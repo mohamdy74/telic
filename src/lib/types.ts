@@ -8,7 +8,7 @@ export interface BaseRecord {
   id: string;
   createdAt: ISODate;
   updatedAt: ISODate;
-  deletedAt?: ISODate;
+  deletedAt?: ISODate | undefined;
 }
 
 export type Priority = "low" | "medium" | "high";
@@ -17,7 +17,7 @@ export type TaskStatus = "todo" | "doing" | "done";
 export interface RecurrenceRule {
   freq: "daily" | "weekly" | "monthly";
   interval: number; // every N units, >= 1
-  byWeekday?: number[]; // 0=Sun..6=Sat, weekly only
+  byWeekday?: number[] | undefined; // 0=Sun..6=Sat, weekly only
 }
 
 export interface Subtask {
@@ -28,14 +28,14 @@ export interface Subtask {
 
 export interface Task extends BaseRecord {
   title: string;
-  notes?: string;
+  notes?: string | undefined;
   priority: Priority;
-  dueDate?: LocalDay;
+  dueDate?: LocalDay | undefined;
   tags: string[];
   subtasks: Subtask[];
   status: TaskStatus;
-  completedAt?: ISODate;
-  recurrence?: RecurrenceRule;
+  completedAt?: ISODate | undefined;
+  recurrence?: RecurrenceRule | undefined;
   kanbanOrder: number;
 }
 
@@ -61,10 +61,10 @@ export interface FocusSession extends BaseRecord {
   plannedMinutes: number;
   startedAt: ISODate;
   endsAt: ISODate;
-  endedAt?: ISODate;
+  endedAt?: ISODate | undefined;
   completed: boolean;
   distractions: { at: ISODate }[];
-  linkedTaskId?: string;
+  linkedTaskId?: string | undefined;
   localDay: LocalDay;
 }
 

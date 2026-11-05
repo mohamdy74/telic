@@ -28,7 +28,7 @@ export function currentTimeZone() {
 
 // LocalDay arithmetic is done on UTC dates so DST never shifts a calendar day.
 function parse(day: LocalDay) {
-  const [y, m, d] = day.split("-").map(Number);
+  const [y = 1970, m = 1, d = 1] = day.split("-").map(Number);
   return new Date(Date.UTC(y, m - 1, d));
 }
 function format(dt: Date): LocalDay {

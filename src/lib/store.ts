@@ -113,7 +113,7 @@ export async function bootStore() {
     const raw: AnySnapshot = {};
     for (const k of STORAGE_KEYS) {
       if (envs[k]) {
-        raw[k] = envs[k]!.data;
+        (raw as Record<string, unknown>)[k] = envs[k]!.data;
         revs[k] = envs[k]!.rev;
       }
     }
@@ -123,7 +123,7 @@ export async function bootStore() {
       const fresh = emptySnapshot();
       const migrated = Object.keys(raw).length ? runMigrations(raw).data : {};
       snap = { ...fresh, ...(migrated as Partial<Snapshot>), meta: fresh.meta };
-      if (!raw.settings) snap.settings = defaultSettings(navigator.language?.startsWith("ar") ? "ar" : "en");
+      if (!raw["settings"]) snap.settings = defaultSettings(navigator.language?.startsWith("ar") ? "ar" : "en");
       Object.assign(revs, await writeAll(snap, revs));
     } else if ((raw.meta as Snapshot["meta"]).schemaVersion < CURRENT_SCHEMA_VERSION) {
       const { data } = runMigrations(raw);
@@ -223,6 +223,7 @@ export const tasks = {
       const { id: _i, createdAt: _c, updatedAt: _u, completedAt: _d, ...rest } = task;
       return tasks.add({ ...rest, status: "todo", dueDate: nextOccurrence(task.recurrence, base), subtasks: task.subtasks.map((s) => ({ ...s, id: uid(), done: false })) });
     }
+    return undefined;
   },
   reopen(id: string) {
     tasks.update(id, { status: "todo", completedAt: undefined });

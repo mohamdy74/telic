@@ -12,5 +12,5 @@ export function nextOccurrence(rule: RecurrenceRule, from: LocalDay): LocalDay {
   const later = days.find((d) => d > wd);
   if (later !== undefined) return addDays(from, later - wd);
   // wrap to the first selected weekday of the next active week
-  return addDays(from, 7 - wd + days[0] + 7 * (n - 1));
+  return addDays(from, 7 - wd + days[0]! + 7 * (n - 1));
 }

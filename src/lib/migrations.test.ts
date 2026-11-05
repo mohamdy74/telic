@@ -5,7 +5,7 @@ describe("migrations", () => {
   const fake: Migration[] = [
     // fake v0 -> v1: rename `todos` to `tasks`, priority numbers -> strings
     (d) => {
-      const todos = (d.todos as { title: string; p: number }[]) ?? [];
+      const todos = (d["todos"] as { title: string; p: number }[]) ?? [];
       const { todos: _drop, ...rest } = d;
       return { ...rest, tasks: todos.map((t) => ({ title: t.title, priority: t.p >= 2 ? "high" : "low" })) };
     },
@@ -16,8 +16,8 @@ describe("migrations", () => {
     expect(from).toBe(0);
     expect(to).toBe(1);
     expect(data.meta?.schemaVersion).toBe(1);
-    expect(data.tasks).toEqual([{ title: "A", priority: "high" }, { title: "B", priority: "low" }]);
-    expect(data.todos).toBeUndefined();
+    expect(data["tasks"]).toEqual([{ title: "A", priority: "high" }, { title: "B", priority: "low" }]);
+    expect(data["todos"]).toBeUndefined();
   });
 
   it("is a no-op when already current", () => {
@@ -31,7 +31,7 @@ describe("migrations", () => {
 
   it("real v0 -> v1 fills missing collections", () => {
     const { data } = runMigrations({ tasks: [{ id: "x" }] });
-    expect(data.habits).toEqual([]);
-    expect(data.tasks).toEqual([{ id: "x" }]);
+    expect(data["habits"]).toEqual([]);
+    expect(data["tasks"]).toEqual([{ id: "x" }]);
   });
 });

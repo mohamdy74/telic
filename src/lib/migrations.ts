@@ -8,11 +8,11 @@ export const migrations: Migration[] = [
   // v0 -> v1: pre-versioned data. Ensure every collection exists as an array.
   (d) => ({
     ...d,
-    tasks: Array.isArray(d.tasks) ? d.tasks : [],
-    habits: Array.isArray(d.habits) ? d.habits : [],
-    habitLogs: Array.isArray(d.habitLogs) ? d.habitLogs : [],
-    focusSessions: Array.isArray(d.focusSessions) ? d.focusSessions : [],
-    xpLedger: Array.isArray(d.xpLedger) ? d.xpLedger : [],
+    tasks: Array.isArray(d["tasks"]) ? d["tasks"] : [],
+    habits: Array.isArray(d["habits"]) ? d["habits"] : [],
+    habitLogs: Array.isArray(d["habitLogs"]) ? d["habitLogs"] : [],
+    focusSessions: Array.isArray(d["focusSessions"]) ? d["focusSessions"] : [],
+    xpLedger: Array.isArray(d["xpLedger"]) ? d["xpLedger"] : [],
   }),
 ];
 
