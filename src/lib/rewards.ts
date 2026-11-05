@@ -150,3 +150,8 @@ export function totalsFromLedger(ledger: XpLedgerEntry[]): RewardTotals {
     xpForNextLevel,
   };
 }
+
+/** XP awarded on one localDay (live entries) — the today-vs-cap readout. */
+export function xpAwardedOnDay(ledger: XpLedgerEntry[], localDay: LocalDay): number {
+  return xpAwardedOn(liveEntries(ledger), localDay);
+}

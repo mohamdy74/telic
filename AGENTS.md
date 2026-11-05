@@ -39,17 +39,17 @@ use the editor.
 - No hardcoded colors in components; all colors are oklch tokens in `src/styles.css`. Accent is driven by `--accent-hue` so themes can swap it.
 - Fonts are self-hosted via @fontsource (no CDN) so they work offline.
 
-## Data rules (schema v1)
+## Data rules (schema v2)
 
 - `localDay` is stored at creation time and never recomputed afterwards. A record's
   localDay must survive later changes of timezone or `dayStartHour`.
-- `meta.schemaVersion` is 1 (`CURRENT_SCHEMA_VERSION` in `src/lib/types.ts`). Any
+- `meta.schemaVersion` is 2 (`CURRENT_SCHEMA_VERSION` in `src/lib/types.ts`). Any
   stored-shape change bumps it and adds one entry to the ordered `migrations`
   array in `src/lib/migrations.ts` (index = from-version); migrations run on boot
   and on import. Exception: ADDITIVE OPTIONAL fields (absent in old records,
   defaulted on read) do not bump the version — e.g. `Task.seriesId`, `FocusSession.pausedAt`.
 - Storage keys: one IndexedDB key per collection — `tasks`, `habits`,
-  `habitLogs`, `focusSessions`, `xpLedger`, `settings`, `meta` (idb-keyval store
+  `habitLogs`, `focusSessions`, `xpLedger`, `achievements`, `settings`, `meta` (idb-keyval store
   "tilth"). Writing one collection never rewrites the others; writes are
   debounced (250 ms) and flushed on tab hide.
 - The store boots client-side AFTER hydration (`bootStore()` effect in
@@ -62,8 +62,7 @@ use the editor.
 - Recurrence is a stored rule on the task; only the NEXT instance is generated
   on completion (`tasks.complete`) — never pre-generate instances.
 - Real pages so far: `/settings`, `/tasks`, `/habits`, `/focus`,
-  `/` (the Today dashboard). Rewards and insights are still
-  placeholders. The settings store-status panel is debug-only.
+  `/` (the Today dashboard). Insights is still a placeholder. The settings store-status panel is debug-only.
 
 ## Tasks page (/tasks)
 
@@ -175,9 +174,10 @@ use the editor.
   stays within 0..1; completing an overdue task does not move it.
 - Focus card: `workMinutesToday` (completed work sessions, breaks excluded)
   vs `settings.dailyFocusTargetMinutes`.
-- The Level card shows live level, XP progress and coins via `totalsFromLedger` from
-  `src/lib/rewards.ts`; achievements stays a placeholder. The dashboard
-  never writes `xpLedger`.
+- The Level card shows live level, XP progress, today XP vs `DAILY_XP_CAP` and
+  coins via `totalsFromLedger` / `xpAwardedOnDay` (`src/lib/rewards.ts`); the
+  achievements card lists the latest unlocks via `latestUnlocks`
+  (`src/lib/achievements.ts`). The dashboard never writes `xpLedger`.
 - First run (no tasks, no habits, no focus sessions) shows a welcome panel
   linking to /tasks and /habits. All cards are skeletons until `ready`.
 
@@ -215,7 +215,43 @@ use the editor.
   awards, NOT security — the ledger lives in the browser and import can
   overwrite it.
 
+## Achievements & challenges (`src/lib/achievements.ts`, `src/lib/challenges.ts`)
+
+- Both are PURE: predicates and progress functions take a state slice
+  assembled by `progressState()` in store.ts and never touch the store,
+  Date.now() or localStorage.
+- Validated-data rule (exploit guard, documented per definition in
+  achievements.ts): predicates read only data the rewards engine already
+  validated. A completed task is a LIVE `xpLedger` entry with sourceType
+  "task" (instant completions have no entry and count for nothing), a habit
+  done-log is a live "habit" entry, focus achievements count only completed
+  work sessions, levels come from `totalsFromLedger`, backups from
+  `meta.lastExportedAt`, purchases from live "shop" entries (dormant until
+  the shop ships). Honest limits: a guardrail against self-cheating, NOT
+  security.
+- Unlocks are stored ONCE in the `achievements` collection (achievementId +
+  unlockedAt + localDay; schema v2 with migration). `evaluateAchievements`
+  returns only new ids, in definition order. The AppShell toasts fresh
+  unlocks; /rewards shows the gallery with progress numbers where
+  measurable; the dashboard achievements card shows the latest 3 via
+  `latestUnlocks`.
+- Challenge selection is deterministic: 3 of 7 daily by localDay, 2 of 5
+  weekly by week start (FNV-1a hash of seed:id, stable sort, pool order
+  restored). Same day, same set.
+- Challenge bonuses are COINS-ONLY ledger entries: sourceType "challenge",
+  sourceId = challenge id, localDay = period anchor (today / week start),
+  xp 0, positive coins (`DAILY_CHALLENGE_COINS` / `WEEKLY_CHALLENGE_COINS`
+  in rewardsConfig.ts). Zero XP means bonuses NEVER count toward
+  `DAILY_XP_CAP` and never advance levels; the ledger identity rule grants
+  once per challenge per period. Undoing the underlying actions keeps the
+  bonus but can never re-grant.
+- Wiring: ONE checkpoint, `applyBonusChecks()` in store.ts — called at the
+  end of `applyRewardEvent`, after an export stamp (metaActions.update with
+  lastExportedAt) and once at the end of `bootStore`. Pages and components
+  never write unlocks or bonuses, and never call the engine directly.
+
 ## SSR constraints (Cloudflare Workers / workerd)
+
 
 - The production runtime is workerd (Lovable hosting). Node dev/build/tests will
   happily accept code that workerd rejects. Never call `crypto.randomUUID()`,

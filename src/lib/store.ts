@@ -3,12 +3,15 @@ import { currentTimeZone, defaultWeekStartsOn, toLocalDay } from "./dates";
 import { runMigrations, type AnySnapshot } from "./migrations";
 import { nextOccurrence } from "./recurrence";
 import { shiftEndsAfterResume } from "./focusTime";
+import { evaluateAchievements, type AchievementState } from "./achievements";
+import { computeChallengeGrants } from "./challenges";
 import { awardXp, revokeXp, totalsFromLedger, type AwardEvent } from "./rewards";
 import { readAll, readKey, writeAll, writeKey, mergeValue } from "./storage/persistence";
 import {
   COLLECTION_KEYS,
   CURRENT_SCHEMA_VERSION,
   STORAGE_KEYS,
+  type AchievementUnlock,
   type CollectionKey,
   type FocusSession,
   type Habit,
@@ -149,6 +152,8 @@ export async function bootStore() {
     useStore.setState({ error: String(e), ready: true });
   }
 
+  applyBonusChecks();
+
   // multi-tab sync
   if ("BroadcastChannel" in window) {
     channel = new BroadcastChannel("tilth-sync");
@@ -252,9 +257,7 @@ function applyRewardEvent(event: RewardEvent) {
   if (award) {
     const res = awardXp(award, state.xpLedger);
     if (res.entry) xp.add(res.entry);
-    return;
-  }
-  if (revoke) {
+  } else if (revoke) {
     const doomed = revokeXp(revoke, state.xpLedger);
     if (doomed.length > 0) {
       const t = nowIso();
@@ -262,9 +265,56 @@ function applyRewardEvent(event: RewardEvent) {
       setCollection("xpLedger", (l) => l.map((e) => (ids.has(e.id) ? { ...e, deletedAt: t, updatedAt: t } : e)));
     }
   }
+
+  applyBonusChecks();
+}
+
+/** Pure state slice for achievement predicates and challenge progress. */
+export function progressState(s = useStore.getState()): AchievementState {
+  return {
+    today: todayLocal(),
+    timeZone: currentTimeZone(),
+    weekStartsOn: s.settings.weekStartsOn,
+    dailyFocusTargetMinutes: s.settings.dailyFocusTargetMinutes,
+    tasks: s.tasks,
+    habits: s.habits,
+    habitLogs: s.habitLogs,
+    focusSessions: s.focusSessions,
+    xpLedger: s.xpLedger,
+    lastExportedAt: s.meta.lastExportedAt,
+  };
+}
+
+/**
+ * The ONE bonus checkpoint: evaluates achievements over already-validated
+ * data, stores new unlocks once, and grants completed-challenge coin
+ * bonuses (coins-only ledger entries, never XP). Called after every reward
+ * event, after an export stamp and once at the end of boot — never from
+ * components.
+ */
+function applyBonusChecks() {
+  const s = useStore.getState();
+  const ps = progressState();
+  const fresh = evaluateAchievements(ps, s.achievements);
+  if (fresh.length > 0) {
+    const t = nowIso();
+    setCollection("achievements", (l) => [
+      ...l,
+      ...fresh.map((id) => ({
+        id: uid(),
+        achievementId: id,
+        unlockedAt: t,
+        localDay: todayLocal(),
+        createdAt: t,
+        updatedAt: t,
+      })),
+    ]);
+  }
+  for (const grant of computeChallengeGrants(ps)) xp.add(grant);
 }
 
 /* ---------------- actions ---------------- */
+
 
 type NewTask = Pick<Task, "title"> & Partial<Omit<Task, "id" | "createdAt" | "updatedAt">>;
 
@@ -403,6 +453,7 @@ export const metaActions = {
   update(patch: Partial<Omit<Meta, "updatedAt">>) {
     useStore.setState({ meta: { ...useStore.getState().meta, ...patch, updatedAt: nowIso() } });
     schedule("meta");
+    if (patch.lastExportedAt !== undefined) applyBonusChecks();
   },
 };
 

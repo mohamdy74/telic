@@ -1,5 +1,5 @@
 import { Link, useNavigate } from "@tanstack/react-router";
-import { ChevronRight, Plus, Search, Target, type LucideIcon } from "lucide-react";
+import { ChevronRight, Plus, Search, Target, Trophy, type LucideIcon } from "lucide-react";
 import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { NAV } from "./nav";
 import { usePrefs } from "./preferences";
@@ -14,6 +14,35 @@ export function AppShell({ children }: { children: ReactNode }) {
   const [open, setOpen] = useState(false);
   const [needRefresh, setNeedRefresh] = useState(false);
   const activeSession = useStore((s) => s.focusSessions.find((x) => isActive(x)));
+  const unlocks = useStore((s) => s.achievements);
+  const [unlockToast, setUnlockToast] = useState<string | null>(null);
+  const seenUnlocks = useRef<Set<string> | null>(null);
+
+  // Achievement unlock toast: the first run records existing unlocks
+  // silently; only fresh unlocks afterwards toast, one at a time.
+  useEffect(() => {
+    const current = unlocks.filter((u) => !u.deletedAt);
+    if (seenUnlocks.current === null) {
+      seenUnlocks.current = new Set(current.map((u) => u.id));
+      return;
+    }
+    const fresh = current.filter((u) => !seenUnlocks.current!.has(u.id));
+    for (const u of fresh) seenUnlocks.current.add(u.id);
+    const newest = fresh[fresh.length - 1];
+    if (newest) {
+      const name =
+        (t.ach as Record<string, { name: string }>)[newest.achievementId]?.name ??
+        newest.achievementId;
+      setUnlockToast(t.achUnlocked.replace("{name}", name));
+    }
+  }, [unlocks, t]);
+
+  useEffect(() => {
+    if (!unlockToast) return;
+    const id = window.setTimeout(() => setUnlockToast(null), 4000);
+    return () => window.clearTimeout(id);
+  }, [unlockToast]);
+
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -114,7 +143,18 @@ export function AppShell({ children }: { children: ReactNode }) {
         </div>
       )}
 
+      {unlockToast && (
+        <div
+          role="status"
+          className="animate-pop fixed inset-x-0 bottom-20 z-40 mx-auto flex w-fit max-w-[90vw] items-center gap-2 rounded-full border border-border bg-card px-4 py-2 shadow-elevated md:bottom-6"
+        >
+          <Trophy className="size-4 shrink-0 text-primary" aria-hidden />
+          <span className="text-sm">{unlockToast}</span>
+        </div>
+      )}
+
       {open && <CommandPalette onClose={() => setOpen(false)} />}
+
     </div>
   );
 }

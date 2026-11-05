@@ -13,6 +13,7 @@ import {
 } from "lucide-react";
 import { useEffect, useState, type ReactNode } from "react";
 import { usePrefs } from "@/components/app/preferences";
+import { ACHIEVEMENT_ICONS } from "@/components/app/achievementIcons";
 import { formatDate, formatNumber } from "@/lib/i18n";
 import {
   dailyProgress,
@@ -23,7 +24,9 @@ import {
   type HabitDue,
 } from "@/lib/dashboard";
 import { workMinutesToday } from "@/lib/focusTime";
-import { totalsFromLedger } from "@/lib/rewards";
+import { latestUnlocks } from "@/lib/achievements";
+import { totalsFromLedger, xpAwardedOnDay } from "@/lib/rewards";
+import { DAILY_XP_CAP } from "@/lib/rewardsConfig";
 import { habits as habitsApi, tasks as tasksApi, todayLocal, useStore } from "@/lib/store";
 import type { Task } from "@/lib/types";
 
@@ -158,13 +161,7 @@ function DashboardPage() {
             <FocusCard minutes={focusMinutes} target={target} footer={footerLink("/focus", t.dash.startFocus)} />
           )}
           {cards.level && <LevelCard />}
-          {cards.achievements && (
-            <SoonCard
-              icon={<Trophy className="size-4" aria-hidden />}
-              title={t.settings.cards.achievements}
-              body={t.dash.achievementsBody}
-            />
-          )}
+          {cards.achievements && <AchievementsCard />}
         </div>
       )}
 
@@ -462,6 +459,9 @@ function LevelCard() {
   const { t, locale } = usePrefs();
   const ledger = useStore((s) => s.xpLedger);
   const totals = totalsFromLedger(ledger);
+  const todayXp = xpAwardedOnDay(ledger, todayLocal());
+  const todayPct =
+    DAILY_XP_CAP <= 0 ? 0 : Math.min(100, Math.round((todayXp / DAILY_XP_CAP) * 100));
   const pct =
     totals.xpForNextLevel <= 0
       ? 0
@@ -482,7 +482,18 @@ function LevelCard() {
             " " +
             t.dash.xpUnit}
         </p>
+        <div className="h-1.5 overflow-hidden rounded-full bg-accent/40" aria-hidden>
+          <div className="h-full rounded-full bg-primary/70 transition-all" style={{ width: todayPct + "%" }} />
+        </div>
+        <p className="text-xs text-muted-foreground tabular-nums">
+          {formatNumber(locale, todayXp) +
+            " / " +
+            formatNumber(locale, DAILY_XP_CAP) +
+            " " +
+            t.rew.todayXp}
+        </p>
         <p className="flex items-center gap-1.5 text-xs text-muted-foreground tabular-nums">
+
           <Coins className="size-3.5 text-primary" aria-hidden />
           {formatNumber(locale, totals.coins) + " " + t.dash.coins}
         </p>
@@ -491,16 +502,44 @@ function LevelCard() {
   );
 }
 
-function SoonCard({ icon, title, body }: { icon: ReactNode; title: string; body: string }) {
-  const { t } = usePrefs();
+/* ---------------- achievements (latest unlocks) ---------------- */
+
+function AchievementsCard() {
+  const { t, locale } = usePrefs();
+  const unlocks = useStore((s) => s.achievements);
+  const recent = latestUnlocks(unlocks, 3);
   return (
-    <Card title={title} icon={icon}>
-      <div className="flex h-full flex-col items-center justify-center gap-3 py-4 text-center">
-        <span className="rounded-full border border-dashed border-border px-3 py-1 text-xs text-muted-foreground">
-          {t.comingSoon}
-        </span>
-        <p className="max-w-56 text-sm text-muted-foreground">{body}</p>
-      </div>
+    <Card
+      title={t.settings.cards.achievements}
+      icon={<Trophy className="size-4" aria-hidden />}
+      footer={
+        <Link to="/rewards" className={LINK_FOOTER}>
+          {t.dash.viewAll}
+        </Link>
+      }
+    >
+      {recent.length === 0 ? (
+        <EmptyBody title={t.dash.achievementsEmptyTitle} body={t.dash.achievementsEmptyBody} />
+      ) : (
+        <ul className="space-y-1.5">
+          {recent.map((u) => {
+            const Icon = ACHIEVEMENT_ICONS[u.achievementId] ?? Trophy;
+            const name =
+              (t.ach as Record<string, { name: string }>)[u.achievementId]?.name ?? u.achievementId;
+            return (
+              <li key={u.id} className="flex items-center gap-2">
+                <span className="grid size-7 shrink-0 place-items-center rounded-full bg-primary/15 text-primary">
+                  <Icon className="size-3.5" aria-hidden />
+                </span>
+                <span className="min-w-0 flex-1 truncate text-sm">{name}</span>
+                <span className="shrink-0 text-xs text-muted-foreground">
+                  {formatDate(locale, new Date(u.unlockedAt), { dateStyle: "medium" })}
+                </span>
+              </li>
+            );
+          })}
+        </ul>
+      )}
     </Card>
   );
 }
