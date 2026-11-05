@@ -1,0 +1,52 @@
+name: Workerd repro
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  workerd:
+    name: run built SSR in workerd (miniflare)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: oven-sh/setup-bun@v2
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Install
+        run: bun install --frozen-lockfile
+      - name: Build
+        run: npm run build > build.log 2>&1 || tail -n 40 build.log
+      - name: Run built output under workerd
+        run: |
+          cd .output
+          ls -la > ../workerd-verdict.txt 2>&1
+          (cat wrangler.toml 2>/dev/null || cat wrangler.json 2>/dev/null || echo "no wrangler config") >> ../workerd-verdict.txt
+          nohup npx wrangler dev --port 8787 > ../wrangler.log 2>&1 &
+          cd ..
+          ok=""
+          for i in $(seq 1 45); do
+            code=$(curl -s -o /dev/null -w "%{http_code}" "http://localhost:8787/" || true)
+            if [ -n "$code" ] && [ "$code" != "000" ]; then ok=1; break; fi
+            sleep 2
+          done
+          if [ -z "$ok" ]; then
+            echo "WORKERD: no answer on :8787" >> workerd-verdict.txt
+          else
+            echo "WORKERD home=$(curl -s -o /dev/null -w '%{http_code}' http://localhost:8787/)" >> workerd-verdict.txt
+            echo "WORKERD settings=$(curl -s -o /dev/null -w '%{http_code}' http://localhost:8787/settings)" >> workerd-verdict.txt
+            echo "SETTINGS-BODY: $(curl -s http://localhost:8787/settings | head -c 300 | tr '\n' ' ')" >> workerd-verdict.txt
+          fi
+      - name: Commit output
+        run: |
+          { cat workerd-verdict.txt; echo; echo "## wrangler.log tail"; tail -n 100 wrangler.log; echo; echo "## build.log tail"; tail -n 20 build.log; } > workerd-output.md
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add workerd-output.md
+          git commit -m "ci: workerd repro output [skip ci]"
+          git push
