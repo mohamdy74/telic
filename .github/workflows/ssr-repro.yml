@@ -10,7 +10,7 @@ permissions:
 
 jobs:
   repro:
-    name: vite build + dev SSR probe
+    name: dev SSR probe (port 8080)
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v5
@@ -20,33 +20,27 @@ jobs:
           node-version: 22
       - name: Install
         run: bun install --frozen-lockfile
-      - name: Vite build (mirrors the Lovable deploy build)
+      - name: Dev SSR probe on :8080
         run: |
-          if npm run build > build.log 2>&1; then
-            echo "BUILD: PASSED" > verdict.txt
-          else
-            echo "BUILD: FAILED (exit $?)" > verdict.txt
-          fi
-          cat verdict.txt
-      - name: Dev SSR probe
-        run: |
+          rm -f verdict.txt
           nohup bun run dev > dev.log 2>&1 &
           ok=""
           for i in $(seq 1 45); do
-            code=$(curl -s -o /dev/null -w "%{http_code}" "http://localhost:3000/" || true)
+            code=$(curl -s -o /dev/null -w "%{http_code}" "http://localhost:8080/" || true)
             if [ -n "$code" ] && [ "$code" != "000" ]; then ok=1; break; fi
             sleep 2
           done
           if [ -z "$ok" ]; then
-            echo "DEV: no answer on :3000" >> verdict.txt
+            echo "DEV: no answer on :8080" >> verdict.txt
           else
-            echo "DEV home=$(curl -s -o /dev/null -w '%{http_code}' http://localhost:3000/)" >> verdict.txt
-            echo "DEV settings=$(curl -s -o /dev/null -w '%{http_code}' http://localhost:3000/settings)" >> verdict.txt
-            echo "SETTINGS-BODY: $(curl -s http://localhost:3000/settings | head -c 400 | tr '\n' ' ')" >> verdict.txt
+            echo "DEV home=$(curl -s -o /dev/null -w '%{http_code}' http://localhost:8080/)" >> verdict.txt
+            echo "DEV settings=$(curl -s -o /dev/null -w '%{http_code}' http://localhost:8080/settings)" >> verdict.txt
+            echo "SETTINGS-BODY: $(curl -s http://localhost:8080/settings | head -c 500 | tr '\n' ' ')" >> verdict.txt
+            echo "HOME-BODY: $(curl -s http://localhost:8080/ | head -c 300 | tr '\n' ' ')" >> verdict.txt
           fi
       - name: Commit output
         run: |
-          { cat verdict.txt; echo; echo "## build.log tail"; tail -n 80 build.log; echo; echo "## dev.log tail"; tail -n 80 dev.log; } > repro-output.md
+          { cat verdict.txt 2>/dev/null; echo; echo "## dev.log (full)"; cat dev.log; } > repro-output.md
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add repro-output.md
