@@ -44,11 +44,15 @@ describe("migrations", () => {
   });
 
   it("real v2 -> v3 adds the shop collections and normalizes the legacy accent", () => {
-    const { data, from, to } = runMigrations({
-      meta: { schemaVersion: 2 },
-      tasks: [],
-      settings: { accent: "forest", updatedAt: "2026-01-01T00:00:00.000Z" },
-    });
+    const { data, from, to } = runMigrations(
+      {
+        meta: { schemaVersion: 2 },
+        tasks: [],
+        settings: { accent: "forest", updatedAt: "2026-01-01T00:00:00.000Z" },
+      },
+      migrations,
+      3,
+    );
     expect(from).toBe(2);
     expect(to).toBe(3);
     expect(data["shopItems"]).toEqual([]);

@@ -154,7 +154,8 @@ describe("buildZipExport", () => {
       "notes/n1.md",
     ]);
 
-    const dec = new TextDecoder();
+    // ignoreBOM so the check proves the CSV's BOM survived the zip round trip.
+    const dec = new TextDecoder("utf-8", { ignoreBOM: true });
     const backup = JSON.parse(dec.decode(entries[0]!.data)) as { schemaVersion: number };
     expect(backup).toEqual(buildBackup(snap, AT));
     expect(backup.schemaVersion).toBe(CURRENT_SCHEMA_VERSION);
