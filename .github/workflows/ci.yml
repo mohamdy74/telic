@@ -70,6 +70,16 @@ jobs:
           SH=$(curl -s -o /dev/null -w "%{http_code}" http://localhost:8787/_shell.html)
           echo "home=$H settings=$S sw=$SW manifest=$MF shell=$SH"
           if [ "$H" != "200" ] || [ "$S" != "200" ] || [ "$SW" != "200" ] || [ "$MF" != "200" ] || [ "$SH" != "200" ]; then
-            tail -n 60 .output/wrangler.log
+            {
+              echo "wrangler log tail:"; tail -n 20 .output/wrangler.log
+              echo "output dir:"; ls .output | head -n 10
+              SWF="no"; [ -f .output/public/sw.js ] && SWF="yes"
+              MFF="no"; [ -f .output/public/manifest.webmanifest ] && MFF="yes"
+              SHF="no"; [ -f .output/public/_shell.html ] && SHF="yes"
+              IDXF="no"; [ -f .output/public/index.html ] && IDXF="yes"
+              echo "files sw=$SWF manifest=$MFF shell=$SHF index=$IDXF"
+              echo "codes home=$H settings=$S sw=$SW manifest=$MF shell=$SH"
+            } > /tmp/probe-fail.txt
+            echo "::error title=workerd probe failed::$(tail -c 690 /tmp/probe-fail.txt | tr '\n' '|')"
             exit 1
           fi
