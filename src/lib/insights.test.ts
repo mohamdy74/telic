@@ -66,6 +66,8 @@ const focus = (id: string, day: string, minutes: number, over: Partial<FocusSess
   completed: true,
   distractions: [],
   localDay: day,
+  createdAt: iso(day, 9),
+  updatedAt: iso(day, 9, minutes),
   ...over,
 });
 
@@ -196,8 +198,8 @@ describe("insights observations", () => {
     });
     const obs = rep.observations.find((o) => o.id === "taskTimeOfDay");
     expect(obs).toBeDefined();
-    expect(obs?.params.bucket).toBe("morning");
-    expect(obs?.params.pct).toBe("70");
+    expect(obs?.params["bucket"]).toBe("morning");
+    expect(obs?.params["pct"]).toBe("70");
     expect(obs?.events).toBe(10);
     expect(obs?.activeDays).toBe(14);
   });
@@ -233,7 +235,7 @@ describe("insights observations", () => {
     });
     const obs = rep.observations.find((o) => o.id === "focusWeekday");
     expect(obs).toBeDefined();
-    expect(obs?.params.weekday).toBe("6"); // Saturday
+    expect(obs?.params["weekday"]).toBe("6"); // Saturday
     expect(obs?.events).toBe(11);
   });
 
@@ -268,7 +270,7 @@ describe("insights observations", () => {
     const rep = insightsReport({ ...empty, habits: [hA, hB], habitLogs: logs });
     const obs = rep.observations.find((o) => o.id === "skippedHabit");
     expect(obs).toBeDefined();
-    expect(obs?.params.habit).toBe("Exercise");
+    expect(obs?.params["habit"]).toBe("Exercise");
     expect(obs?.events).toBe(4);
   });
 
