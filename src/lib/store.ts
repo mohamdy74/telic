@@ -2,6 +2,7 @@ import { create } from "zustand";
 import { currentTimeZone, defaultWeekStartsOn, toLocalDay } from "./dates";
 import { runMigrations, type AnySnapshot } from "./migrations";
 import { nextOccurrence } from "./recurrence";
+import { shiftEndsAfterResume } from "./focusTime";
 import { readAll, readKey, writeAll, writeKey, mergeValue } from "./storage/persistence";
 import {
   COLLECTION_KEYS,
@@ -294,6 +295,17 @@ export const focus = {
   distraction(id: string) {
     const t = nowIso();
     setCollection("focusSessions", (l) => l.map((x) => (x.id === id ? { ...x, distractions: [...x.distractions, { at: t }], updatedAt: t } : x)));
+  },
+  /** Freezes the countdown; endsAt is shifted on resume (pure helper). */
+  pause(id: string) {
+    const t = nowIso();
+    setCollection("focusSessions", (l) => l.map((x) => (x.id === id && x.endedAt === undefined ? { ...x, pausedAt: t, updatedAt: t } : x)));
+  },
+  resume(id: string) {
+    const s = useStore.getState().focusSessions.find((x) => x.id === id);
+    if (!s || s.endedAt !== undefined || s.pausedAt === undefined) return;
+    const endsAt = shiftEndsAfterResume(s.endsAt, s.pausedAt, Date.now());
+    setCollection("focusSessions", (l) => l.map((x) => (x.id === id ? { ...x, endsAt, pausedAt: undefined, updatedAt: nowIso() } : x)));
   },
   end(id: string, completed: boolean) {
     const t = nowIso();

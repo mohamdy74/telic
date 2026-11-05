@@ -64,6 +64,8 @@ export interface FocusSession extends BaseRecord {
   startedAt: ISODate;
   endsAt: ISODate;
   endedAt?: ISODate | undefined;
+  /** Set while the countdown is frozen; cleared when endsAt is shifted on resume. */
+  pausedAt?: ISODate | undefined;
   completed: boolean;
   distractions: { at: ISODate }[];
   linkedTaskId?: string | undefined;
