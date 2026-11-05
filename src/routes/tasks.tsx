@@ -952,9 +952,33 @@ function Segmented({
 }
 
 function Modal({ title, onClose, children }: { title: string; onClose: () => void; children: ReactNode }) {
+  const panelRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    const prev = document.activeElement as HTMLElement | null;
+    panelRef.current?.focus();
+    return () => prev?.focus?.();
+  }, []);
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if (e.key === "Escape") onClose();
+      else if (e.key === "Tab") {
+        const items = panelRef.current?.querySelectorAll<HTMLElement>(
+          "button, [href], input, select, textarea, [tabindex]:not([tabindex='-1'])",
+        );
+        const first = items?.[0];
+        const last = items?.[items.length - 1];
+        if (!first || !last) {
+          e.preventDefault();
+          return;
+        }
+        if (e.shiftKey && document.activeElement === first) {
+          e.preventDefault();
+          last.focus();
+        } else if (!e.shiftKey && document.activeElement === last) {
+          e.preventDefault();
+          first.focus();
+        }
+      }
     };
     window.addEventListener("keydown", onKey);
     document.body.style.overflow = "hidden";
@@ -972,7 +996,9 @@ function Modal({ title, onClose, children }: { title: string; onClose: () => voi
       onClick={onClose}
     >
       <div
-        className="animate-pop w-full max-w-md rounded-lg border border-border bg-card p-5 shadow-elevated"
+        ref={panelRef}
+        tabIndex={-1}
+        className="animate-pop w-full max-w-md rounded-lg border border-border bg-card p-5 shadow-elevated outline-none"
         onClick={(e) => e.stopPropagation()}
       >
         {children}

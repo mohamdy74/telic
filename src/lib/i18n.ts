@@ -413,6 +413,7 @@ const en = {
   daysStreak: { one: "{n} day streak", other: "{n} day streak" } as PluralForms,
   skip: "Skip to content",
   notFound: "Page not found",
+  notFoundBody: "The page you're looking for doesn't exist or has been moved.",
   goHome: "Go home",
 };
 
@@ -832,6 +833,7 @@ const ar: Dict = {
   },
   skip: "تخطَّ إلى المحتوى",
   notFound: "الصفحة غير موجودة",
+  notFoundBody: "الصفحة التي تبحث عنها غير موجودة أو تم نقلها.",
   goHome: "الرئيسية",
 };
 

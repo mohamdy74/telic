@@ -10,27 +10,26 @@ import {
 } from "@tanstack/react-router";
 import { useEffect, type ReactNode } from "react";
 
-import { PreferencesProvider } from "@/components/app/preferences";
+import { PreferencesProvider, usePrefs } from "@/components/app/preferences";
 import { AppShell } from "@/components/app/AppShell";
 import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
 import { bootStore } from "../lib/store";
 
 function NotFoundComponent() {
+  const { t } = usePrefs();
   return (
     <div className="flex min-h-screen items-center justify-center bg-background px-4">
       <div className="max-w-md text-center">
         <h1 className="text-7xl font-bold text-foreground">404</h1>
-        <h2 className="mt-4 text-xl font-semibold text-foreground">Page not found</h2>
-        <p className="mt-2 text-sm text-muted-foreground">
-          The page you're looking for doesn't exist or has been moved.
-        </p>
+        <h2 className="mt-4 text-xl font-semibold text-foreground">{t.notFound}</h2>
+        <p className="mt-2 text-sm text-muted-foreground">{t.notFoundBody}</p>
         <div className="mt-6">
           <Link
             to="/"
             className="inline-flex items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90"
           >
-            Go home
+            {t.goHome}
           </Link>
         </div>
       </div>
@@ -38,6 +37,8 @@ function NotFoundComponent() {
   );
 }
 
+/* Deliberately NOT localized: this is the crash boundary — the failure can be
+ * inside the preferences provider itself, so it must render with zero context. */
 function ErrorComponent({ error, reset }: ErrorComponentProps) {
   console.error(error);
   const router = useRouter();
