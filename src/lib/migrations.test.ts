@@ -42,4 +42,26 @@ describe("migrations", () => {
     expect(data["achievements"]).toEqual([]);
     expect(data.meta?.schemaVersion).toBe(2);
   });
+
+  it("real v2 -> v3 adds the shop collections and normalizes the legacy accent", () => {
+    const { data, from, to } = runMigrations({
+      meta: { schemaVersion: 2 },
+      tasks: [],
+      settings: { accent: "forest", updatedAt: "2026-01-01T00:00:00.000Z" },
+    });
+    expect(from).toBe(2);
+    expect(to).toBe(3);
+    expect(data["shopItems"]).toEqual([]);
+    expect(data["purchases"]).toEqual([]);
+    expect((data["settings"] as { accent: string }).accent).toBe("moss");
+    expect(data.meta?.schemaVersion).toBe(3);
+  });
+
+  it("real v1 -> v3 chains: achievements and shop collections all present", () => {
+    const { data } = runMigrations({ meta: { schemaVersion: 1 }, tasks: [] });
+    expect(data["achievements"]).toEqual([]);
+    expect(data["shopItems"]).toEqual([]);
+    expect(data["purchases"]).toEqual([]);
+    expect(data.meta?.schemaVersion).toBe(3);
+  });
 });

@@ -19,6 +19,19 @@ export const migrations: Migration[] = [
     ...d,
     achievements: Array.isArray(d["achievements"]) ? d["achievements"] : [],
   }),
+  // v2 -> v3: add the shop collections; normalize the legacy accent placeholder.
+  (d) => {
+    const out: AnySnapshot = {
+      ...d,
+      shopItems: Array.isArray(d["shopItems"]) ? d["shopItems"] : [],
+      purchases: Array.isArray(d["purchases"]) ? d["purchases"] : [],
+    };
+    const s = d["settings"];
+    if (typeof s === "object" && s !== null && (s as Record<string, unknown>)["accent"] === "forest") {
+      out["settings"] = { ...s, accent: "moss" };
+    }
+    return out;
+  },
 ];
 
 export function runMigrations(

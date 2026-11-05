@@ -12,6 +12,8 @@ const snapshot = (n = 1): Snapshot =>
     habitLogs: [{ ...rec("l1"), habitId: "h1", localDay: "2026-01-01", status: "done" }],
     focusSessions: [],
     achievements: [],
+    shopItems: [],
+    purchases: [],
     xpLedger: [
       { ...rec("x1"), sourceType: "focus", sourceId: "s1", localDay: "2026-01-01", xp: 10, coins: 2 },
       { ...rec("x2"), sourceType: "task", sourceId: "t0", localDay: "2026-01-01", xp: 5, coins: 1 },
@@ -19,7 +21,7 @@ const snapshot = (n = 1): Snapshot =>
     settings: {
       language: "ar",
       theme: "dark",
-      accent: "forest",
+      accent: "moss",
       dayStartHour: 0,
       weekStartsOn: 6,
       dashboardCards: {
@@ -121,7 +123,20 @@ describe("parseBackup migration", () => {
     expect(parsed.snapshot.meta.schemaVersion).toBe(CURRENT_SCHEMA_VERSION);
     expect(parsed.snapshot.habits).toEqual([]);
     expect(parsed.snapshot.achievements).toEqual([]);
+    expect(parsed.snapshot.shopItems).toEqual([]);
+    expect(parsed.snapshot.purchases).toEqual([]);
     expect(parsed.counts.tasks).toBe(2);
+  });
+
+  it("counts shop items and purchases", () => {
+    const snap = snapshot(1);
+    snap.shopItems = [{ ...rec("s1"), name: "Coffee out", price: 20 }] as Snapshot["shopItems"];
+    snap.purchases = [
+      { ...rec("p1"), itemId: "s1", name: "Coffee out", price: 20, localDay: "2026-01-01" },
+    ] as Snapshot["purchases"];
+    const parsed = parseBackup(JSON.stringify(buildBackup(snap)));
+    expect(parsed.counts.shopItems).toBe(1);
+    expect(parsed.counts.purchases).toBe(1);
   });
 
   it("counts every collection", () => {

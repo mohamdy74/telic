@@ -298,6 +298,8 @@ const en = {
       focusSessions: "Focus sessions",
       xpLedger: "XP ledger",
       achievements: "Achievements",
+      shopItems: "Shop items",
+      purchases: "Purchases",
     },
   },
   debug: {
@@ -622,6 +624,8 @@ const ar: Dict = {
       focusSessions: "جلسات التركيز",
       xpLedger: "سجل الخبرة",
       achievements: "الإنجازات",
+      shopItems: "عناصر المتجر",
+      purchases: "عمليات الشراء",
     },
   },
   debug: {

@@ -31,7 +31,7 @@ export function defaultSettings(language: "en" | "ar" = "en"): Settings {
   return {
     language,
     theme: "dark",
-    accent: "forest",
+    accent: "moss",
     dayStartHour: 0,
     weekStartsOn: defaultWeekStartsOn(language),
     dashboardCards: { priorities: true, progress: true, deadlines: true, habits: true, focus: true, level: true, achievements: true },
@@ -44,6 +44,7 @@ function emptySnapshot(): Snapshot {
   const t = nowIso();
   return {
     tasks: [], habits: [], habitLogs: [], focusSessions: [], xpLedger: [], achievements: [],
+    shopItems: [], purchases: [],
     settings: defaultSettings(),
     meta: { schemaVersion: CURRENT_SCHEMA_VERSION, createdAt: t, updatedAt: t },
   };

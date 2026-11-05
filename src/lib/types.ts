@@ -1,5 +1,5 @@
 /** Schema entity types. Bump CURRENT_SCHEMA_VERSION + add a migration when changing. */
-export const CURRENT_SCHEMA_VERSION = 2;
+export const CURRENT_SCHEMA_VERSION = 3;
 
 export type ISODate = string; // full ISO timestamp
 export type LocalDay = string; // 'YYYY-MM-DD', stored at creation, never recomputed
@@ -87,12 +87,40 @@ export interface AchievementUnlock extends BaseRecord {
   localDay: LocalDay;
 }
 
+/** Unlockable accent themes — hue sets live in src/styles.css, unlock rules in rewardsConfig. */
+export const ACCENT_IDS = ["moss", "sage", "pine", "clay", "dusk"] as const;
+export type AccentId = (typeof ACCENT_IDS)[number];
+
+/** A user-defined reward the user can buy with coins. */
+export interface ShopItem extends BaseRecord {
+  name: string;
+  note?: string | undefined;
+  /** Coin price — a positive integer. */
+  price: number;
+}
+
+/**
+ * One purchase. The matching xpLedger entry (sourceType "shop",
+ * sourceId = id, coins = -price, xp 0) carries the spent coins; this
+ * record keeps the history and the used/refunded state. name and price
+ * are snapshots at buy time, so deleting the item never rewrites
+ * history. Soft-delete marks a refund (same localDay, unused only).
+ */
+export interface Purchase extends BaseRecord {
+  itemId: string;
+  name: string;
+  price: number;
+  localDay: LocalDay;
+  /** Set when the user redeems the purchase themselves. */
+  usedAt?: ISODate | undefined;
+}
+
 export type DashboardCard = "priorities" | "progress" | "deadlines" | "habits" | "focus" | "level" | "achievements";
 
 export interface Settings {
   language: "en" | "ar";
   theme: "light" | "dark" | "system";
-  accent: string;
+  accent: AccentId;
   dayStartHour: 0 | 4;
   weekStartsOn: number; // 0=Sun..6=Sat
   dashboardCards: Record<DashboardCard, boolean>;
@@ -115,9 +143,20 @@ export interface Collections {
   focusSessions: FocusSession[];
   xpLedger: XpLedgerEntry[];
   achievements: AchievementUnlock[];
+  shopItems: ShopItem[];
+  purchases: Purchase[];
 }
 export type CollectionKey = keyof Collections;
-export const COLLECTION_KEYS: CollectionKey[] = ["tasks", "habits", "habitLogs", "focusSessions", "xpLedger", "achievements"];
+export const COLLECTION_KEYS: CollectionKey[] = [
+  "tasks",
+  "habits",
+  "habitLogs",
+  "focusSessions",
+  "xpLedger",
+  "achievements",
+  "shopItems",
+  "purchases",
+];
 
 /** Full snapshot = every storage key. Used for load, export, import and migrations. */
 export interface Snapshot extends Collections {

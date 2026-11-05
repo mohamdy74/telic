@@ -12,7 +12,8 @@
  *   entries (xp 0), so they never touch DAILY_XP_CAP or levels.
  */
 
-import type { Priority } from "./types";
+import type { AchievementId } from "./achievements";
+import type { AccentId, Priority } from "./types";
 
 /** XP awarded per completed task, by priority. */
 export const TASK_XP: Record<Priority, number> = { low: 5, medium: 10, high: 20 };
@@ -85,3 +86,21 @@ export function levelFromXp(xp: number): LevelInfo {
   }
   return { level, xpIntoLevel: remaining, xpForNextLevel: step };
 }
+
+/*
+ * Accent-theme unlock rules. Moss ships unlocked; the others open at a
+ * level or at an achievement. The theme hues themselves live in
+ * src/styles.css ([data-accent=...]) and src/lib/themes.ts.
+ */
+export type ThemeUnlockRule =
+  | { type: "default" }
+  | { type: "level"; level: number }
+  | { type: "achievement"; achievementId: AchievementId };
+
+export const THEME_UNLOCKS: Record<AccentId, ThemeUnlockRule> = {
+  moss: { type: "default" },
+  sage: { type: "level", level: 3 },
+  pine: { type: "achievement", achievementId: "streakSeven" },
+  clay: { type: "achievement", achievementId: "firstPurchase" },
+  dusk: { type: "level", level: 10 },
+};
