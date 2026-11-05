@@ -386,6 +386,7 @@ const en = {
       achievements: "Achievements",
       shopItems: "Shop items",
       purchases: "Purchases",
+      notes: "Notes",
     },
   },
   debug: {
@@ -799,6 +800,7 @@ const ar: Dict = {
       achievements: "الإنجازات",
       shopItems: "عناصر المتجر",
       purchases: "عمليات الشراء",
+      notes: "الملاحظات",
     },
   },
   debug: {

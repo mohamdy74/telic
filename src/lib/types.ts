@@ -1,5 +1,5 @@
 /** Schema entity types. Bump CURRENT_SCHEMA_VERSION + add a migration when changing. */
-export const CURRENT_SCHEMA_VERSION = 3;
+export const CURRENT_SCHEMA_VERSION = 4;
 
 export type ISODate = string; // full ISO timestamp
 export type LocalDay = string; // 'YYYY-MM-DD', stored at creation, never recomputed
@@ -115,6 +115,15 @@ export interface Purchase extends BaseRecord {
   usedAt?: ISODate | undefined;
 }
 
+/** A free-form Markdown note — thoughts, plans and links. Notes sit outside the XP economy. */
+export interface Note extends BaseRecord {
+  title: string;
+  body: string;
+  /** Optional link to a task this note belongs to. */
+  linkedTaskId?: string | undefined;
+  pinned?: boolean | undefined;
+}
+
 export type DashboardCard = "priorities" | "progress" | "deadlines" | "habits" | "focus" | "level" | "achievements";
 
 export interface Settings {
@@ -138,6 +147,7 @@ export interface Meta {
 
 export interface Collections {
   tasks: Task[];
+  notes: Note[];
   habits: Habit[];
   habitLogs: HabitLog[];
   focusSessions: FocusSession[];
@@ -149,6 +159,7 @@ export interface Collections {
 export type CollectionKey = keyof Collections;
 export const COLLECTION_KEYS: CollectionKey[] = [
   "tasks",
+  "notes",
   "habits",
   "habitLogs",
   "focusSessions",

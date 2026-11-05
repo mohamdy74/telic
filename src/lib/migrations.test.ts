@@ -57,11 +57,12 @@ describe("migrations", () => {
     expect(data.meta?.schemaVersion).toBe(3);
   });
 
-  it("real v1 -> v3 chains: achievements and shop collections all present", () => {
+  it("real v1 -> v4 chains: achievements, shop and notes collections all present", () => {
     const { data } = runMigrations({ meta: { schemaVersion: 1 }, tasks: [] });
     expect(data["achievements"]).toEqual([]);
     expect(data["shopItems"]).toEqual([]);
     expect(data["purchases"]).toEqual([]);
-    expect(data.meta?.schemaVersion).toBe(3);
+    expect(data["notes"]).toEqual([]);
+    expect(data.meta?.schemaVersion).toBe(4);
   });
 });

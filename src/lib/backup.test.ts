@@ -8,6 +8,7 @@ const rec = (id: string) => ({ id, createdAt: stamp, updatedAt: stamp });
 const snapshot = (n = 1): Snapshot =>
   ({
     tasks: Array.from({ length: n }, (_, i) => rec("t" + i)),
+    notes: [{ ...rec("n1"), title: "Note one", body: "hello" }],
     habits: [],
     habitLogs: [{ ...rec("l1"), habitId: "h1", localDay: "2026-01-01", status: "done" }],
     focusSessions: [],
@@ -39,7 +40,7 @@ const snapshot = (n = 1): Snapshot =>
     meta: { schemaVersion: CURRENT_SCHEMA_VERSION, createdAt: stamp, updatedAt: stamp },
   }) as unknown as Snapshot;
 
-const emptySnap = (): Snapshot => ({ ...snapshot(0), habitLogs: [], xpLedger: [] });
+const emptySnap = (): Snapshot => ({ ...snapshot(0), notes: [], habitLogs: [], xpLedger: [] });
 
 const failCode = (text: string): string => {
   try {
@@ -71,6 +72,7 @@ describe("parseBackup validation", () => {
     expect(parsed.migratedFrom).toBeNull();
     expect(parsed.counts.tasks).toBe(3);
     expect(parsed.counts.habitLogs).toBe(1);
+    expect(parsed.counts.notes).toBe(1);
     expect(parsed.counts.xpLedger).toBe(2);
     expect(parsed.snapshot.meta.schemaVersion).toBe(CURRENT_SCHEMA_VERSION);
   });
@@ -125,6 +127,7 @@ describe("parseBackup migration", () => {
     expect(parsed.snapshot.achievements).toEqual([]);
     expect(parsed.snapshot.shopItems).toEqual([]);
     expect(parsed.snapshot.purchases).toEqual([]);
+    expect(parsed.snapshot.notes).toEqual([]);
     expect(parsed.counts.tasks).toBe(2);
   });
 

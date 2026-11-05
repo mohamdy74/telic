@@ -32,6 +32,8 @@ export const migrations: Migration[] = [
     }
     return out;
   },
+  // v3 -> v4: add the notes collection.
+  (d) => ({ ...d, notes: Array.isArray(d["notes"]) ? d["notes"] : [] }),
 ];
 
 export function runMigrations(

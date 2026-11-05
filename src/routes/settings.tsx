@@ -31,6 +31,7 @@ export const Route = createFileRoute("/settings")({
 
 const COLLECTIONS = [
   "tasks",
+  "notes",
   "habits",
   "habitLogs",
   "focusSessions",
