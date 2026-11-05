@@ -17,7 +17,14 @@ jobs:
         with:
           node-version: 22
       - name: Install dependencies
-        run: bun install # not frozen: bun.lock lags package.json until regenerated locally
+        run: |
+          set +e
+          bun install > /tmp/bun-install.log 2>&1
+          code=$?
+          if [ $code -ne 0 ]; then
+            echo "::error title=bun install failed::$(tail -c 700 /tmp/bun-install.log | tr '\n' ' ')"
+            exit 1
+          fi
       - name: Typecheck
         run: npm run typecheck
       - name: Unit tests
@@ -36,7 +43,14 @@ jobs:
         with:
           node-version: 22
       - name: Install dependencies
-        run: bun install # not frozen: bun.lock lags package.json until regenerated locally
+        run: |
+          set +e
+          bun install > /tmp/bun-install.log 2>&1
+          code=$?
+          if [ $code -ne 0 ]; then
+            echo "::error title=bun install failed::$(tail -c 700 /tmp/bun-install.log | tr '\n' ' ')"
+            exit 1
+          fi
       - name: Build
         run: npm run build
       - name: Serve with workerd and probe
