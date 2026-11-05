@@ -29,7 +29,7 @@ import type { FocusSession, ISODate, LocalDay, Task, XpLedgerEntry } from "./typ
  * cannot move an award to another day or re-open a capped one.
  */
 
-export type XpSource = "task" | "habit" | "focus";
+export type XpSource = "task" | "habit" | "focus" | "shop";
 
 export type DenyReason =
   | "duplicate"

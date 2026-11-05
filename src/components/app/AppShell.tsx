@@ -4,19 +4,37 @@ import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { NAV } from "./nav";
 import { usePrefs } from "./preferences";
 import { useStore } from "@/lib/store";
+import { totalsFromLedger } from "@/lib/rewards";
+import { resolveAccent } from "@/lib/themes";
 import { isActive } from "@/lib/focusTime";
 import { applyUpdate, registerPwa } from "@/lib/pwa";
 
 type Cmd = { key: string; label: string; icon: LucideIcon; run: () => void };
 
 export function AppShell({ children }: { children: ReactNode }) {
-  const { t } = usePrefs();
+  const { t, setAccent } = usePrefs();
   const [open, setOpen] = useState(false);
   const [needRefresh, setNeedRefresh] = useState(false);
   const activeSession = useStore((s) => s.focusSessions.find((x) => isActive(x)));
   const unlocks = useStore((s) => s.achievements);
+  const ready = useStore((s) => s.ready);
+  const settingsAccent = useStore((s) => s.settings.accent);
+  const xpLedger = useStore((s) => s.xpLedger);
   const [unlockToast, setUnlockToast] = useState<string | null>(null);
   const seenUnlocks = useRef<Set<string> | null>(null);
+
+  // Sync the persisted accent (app data) into the live UI accent, resolving
+  // unlock rules — also repairs legacy or re-locked values. Color-only, so
+  // there is no layout shift on load or on change.
+  useEffect(() => {
+    if (!ready) return;
+    setAccent(
+      resolveAccent(settingsAccent, {
+        level: totalsFromLedger(xpLedger).level,
+        unlockedAchievements: unlocks.filter((u) => !u.deletedAt).map((u) => u.achievementId),
+      }),
+    );
+  }, [ready, settingsAccent, xpLedger, unlocks, setAccent]);
 
   // Achievement unlock toast: the first run records existing unlocks
   // silently; only fresh unlocks afterwards toast, one at a time.

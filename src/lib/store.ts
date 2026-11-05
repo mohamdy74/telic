@@ -5,6 +5,7 @@ import { nextOccurrence } from "./recurrence";
 import { shiftEndsAfterResume } from "./focusTime";
 import { evaluateAchievements, type AchievementState } from "./achievements";
 import { computeChallengeGrants } from "./challenges";
+import { buyShopItem, markPurchaseUsed, refundPurchase, type BuyOutcome, type RefundOutcome } from "./shop";
 import { awardXp, revokeXp, totalsFromLedger, type AwardEvent } from "./rewards";
 import { readAll, readKey, writeAll, writeKey, mergeValue } from "./storage/persistence";
 import {
@@ -17,7 +18,9 @@ import {
   type Habit,
   type HabitLog,
   type Meta,
+  type Purchase,
   type Settings,
+  type ShopItem,
   type Snapshot,
   type StorageKey,
   type Task,
@@ -439,6 +442,79 @@ export const xp = {
     const e: XpLedgerEntry = { localDay: todayLocal(), ...entry, id: uid(), createdAt: t, updatedAt: t };
     setCollection("xpLedger", (l) => [...l, e]);
     return e;
+  },
+};
+
+/* ---------------- shop (user-defined rewards) ---------------- */
+
+export const shop = {
+  /** Adds a user-defined reward (name, optional note, price in coins). */
+  addItem(input: Pick<ShopItem, "name" | "price"> & { note?: string | undefined }): ShopItem {
+    const t = nowIso();
+    const item: ShopItem = { id: uid(), createdAt: t, updatedAt: t, ...input };
+    setCollection("shopItems", (l) => [...l, item]);
+    return item;
+  },
+  updateItem(id: string, patch: Partial<Omit<ShopItem, "id" | "createdAt">>) {
+    setCollection("shopItems", (l) =>
+      l.map((x) => (x.id === id ? { ...x, ...patch, updatedAt: nowIso() } : x)),
+    );
+  },
+  removeItem(id: string) {
+    shop.updateItem(id, { deletedAt: nowIso() });
+  },
+  restoreItem(id: string) {
+    shop.updateItem(id, { deletedAt: undefined });
+  },
+  /** Buys an item: the pure engine decides, then the store writes the records. */
+  buy(itemId: string): BuyOutcome {
+    const s = useStore.getState();
+    const res = buyShopItem({
+      items: s.shopItems,
+      purchases: s.purchases,
+      ledger: s.xpLedger,
+      itemId,
+      today: todayLocal(),
+      purchaseId: uid(),
+      now: nowIso(),
+    });
+    if (res.ok) {
+      const purchase = res.purchase;
+      const entry = res.entry;
+      setCollection("purchases", (l) => [...l, purchase]);
+      xp.add(entry);
+      applyBonusChecks();
+    }
+    return res;
+  },
+  /** Refunds an unused same-day purchase: soft-deletes it and its ledger entry. */
+  refund(purchaseId: string): RefundOutcome {
+    const s = useStore.getState();
+    const res = refundPurchase({
+      purchases: s.purchases,
+      ledger: s.xpLedger,
+      purchaseId,
+      today: todayLocal(),
+      now: nowIso(),
+    });
+    if (res.ok) {
+      const purchase = res.purchase;
+      const revoked = res.revoked;
+      const t = nowIso();
+      const ids = new Set(revoked.map((e) => e.id));
+      setCollection("purchases", (l) => l.map((p) => (p.id === purchaseId ? purchase : p)));
+      setCollection("xpLedger", (l) =>
+        l.map((e) => (ids.has(e.id) ? { ...e, deletedAt: t, updatedAt: t } : e)),
+      );
+      applyBonusChecks();
+    }
+    return res;
+  },
+  /** Marks a purchase used (the user redeems it themselves) or clears it. */
+  setUsed(purchaseId: string, used: boolean) {
+    const updated = markPurchaseUsed(useStore.getState().purchases, purchaseId, used, nowIso());
+    if (!updated) return;
+    setCollection("purchases", (l) => l.map((p) => (p.id === purchaseId ? updated : p)));
   },
 };
 

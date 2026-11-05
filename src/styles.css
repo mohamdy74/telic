@@ -12,7 +12,7 @@
 /*
  * Tilth design system — "Ember & Soil".
  * All colors are oklch tokens. --accent-hue drives the swappable accent
- * (future unlockable themes change only this variable).
+ * (accent themes change only this variable — see src/lib/themes.ts).
  */
 
 @theme inline {
@@ -50,7 +50,7 @@
 
 :root {
   --radius: 0.75rem;
-  --accent-hue: 55;
+  --accent-hue: 150;
   --background: oklch(0.975 0.008 95);
   --foreground: oklch(0.24 0.04 155);
   --card: oklch(0.99 0.005 95);
@@ -96,6 +96,15 @@
   --sidebar: oklch(0.18 0.018 70);
   --shadow-elevated: 0 24px 60px -20px oklch(0 0 0 / 60%);
 }
+
+/*
+ * Unlockable accent themes (hue sets — keep in sync with src/lib/themes.ts;
+ * themes.test.ts pins the WCAG AA pairs). moss is the default, no rule needed.
+ */
+[data-accent="sage"] { --accent-hue: 128; }
+[data-accent="pine"] { --accent-hue: 172; }
+[data-accent="clay"] { --accent-hue: 45; }
+[data-accent="dusk"] { --accent-hue: 300; }
 
 @layer base {
   * {

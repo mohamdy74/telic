@@ -32,18 +32,18 @@ export interface ThemeUnlockState {
 }
 
 export function isThemeUnlocked(accent: AccentId, state: ThemeUnlockState): boolean {
-  void state; // stub (RED)
-  void THEME_UNLOCKS;
-  return accent === "moss";
+  const rule = THEME_UNLOCKS[accent];
+  if (rule.type === "default") return true;
+  if (rule.type === "level") return state.level >= rule.level;
+  return state.unlockedAchievements.includes(rule.achievementId);
 }
 
 /** The accent to apply for a stored value: valid + unlocked, else moss. */
 export function resolveAccent(saved: string, state: ThemeUnlockState): AccentId {
-  void saved; // stub (RED)
-  void state;
-  return DEFAULT_ACCENT;
+  return isAccentId(saved) && isThemeUnlocked(saved, state) ? saved : DEFAULT_ACCENT;
 }
 
 export function isAccentId(v: string): v is AccentId {
   return (ACCENT_IDS as readonly string[]).includes(v);
 }
+

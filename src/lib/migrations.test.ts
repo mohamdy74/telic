@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { runMigrations, type Migration } from "./migrations";
+import { migrations, runMigrations, type Migration } from "./migrations";
 
 describe("migrations", () => {
   const fake: Migration[] = [
@@ -36,7 +36,7 @@ describe("migrations", () => {
   });
 
   it("real v1 -> v2 adds the achievements collection", () => {
-    const { data, from, to } = runMigrations({ meta: { schemaVersion: 1 }, tasks: [] });
+    const { data, from, to } = runMigrations({ meta: { schemaVersion: 1 }, tasks: [] }, migrations, 2);
     expect(from).toBe(1);
     expect(to).toBe(2);
     expect(data["achievements"]).toEqual([]);

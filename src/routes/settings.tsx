@@ -29,7 +29,16 @@ export const Route = createFileRoute("/settings")({
   component: SettingsPage,
 });
 
-const COLLECTIONS = ["tasks", "habits", "habitLogs", "focusSessions", "xpLedger", "achievements"] as const;
+const COLLECTIONS = [
+  "tasks",
+  "habits",
+  "habitLogs",
+  "focusSessions",
+  "xpLedger",
+  "achievements",
+  "shopItems",
+  "purchases",
+] as const;
 const DAY_START_HOURS = [0, 4] as const;
 const WEEKDAYS = [0, 1, 2, 3, 4, 5, 6] as const;
 const DASHBOARD_CARDS: DashboardCard[] = [

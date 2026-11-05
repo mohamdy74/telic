@@ -39,17 +39,18 @@ use the editor.
 - No hardcoded colors in components; all colors are oklch tokens in `src/styles.css`. Accent is driven by `--accent-hue` so themes can swap it.
 - Fonts are self-hosted via @fontsource (no CDN) so they work offline.
 
-## Data rules (schema v2)
+## Data rules (schema v3)
 
 - `localDay` is stored at creation time and never recomputed afterwards. A record's
   localDay must survive later changes of timezone or `dayStartHour`.
-- `meta.schemaVersion` is 2 (`CURRENT_SCHEMA_VERSION` in `src/lib/types.ts`). Any
+- `meta.schemaVersion` is 3 (`CURRENT_SCHEMA_VERSION` in `src/lib/types.ts`). Any
   stored-shape change bumps it and adds one entry to the ordered `migrations`
   array in `src/lib/migrations.ts` (index = from-version); migrations run on boot
   and on import. Exception: ADDITIVE OPTIONAL fields (absent in old records,
   defaulted on read) do not bump the version — e.g. `Task.seriesId`, `FocusSession.pausedAt`.
 - Storage keys: one IndexedDB key per collection — `tasks`, `habits`,
-  `habitLogs`, `focusSessions`, `xpLedger`, `achievements`, `settings`, `meta` (idb-keyval store
+  `habitLogs`, `focusSessions`, `xpLedger`, `achievements`, `shopItems`,
+  `purchases`, `settings`, `meta` (idb-keyval store
   "tilth"). Writing one collection never rewrites the others; writes are
   debounced (250 ms) and flushed on tab hide.
 - The store boots client-side AFTER hydration (`bootStore()` effect in
@@ -62,7 +63,8 @@ use the editor.
 - Recurrence is a stored rule on the task; only the NEXT instance is generated
   on completion (`tasks.complete`) — never pre-generate instances.
 - Real pages so far: `/settings`, `/tasks`, `/habits`, `/focus`,
-  `/` (the Today dashboard). Insights is still a placeholder. The settings store-status panel is debug-only.
+  `/rewards`, `/` (the Today dashboard). Insights is still a placeholder.
+  The settings store-status panel is debug-only.
 
 ## Tasks page (/tasks)
 
@@ -226,8 +228,8 @@ use the editor.
   "task" (instant completions have no entry and count for nothing), a habit
   done-log is a live "habit" entry, focus achievements count only completed
   work sessions, levels come from `totalsFromLedger`, backups from
-  `meta.lastExportedAt`, purchases from live "shop" entries (dormant until
-  the shop ships). Honest limits: a guardrail against self-cheating, NOT
+  `meta.lastExportedAt`, purchases from live "shop" entries (the
+  /rewards shop). Honest limits: a guardrail against self-cheating, NOT
   security.
 - Unlocks are stored ONCE in the `achievements` collection (achievementId +
   unlockedAt + localDay; schema v2 with migration). `evaluateAchievements`
@@ -247,8 +249,47 @@ use the editor.
   bonus but can never re-grant.
 - Wiring: ONE checkpoint, `applyBonusChecks()` in store.ts — called at the
   end of `applyRewardEvent`, after an export stamp (metaActions.update with
-  lastExportedAt) and once at the end of `bootStore`. Pages and components
+  lastExportedAt) and once at the end of `bootStore`, after shop buys and
+  refunds. Pages and components
   never write unlocks or bonuses, and never call the engine directly.
+
+## Shop (`src/lib/shop.ts`)
+
+- Shop items are USER-DEFINED rewards (name, optional note, price in
+  coins) in the `shopItems` collection; the shop panel lives on /rewards.
+- Buying writes TWO records through the store (`shop` actions in
+  store.ts): a `purchases` row (name and price snapshotted at buy time,
+  so deleting the item never rewrites history) and a coins-only ledger
+  entry (sourceType "shop", sourceId = the purchase id, xp 0,
+  coins = -price). The ledger stays the ONLY source of the balance, so a
+  refund is just a soft-delete of that entry.
+- Idempotency: every purchase gets a unique id (`crypto.randomUUID()`);
+  while a purchase of the same item from the same localDay is unused,
+  the next buy of that item is denied ("pending-today") — rapid
+  double-taps buy exactly once.
+- The balance is checked before every buy: it can never go negative.
+- Refunds: same localDay and unused only. "Used" (usedAt) is the user
+  redeeming the purchase themselves; a used or refunded purchase can be
+  bought again the same day.
+- The firstPurchase achievement now counts live shop entries.
+  `applyBonusChecks()` also runs after shop buys and refunds.
+
+## Accent themes (`src/lib/themes.ts`)
+
+- 5 accents (moss/sage/pine/clay/dusk) are HUE sets: src/styles.css
+  derives every accent token from --accent-hue, and [data-accent=...] rules
+  swap it (moss is the default, no rule). The hue table in themes.ts MUST
+  stay in sync with those CSS rules; themes.test.ts pins WCAG AA contrast
+  for the derived pairs — all 5 accents pass in light and dark (dusk dark
+  is the tightest, ~4.8:1).
+- Unlock rules live in THEME_UNLOCKS (rewardsConfig.ts): moss default,
+  sage level 3, pine streakSeven, clay firstPurchase, dusk level 10.
+  Locked themes show their condition; resolveAccent falls back to moss
+  for legacy or re-locked values.
+- The chosen accent is app data (settings.accent, schema v3 with
+  migration), mirrored into the tilth.prefs localStorage key and applied
+  by AppShell (resolveAccent with the live level + unlocks). Accent
+  changes are color-only — no layout shift on load or switch.
 
 ## SSR constraints (Cloudflare Workers / workerd)
 

@@ -23,7 +23,7 @@ import type {
  * - a "validated focus session" is a completed work session (completed, not
  *   a break, not soft-deleted) — the same sessions the engine pays XP for;
  * - levels read totalsFromLedger, backups read meta.lastExportedAt,
- *   purchases read live "shop" entries (dormant until the shop ships).
+ *   purchases read live "shop" entries (the /rewards shop).
  * Each definition below names the data it depends on.
  * Unlocks are stored ONCE in the achievements collection (id + unlockedAt
  * + localDay); evaluateAchievements returns only ids not yet unlocked.
@@ -221,7 +221,7 @@ function bestTargetRun(s: AchievementState): number {
   return best;
 }
 
-/** Live shop purchases (coins spent). Dormant until the shop ships. */
+/** Live shop purchases (coins spent) — written by the /rewards shop. */
 function purchaseCount(s: AchievementState): number {
   return liveLedgerEntries(s).filter((e) => e.sourceType === "shop" && e.coins < 0).length;
 }
@@ -335,7 +335,7 @@ export const ACHIEVEMENTS: Achievement[] = [
     predicate: (s) => totalsFromLedger(s.xpLedger).level >= 10,
     progress: (s) => ({ current: totalsFromLedger(s.xpLedger).level, target: 10 }),
   },
-  // Validated data: live "shop" entries with negative coins (dormant until the shop ships).
+  // Validated data: live "shop" entries with negative coins (the /rewards shop).
   {
     id: "firstPurchase",
     icon: "ShoppingBag",

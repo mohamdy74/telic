@@ -36,9 +36,39 @@ export interface BuyInput {
 }
 
 export function buyShopItem(input: BuyInput): BuyOutcome {
-  void input; // stub (RED)
-  void totalsFromLedger;
-  return { ok: false, reason: "not-found" };
+  const item = input.items.find((i) => i.id === input.itemId && !i.deletedAt);
+  if (!item) return { ok: false, reason: "not-found" };
+  if (!Number.isInteger(item.price) || item.price < 1) {
+    return { ok: false, reason: "invalid-price" };
+  }
+  if (totalsFromLedger(input.ledger).coins < item.price) {
+    return { ok: false, reason: "insufficient-coins" };
+  }
+  const pending = input.purchases.find(
+    (p) =>
+      !p.deletedAt &&
+      p.usedAt === undefined &&
+      p.itemId === input.itemId &&
+      p.localDay === input.today,
+  );
+  if (pending) return { ok: false, reason: "pending-today" };
+  const purchase: Purchase = {
+    id: input.purchaseId,
+    itemId: item.id,
+    name: item.name,
+    price: item.price,
+    localDay: input.today,
+    createdAt: input.now,
+    updatedAt: input.now,
+  };
+  const entry: NewXpEntry = {
+    sourceType: "shop",
+    sourceId: purchase.id,
+    localDay: input.today,
+    xp: 0,
+    coins: -item.price,
+  };
+  return { ok: true, purchase, entry };
 }
 
 export type RefundDenyReason = "not-found" | "refunded" | "used" | "not-today";
@@ -56,9 +86,13 @@ export interface RefundInput {
 }
 
 export function refundPurchase(input: RefundInput): RefundOutcome {
-  void input; // stub (RED)
-  void revokeXp;
-  return { ok: false, reason: "not-found" };
+  const p = input.purchases.find((x) => x.id === input.purchaseId);
+  if (!p) return { ok: false, reason: "not-found" };
+  if (p.deletedAt !== undefined) return { ok: false, reason: "refunded" };
+  if (p.usedAt !== undefined) return { ok: false, reason: "used" };
+  if (p.localDay !== input.today) return { ok: false, reason: "not-today" };
+  const revoked = revokeXp({ sourceType: "shop", sourceId: input.purchaseId }, input.ledger);
+  return { ok: true, purchase: { ...p, deletedAt: input.now, updatedAt: input.now }, revoked, now: input.now };
 }
 
 /** Sets or clears usedAt; null when the purchase is missing or refunded. */
@@ -68,15 +102,16 @@ export function markPurchaseUsed(
   used: boolean,
   now: ISODate,
 ): Purchase | null {
-  void purchases; // stub (RED)
-  void purchaseId;
-  void used;
-  void now;
-  return null;
+  const p = purchases.find((x) => x.id === purchaseId);
+  if (!p || p.deletedAt !== undefined) return null;
+  return { ...p, usedAt: used ? now : undefined, updatedAt: now };
 }
 
 /** Purchase history: every purchase (refunds included), newest first. */
 export function purchaseHistory(purchases: Purchase[]): Purchase[] {
-  void purchases; // stub (RED)
-  return [];
+  return [...purchases].sort((a, b) => {
+    if (a.createdAt !== b.createdAt) return a.createdAt < b.createdAt ? 1 : -1;
+    return a.id < b.id ? 1 : -1;
+  });
 }
+
