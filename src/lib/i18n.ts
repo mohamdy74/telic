@@ -22,7 +22,7 @@ const en = {
     habits: { title: "Habits", body: "Small, steady actions. Missed days won't erase your progress." },
     focus: { title: "Focus", body: "One session at a time — work, then a real break." },
     rewards: { title: "Your progress, rewarded", body: "Levels, challenges, a shop you define and themes you unlock." },
-    insights: { title: "Patterns take time", body: "Come back after a few days of activity for useful insights." },
+    insights: { title: "Insights", body: "Your patterns in plain language — charts and observations from your own data." },
     settings: { title: "Settings", body: "Language, appearance, your day and your data." },
   },
   tasks: {
@@ -273,6 +273,40 @@ const en = {
     selected: "Selected",
   },
 
+  ins: {
+    weekly: "Weekly",
+    monthly: "Monthly",
+    charts: {
+      tasksTitle: "Tasks completed per day",
+      tasksUnit: "tasks",
+      tasksSummary: "{total} tasks completed in this range",
+      habitTitle: "Habit consistency over time",
+      habitUnit: "%",
+      habitSummary: "average {avg}% on days with scheduled habits",
+      focusTitle: "Focus minutes per day vs the daily target",
+      focusUnit: "min",
+      focusSummary: "{total} focus minutes in this range · daily target {target} min",
+      targetLabel: "target {n} min",
+      emptyRange: "Nothing in this range yet — a few days of data will fill it in.",
+    },
+    empty: {
+      title: "Nothing to analyze yet",
+      body: "Complete tasks, log habits or finish focus sessions — your patterns will appear here.",
+      seed: "Tip: seed sample data from the debug tools in Settings to preview the charts.",
+    },
+    obs: {
+      title: "What your data says",
+      insufficient: "Keep going — insights appear after 2 weeks of data.",
+      morning: "You get most of your tasks done before noon — {pct}% of them.",
+      afternoon: "You get most of your tasks done between noon and 5 PM — {pct}% of them.",
+      evening: "You get most of your tasks done in the evening — {pct}% of them.",
+      focusDay: "Your strongest focus day is {weekday}.",
+      skippedHabit: "{habit} is the habit you skip most often — maybe a smaller step would fit better.",
+      basisTasks: "based on {events} completed tasks over {activeDays} active days",
+      basisFocus: "based on {events} focus sessions over {activeDays} active days",
+      basisSkips: "based on {events} skipped days over {activeDays} active days",
+    },
+  },
   comingSoon: "Coming soon",
 
   command: {
@@ -402,7 +436,7 @@ const ar: Dict = {
     habits: { title: "العادات", body: "خطوات صغيرة وثابتة. الأيام الفائتة لن تمحو تقدّمك." },
     focus: { title: "التركيز", body: "جلسة واحدة في كل مرة — تركيز ثم استراحة حقيقية." },
     rewards: { title: "تقدّمك يُكافأ", body: "مستويات وتحديات ومتجر تعرفه بنفسك ومظاهر تفتحها." },
-    insights: { title: "الأنماط تحتاج وقتًا", body: "بعد أيام قليلة من الاستخدام ستبدأ الرؤى المفيدة بالظهور." },
+    insights: { title: "الرؤى", body: "أنماطك بلغة واضحة — رسوم وملاحظات مبنية على بياناتك أنت." },
     settings: { title: "الإعدادات", body: "اللغة والمظهر ويومك وبياناتك." },
   },
   tasks: {
@@ -653,6 +687,40 @@ const ar: Dict = {
     selected: "مختار",
   },
 
+  ins: {
+    weekly: "أسبوعي",
+    monthly: "شهري",
+    charts: {
+      tasksTitle: "المهام المكتملة يوميًا",
+      tasksUnit: "مهمة",
+      tasksSummary: "{total} مهمة مكتملة خلال هذه الفترة",
+      habitTitle: "انتظام العادات عبر الوقت",
+      habitUnit: "٪",
+      habitSummary: "متوسط {avg}٪ في الأيام ذات العادات المجدولة",
+      focusTitle: "دقائق التركيز يوميًا مقابل الهدف اليومي",
+      focusUnit: "دقيقة",
+      focusSummary: "{total} دقيقة تركيز خلال هذه الفترة · الهدف اليومي {target} دقيقة",
+      targetLabel: "الهدف {n} دقيقة",
+      emptyRange: "لا شيء في هذه الفترة بعد — أيام قليلة من البيانات ستملأها.",
+    },
+    empty: {
+      title: "لا شيء لتحليله بعد",
+      body: "أكمل مهامًا أو سجّل عاداتك أو أنهِ جلسات تركيز — ستظهر أنماطك هنا.",
+      seed: "نصيحة: ازرع بيانات تجريبية من أدوات التصحيح في الإعدادات لمعاينة الرسوم.",
+    },
+    obs: {
+      title: "ماذا تقول بياناتك",
+      insufficient: "واصل — تظهر الرؤى بعد أسبوعين من البيانات.",
+      morning: "تكمل أغلب مهامك قبل الظهر — {pct}٪ منها.",
+      afternoon: "تكمل أغلب مهامك بين الظهر والخامسة مساءً — {pct}٪ منها.",
+      evening: "تكمل أغلب مهامك في المساء — {pct}٪ منها.",
+      focusDay: "أقوى أيام تركيزك هو {weekday}.",
+      skippedHabit: "العادة التي تتخطاها أكثر من غيرها هي {habit} — ربما خطوة أصغر تناسبك أكثر.",
+      basisTasks: "بناءً على {events} مهمة مكتملة عبر {activeDays} يومًا نشطًا",
+      basisFocus: "بناءً على {events} جلسة تركيز عبر {activeDays} يومًا نشطًا",
+      basisSkips: "بناءً على {events} أيام تخطٍّ عبر {activeDays} يومًا نشطًا",
+    },
+  },
   comingSoon: "قريبًا",
 
   command: {

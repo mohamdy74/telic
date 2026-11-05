@@ -63,7 +63,8 @@ use the editor.
 - Recurrence is a stored rule on the task; only the NEXT instance is generated
   on completion (`tasks.complete`) — never pre-generate instances.
 - Real pages so far: `/settings`, `/tasks`, `/habits`, `/focus`,
-  `/rewards`, `/` (the Today dashboard). Insights is still a placeholder.
+  `/rewards`, `/insights`, `/` (the Today dashboard) — every nav
+  section is a real page.
   The settings store-status panel is debug-only.
 
 ## Tasks page (/tasks)
@@ -290,6 +291,43 @@ use the editor.
   migration), mirrored into the tilth.prefs localStorage key and applied
   by AppShell (resolveAccent with the live level + unlocks). Accent
   changes are color-only — no layout shift on load or switch.
+
+## Insights page (/insights)
+
+- PURE engine in `src/lib/insights.ts` (insights.test.ts): three daily
+  series — taskCompletionsByDay (done tasks grouped by the toLocalDay of
+  completedAt, honoring settings.dayStartHour), habitConsistencyByDay
+  (done / (scheduled - skipped) per day; skipped days leave the
+  denominator; null when nothing scheduled — the consistency30
+  convention), focusMinutesByDay (ACTUAL minutes of completed non-break
+  sessions by their stored localDay) — plus windowDays and insightsReport,
+  the observations engine.
+- Observations are honest claims with data floors: the report window is
+  ACTIVE_WINDOW_DAYS (28) and no claim appears below MIN_ACTIVE_DAYS (14
+  days with any live activity: a ledger entry, a completed task, a habit
+  log or a focus session). Per-claim minimums: 10 completed tasks for the
+  time-of-day claim, 6 completed work sessions on 3+ weekdays for the
+  best-focus-day claim, 3 skips of one live habit for the most-skipped
+  claim. Below the floor the page shows a friendly "keep going" line and
+  NO claim; every claim renders its basis ("based on N events over D
+  active days") so the numbers are checkable. Time-of-day buckets use
+  the wall-clock hour in the active timezone (morning < 12, afternoon
+  12-16, evening >= 17); a claim needs a >= 40% share that strictly
+  beats the runner-up bucket.
+- RTL: recharts does NOT mirror itself. The page passes reversed to XAxis,
+  moves YAxis to the right in Arabic, mirrors the target-line label
+  position, and routes every number, tick and date through Intl in the
+  active locale (ar-EG uses Arabic-Indic digits).
+- Accessibility: each chart container is role="img" with an aria-label
+  built from the same totals/average summary line shown under the chart;
+  the page keeps the skeleton-then-content pattern (SSR emits the
+  skeleton, so recharts never renders on the server).
+- Charts use CSS token fills (var(--color-primary) etc.) so accent themes
+  recolor them with no chart-side changes.
+- seedSampleData (dev-only) now plants three weeks of history — done
+  tasks with morning/afternoon completion hours, daily habit logs with a
+  few Exercise skips, and focus sessions — so the charts and all three
+  observations render right after seeding.
 
 ## SSR constraints (Cloudflare Workers / workerd)
 

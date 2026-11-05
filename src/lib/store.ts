@@ -583,6 +583,54 @@ export function seedSampleData() {
   habits.log(h2.id, "skipped", plus(-1));
   const s = focus.start("pomodoro", 25);
   focus.end(s.id, true); // XP is awarded automatically through applyRewardEvent
+
+  // Three weeks of history so /insights has real series to chart (dev-only).
+  const mkDone = (title: string, day: string, hourUtc: number) => {
+    const at = day + "T" + String(hourUtc).padStart(2, "0") + ":00:00.000Z";
+    const t: Task = {
+      id: uid(),
+      title,
+      priority: "medium",
+      tags: [],
+      subtasks: [],
+      status: "done",
+      completedAt: at,
+      createdAt: at,
+      updatedAt: at,
+      kanbanOrder: 0,
+      dueDate: day,
+    };
+    setCollection("tasks", (l) => [...l, t]);
+  };
+  const mkFocus = (day: string, hourUtc: number, minutes: number) => {
+    const startedAt = day + "T" + String(hourUtc).padStart(2, "0") + ":00:00.000Z";
+    const fs: FocusSession = {
+      id: uid(),
+      mode: "pomodoro",
+      plannedMinutes: minutes,
+      startedAt,
+      endsAt: new Date(new Date(startedAt).getTime() + minutes * 60_000).toISOString(),
+      endedAt: new Date(new Date(startedAt).getTime() + minutes * 60_000).toISOString(),
+      completed: true,
+      distractions: [],
+      localDay: day,
+      createdAt: startedAt,
+      updatedAt: startedAt,
+    };
+    setCollection("focusSessions", (l) => [...l, fs]);
+  };
+  for (let i = 21; i >= 2; i--) {
+    const day = plus(-i);
+    mkDone("Morning routine", day, 8); // 10:00 Cairo — most completions before noon
+    if (i % 2 === 0) mkDone("Afternoon block", day, 13); // 15:00 Cairo
+    habits.log(h1.id, "done", day);
+    if (i % 2 === 0) mkFocus(day, 9, 25);
+  }
+  // A few Exercise skips so the most-skipped observation has data too.
+  habits.log(h2.id, "skipped", plus(-2));
+  habits.log(h2.id, "skipped", plus(-5));
+  habits.log(h2.id, "skipped", plus(-8));
+  habits.log(h2.id, "skipped", plus(-11));
 }
 
 export { COLLECTION_KEYS };
