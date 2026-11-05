@@ -1,0 +1,56 @@
+name: SSR repro
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  repro:
+    name: vite build + dev SSR probe
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: oven-sh/setup-bun@v2
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Install
+        run: bun install --frozen-lockfile
+      - name: Vite build (mirrors the Lovable deploy build)
+        run: |
+          if npm run build > build.log 2>&1; then
+            echo "::error::BUILD-CHECK: vite build PASSED"
+          else
+            echo "::error::BUILD-CHECK: vite build FAILED — last 40 lines follow in the job log"
+            tail -n 40 build.log
+            grep -iE "error" build.log | head -n 6 | while IFS= read -r l; do
+              echo "::error::BUILD-LOG: ${l:0:230}"
+            done
+            exit 1
+          fi
+      - name: Dev SSR probe
+        run: |
+          nohup bun run dev > dev.log 2>&1 &
+          ok=""
+          for i in $(seq 1 45); do
+            code=$(curl -s -o /dev/null -w "%{http_code}" "http://localhost:3000/" || true)
+            if [ -n "$code" ] && [ "$code" != "000" ]; then ok=1; break; fi
+            sleep 2
+          done
+          if [ -z "$ok" ]; then
+            echo "::error::SSR-CHECK: dev server never answered on :3000"
+            tail -n 40 dev.log
+            exit 1
+          fi
+          HOME_CODE=$(curl -s -o /dev/null -w "%{http_code}" "http://localhost:3000/")
+          SET_CODE=$(curl -s -o /dev/null -w "%{http_code}" "http://localhost:3000/settings")
+          echo "::error::SSR-CHECK: home=$HOME_CODE settings=$SET_CODE"
+          curl -s "http://localhost:3000/" | head -c 250 | tr '\n' ' ' > home.txt
+          curl -s "http://localhost:3000/settings" | head -c 250 | tr '\n' ' ' > set.txt
+          echo "::error::SSR-HOME-BODY: $(cat home.txt)"
+          echo "::error::SSR-SETTINGS-BODY: $(cat set.txt)"
+          grep -iE "error|stack|throw" dev.log | head -n 8 | while IFS= read -r l; do
+            echo "::error::SSR-LOG: ${l:0:230}"
+          done
+          tail -n 40 dev.log
