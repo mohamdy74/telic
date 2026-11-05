@@ -51,8 +51,11 @@ jobs:
           done
           H=$(curl -s -o /dev/null -w "%{http_code}" http://localhost:8787/)
           S=$(curl -s -o /dev/null -w "%{http_code}" http://localhost:8787/settings)
-          echo "home=$H settings=$S"
-          if [ "$H" != "200" ] || [ "$S" != "200" ]; then
+          SW=$(curl -s -o /dev/null -w "%{http_code}" http://localhost:8787/sw.js)
+          MF=$(curl -s -o /dev/null -w "%{http_code}" http://localhost:8787/manifest.webmanifest)
+          SH=$(curl -s -o /dev/null -w "%{http_code}" http://localhost:8787/_shell.html)
+          echo "home=$H settings=$S sw=$SW manifest=$MF shell=$SH"
+          if [ "$H" != "200" ] || [ "$S" != "200" ] || [ "$SW" != "200" ] || [ "$MF" != "200" ] || [ "$SH" != "200" ]; then
             tail -n 60 .output/wrangler.log
             exit 1
           fi

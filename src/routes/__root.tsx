@@ -87,6 +87,8 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { property: "og:description", content: "An offline-first home for your tasks, habits, focus and progress." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
+      { name: "theme-color", media: "(prefers-color-scheme: light)", content: "#f8f7f1" },
+      { name: "theme-color", media: "(prefers-color-scheme: dark)", content: "#1d160e" },
           ],
     links: [
       {
@@ -94,6 +96,8 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
         href: appCss,
       },
       { rel: "icon", href: "/favicon.ico", type: "image/x-icon" },
+      { rel: "manifest", href: "/manifest.webmanifest" },
+      { rel: "apple-touch-icon", href: "/icons/icon.svg" },
     ],
   }),
   shellComponent: RootShell,

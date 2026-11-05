@@ -3,12 +3,17 @@ import { ChevronRight, Plus, Search, Target, type LucideIcon } from "lucide-reac
 import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { NAV } from "./nav";
 import { usePrefs } from "./preferences";
+import { useStore } from "@/lib/store";
+import { isActive } from "@/lib/focusTime";
+import { applyUpdate, registerPwa } from "@/lib/pwa";
 
 type Cmd = { key: string; label: string; icon: LucideIcon; run: () => void };
 
 export function AppShell({ children }: { children: ReactNode }) {
   const { t } = usePrefs();
   const [open, setOpen] = useState(false);
+  const [needRefresh, setNeedRefresh] = useState(false);
+  const activeSession = useStore((s) => s.focusSessions.find((x) => isActive(x)));
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -19,6 +24,11 @@ export function AppShell({ children }: { children: ReactNode }) {
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
+  }, []);
+
+  // PWA: register the service worker (published app only) and surface waiting updates.
+  useEffect(() => {
+    return registerPwa(() => setNeedRefresh(true));
   }, []);
 
   return (
@@ -75,6 +85,34 @@ export function AppShell({ children }: { children: ReactNode }) {
           </Link>
         ))}
       </nav>
+
+      {needRefresh && (
+        <div className="fixed inset-x-0 bottom-16 z-40 flex justify-center px-4 md:bottom-6" role="status">
+          <div className="flex items-center gap-3 rounded-full border border-border bg-card px-4 py-2 shadow-elevated">
+            <span className="text-sm">{t.pwa.updateAvailable}</span>
+            <span className="flex items-center gap-2">
+              <button
+                type="button"
+                disabled={!!activeSession}
+                onClick={() => {
+                  void applyUpdate();
+                  setNeedRefresh(false);
+                }}
+                className="rounded-md bg-primary px-3 py-1 text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary/90 disabled:pointer-events-none disabled:opacity-50"
+              >
+                {t.pwa.reload}
+              </button>
+              <button
+                type="button"
+                onClick={() => setNeedRefresh(false)}
+                className="rounded-md px-2 py-1 text-sm text-muted-foreground transition-colors hover:bg-accent/40"
+              >
+                {t.pwa.dismiss}
+              </button>
+            </span>
+          </div>
+        </div>
+      )}
 
       {open && <CommandPalette onClose={() => setOpen(false)} />}
     </div>

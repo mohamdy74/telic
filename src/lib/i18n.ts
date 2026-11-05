@@ -151,6 +151,18 @@ const en = {
       addHabit: "Add a habit",
     },
   },
+
+  pwa: {
+    updateAvailable: "Update available",
+    reload: "Reload",
+    dismiss: "Dismiss",
+    sectionTitle: "App",
+    install: "Install app",
+    installed: "Installed",
+    installBody: "Add Tilth to your home screen and use it full-screen — it works offline.",
+    installUnsupported: "You can install Tilth from your browser menu — look for \"Install app\".",
+  },
+
   comingSoon: "Coming soon",
   command: {
     open: "Search or jump to…",
@@ -405,6 +417,18 @@ const ar: Dict = {
       addHabit: "أضف عادة",
     },
   },
+
+  pwa: {
+    updateAvailable: "يوجد تحديث",
+    reload: "إعادة التحميل",
+    dismiss: "تجاهل",
+    sectionTitle: "التطبيق",
+    install: "ثبّت التطبيق",
+    installed: "مثبّت",
+    installBody: "أضف تيلث إلى شاشتك الرئيسية واستخدمه بملء الشاشة — يعمل بدون إنترنت.",
+    installUnsupported: "يمكنك تثبيت تيلث من قائمة المتصفح — ابحث عن «تثبيت التطبيق».",
+  },
+
   comingSoon: "قريبًا",
   command: {
     open: "ابحث أو انتقل إلى…",

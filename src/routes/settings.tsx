@@ -1,9 +1,10 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useRef, useState, type ReactNode } from "react";
-import { Database, Download, FileWarning, Monitor, Moon, Sprout, Sun, Upload } from "lucide-react";
+import { Check, Database, Download, FileWarning, Monitor, Moon, Smartphone, Sprout, Sun, Upload } from "lucide-react";
 import { usePrefs, type Theme } from "@/components/app/preferences";
 import { BackupError, backupFileName, buildBackup, parseBackup, type ParsedBackup } from "@/lib/backup";
 import { formatDate, formatNumber, type Locale } from "@/lib/i18n";
+import { isStandalone } from "@/lib/pwa";
 import {
   exportSnapshot,
   flushAll,
@@ -64,6 +65,7 @@ function SettingsPage() {
         <YourDaySection />
         <ThemeSection />
         <DashboardCardsSection />
+        <AppSection />
       </div>
 
       <div className="mt-4">
@@ -265,6 +267,54 @@ function DashboardCardsSection() {
           </li>
         ))}
       </ul>
+    </fieldset>
+  );
+}
+
+type InstallPromptEvent = {
+  prompt: () => Promise<void>;
+  userChoice: Promise<{ outcome: "accepted" | "dismissed" }>;
+};
+
+/** Install app (PWA) — uses beforeinstallprompt where supported. */
+function AppSection() {
+  const { t } = usePrefs();
+  const [promptEvent, setPromptEvent] = useState<InstallPromptEvent | null>(null);
+  const [installed, setInstalled] = useState(false);
+
+  useEffect(() => {
+    const onPrompt = (e: Event) => {
+      e.preventDefault();
+      setPromptEvent(e as unknown as InstallPromptEvent);
+    };
+    window.addEventListener("beforeinstallprompt", onPrompt);
+    setInstalled(isStandalone());
+    return () => window.removeEventListener("beforeinstallprompt", onPrompt);
+  }, []);
+
+  const install = async () => {
+    if (!promptEvent) return;
+    await promptEvent.prompt();
+    const choice = await promptEvent.userChoice;
+    if (choice.outcome === "accepted") setInstalled(true);
+    setPromptEvent(null);
+  };
+
+  return (
+    <fieldset className="panel">
+      <legend className="panel-title">{t.pwa.sectionTitle}</legend>
+      <p className="text-sm text-muted-foreground">{t.pwa.installBody}</p>
+      {installed ? (
+        <p className="mt-3 inline-flex items-center gap-2 text-sm font-medium text-primary">
+          <Check className="size-4" aria-hidden /> {t.pwa.installed}
+        </p>
+      ) : promptEvent ? (
+        <button type="button" onClick={() => void install()} className={PRIMARY_BTN + " mt-3"}>
+          <Smartphone className="size-4" aria-hidden /> {t.pwa.install}
+        </button>
+      ) : (
+        <p className="mt-3 text-xs text-muted-foreground">{t.pwa.installUnsupported}</p>
+      )}
     </fieldset>
   );
 }

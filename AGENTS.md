@@ -191,6 +191,37 @@ use the editor.
   and requires 200 from `/` and `/settings`. Keep it passing; it is the only
   gate that runs the real production runtime.
 
+## PWA (offline & install)
+
+- Installable PWA: vite-plugin-pwa (generateSW) precaches the app shell and all
+  self-hosted fonts/assets. Offline works only in the published app — dev,
+  localhost and Lovable preview hosts never register a service worker
+(see `shouldRegisterPwa` in `src/lib/pwa.ts`).
+- SPA mode: `tanstackStart({ spa: { enabled: true } })` — the build
+  prerenders the root route to `/_shell.html` and rewrites 404 navigations to it,
+  so a hard refresh offline works on every route. SSR is off at runtime, but the
+  prerender step still executes the root route at build time, so the workerd
+  module-top-level rules above still apply.
+- The service worker serves `_shell.html` as the navigation fallback
+  and precaches js/css/woff2/svg/png/ico/webmanifest. New versions show a
+  reload banner (`registerPwa` / `applyUpdate` in
+  `src/lib/pwa.ts`); the reload is always user-approved and the
+  banner never reloads while a focus session is active.
+- Registration is wrapped in `registerPwa()` — the ONLY place that touches
+  `navigator.serviceWorker`. It skips dev (`import.meta.env.DEV`),
+  localhost/127.0.0.1, hosts containing `--`, and `*.lovable.dev`.
+- Manifest lives in the VitePWA options in `vite.config.ts`: standalone,
+  `start_url: "/"`, dark theme colors, `dir: "rtl"`,
+  `lang: "ar"`. Icons are SVG only
+  (`public/icons/icon.svg` + `maskable.svg`, declared as 192/512
+  any + maskable) because binary pushes corrupt; iOS ignores SVG manifest icons, so
+  iOS home-screen installs fall back to a screenshot — accepted limitation for now.
+- The /settings install button uses `beforeinstallprompt` and
+  `isStandalone()`; browsers without the event show a hint instead.
+- CI probes `/`, `/settings`, `/sw.js`,
+  `/manifest.webmanifest` and `/_shell.html` under workerd (workerd-smoke
+  job). Keep them all at 200.
+
 ## Backups & import (src/lib/backup.ts)
 
 - Export envelope: `{ schemaVersion, exportedAt, data: <full snapshot> }`;
