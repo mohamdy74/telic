@@ -252,8 +252,8 @@ describe("awardXp: idempotency and undo", () => {
     expect(live(ledger)).toHaveLength(1);
     expect(totalsFromLedger(ledger).xp).toBe(HABIT_XP);
 
-    // 10 more alternating toggles starting done end on undone: zero live entries.
-    for (let i = 0; i < 10; i++) ledger = i % 2 === 0 ? markUndone(ledger) : markDone(ledger);
+    // 9 more alternating toggles starting done end on undone: zero live entries.
+    for (let i = 0; i < 9; i++) ledger = i % 2 === 0 ? markUndone(ledger) : markDone(ledger);
     expect(live(ledger)).toHaveLength(0);
     expect(totalsFromLedger(ledger).xp).toBe(0);
   });
