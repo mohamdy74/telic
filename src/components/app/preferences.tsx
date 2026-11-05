@@ -60,7 +60,7 @@ export function PreferencesProvider({ children }: { children: ReactNode }) {
 
   // Accent: color tokens only — no layout shift when it loads or changes.
   useEffect(() => {
-    document.documentElement.dataset.accent = accent;
+    document.documentElement.dataset["accent"] = accent;
   }, [accent]);
 
   const setLocale = useCallback((l: Locale) => setLocaleState(l), []);
