@@ -61,8 +61,9 @@ use the editor.
   deletion is soft (`deletedAt`) wherever undo matters.
 - Recurrence is a stored rule on the task; only the NEXT instance is generated
   on completion (`tasks.complete`) — never pre-generate instances.
-- `/settings` is the real settings page (language/theme/system, day prefs,
-  dashboard cards, export/import/reset). Its store-status panel is debug-only.
+- Real pages so far: `/settings`, `/tasks`, `/habits`.
+  Dashboard, focus, rewards and insights are still placeholders. The settings
+  store-status panel is debug-only.
 
 ## Tasks page (/tasks)
 
@@ -91,6 +92,35 @@ use the editor.
   (`tasks.restore`) and removes a spawned next instance when one was created.
 - ⌘K palette: "New task" sets sessionStorage `tilth.new-task`, routes to
   /tasks, and the page focuses the quick-add input (flag cleared on read).
+
+## Habits page (/habits)
+
+- Schedules: daily / weekly (specific weekdays) / custom days — all reduce to
+  `HabitSchedule.days` (0=Sun..6=Sat); `isScheduledOn` in
+  `src/lib/streaks.ts` is the single source of truth. Weekly-count habits
+  ("3 times per week") are out of scope for v1.
+- Streaks are pure functions in `src/lib/streaks.ts` (`habitStreaks`):
+  a streak counts consecutive scheduled days that are done; a skipped day
+  neither breaks nor extends it; gentle recovery protects at most
+  `SKIP_LIMIT_PER_WEEK` (2) skips per week (week per
+  `settings.weekStartsOn`) — a 3rd skip in the same week breaks;
+  unscheduled days never break or extend; a missed scheduled day breaks;
+  today never breaks until the day has ended. All of it runs on stored
+  LocalDay strings — never recompute a record's day.
+- Consistency: `consistency30` = done / (scheduled − skipped) over the
+  last 30 days including today (formula documented in the code); skipped
+  days leave the denominator, unscheduled days never count; null when
+  nothing was scheduled.
+- Logging is one HabitLog per (habitId, localDay): `habits.log` replaces the
+  status (idempotent), `habits.unlog` soft-deletes. The habits UI NEVER
+  writes `xpLedger` — the rewards engine will subscribe to completion later.
+- Heatmap (12 weeks): done / skipped / missed / upcoming / not-scheduled are
+  distinct beyond color (solid fill, hollow ring, tint, tooltips via
+  title/aria-label, and a legend). Clicking a scheduled day within the last 7
+  days cycles done → skipped → clear (past-day logging). Week columns flow
+  with inline direction, so the timeline mirrors automatically in RTL.
+- Archive is `habits.update(id, { archived: true })`; the All-habits tab lists
+  archived habits with restore + delete (soft delete, toast with undo).
 
 ## SSR constraints (Cloudflare Workers / workerd)
 
