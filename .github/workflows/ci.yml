@@ -17,7 +17,7 @@ jobs:
         with:
           node-version: 22
       - name: Install dependencies
-        run: bun install --frozen-lockfile
+        run: bun install # not frozen: bun.lock lags package.json until regenerated locally
       - name: Typecheck
         run: npm run typecheck
       - name: Unit tests
@@ -36,7 +36,7 @@ jobs:
         with:
           node-version: 22
       - name: Install dependencies
-        run: bun install --frozen-lockfile
+        run: bun install # not frozen: bun.lock lags package.json until regenerated locally
       - name: Build
         run: npm run build
       - name: Serve with workerd and probe
