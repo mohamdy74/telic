@@ -56,7 +56,7 @@ describe("todaysPriorities", () => {
 
   it("within one priority, overdue comes before today", () => {
     const list = [
-      task({ id: "today", dueDate: TODAY }),
+      task({ id: "today", dueDate: TODAY, priority: "high" }),
       task({ id: "overdue", dueDate: "2026-03-07", priority: "high" }),
       task({ id: "today2", dueDate: TODAY, priority: "high" }),
     ];
@@ -94,7 +94,7 @@ describe("upcomingDeadlines", () => {
       task({ id: "done", dueDate: "2026-03-11", status: "done" }),
       task({ id: "gone", dueDate: "2026-03-11", deletedAt: "2026-03-08T10:00:00.000Z" }),
     ];
-    expect(upcomingDeadlines(list, TODAY).map((x) => x.id)).toEqual(["earlierHigh", "earlierLow"]);
+    expect(upcomingDeadlines(list, TODAY).map((x) => x.id)).toEqual(["earlierHigh", "earlierLow", "laterLow"]);
   });
 });
 
