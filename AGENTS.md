@@ -62,3 +62,14 @@ use the editor.
 - `/settings` is a temporary debug page (store status + dev-only seed); the real
   settings UI comes later.
 
+## SSR constraints (Cloudflare Workers / workerd)
+
+- The production runtime is workerd (Lovable hosting). Node dev/build/tests will
+  happily accept code that workerd rejects. Never call `crypto.randomUUID()`,
+  `Math.random()`, `setTimeout`, or async I/O at module top level in any file
+  reachable from the SSR bundle — workerd forbids them in global scope and the
+  whole app 500s. Generate values lazily inside functions (see `tabId()` in
+  `src/lib/store.ts`).
+- The `workerd-smoke` CI job builds the app, serves it with wrangler (workerd),
+  and requires 200 from `/` and `/settings`. Keep it passing; it is the only
+  gate that runs the real production runtime.

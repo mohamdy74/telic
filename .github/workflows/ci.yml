@@ -25,3 +25,34 @@ jobs:
       - name: Lint
         run: npm run lint
         continue-on-error: true # TODO: make blocking after a prettier baseline pass
+
+  workerd-smoke:
+    name: workerd SSR smoke (production runtime)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: oven-sh/setup-bun@v2
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+      - name: Install dependencies
+        run: bun install --frozen-lockfile
+      - name: Build
+        run: npm run build
+      - name: Serve with workerd and probe
+        run: |
+          cd .output
+          nohup npx wrangler dev --port 8787 > wrangler.log 2>&1 &
+          cd ..
+          for i in $(seq 1 45); do
+            code=$(curl -s -o /dev/null -w "%{http_code}" http://localhost:8787/ || true)
+            [ -n "$code" ] && [ "$code" != "000" ] && [ "$code" != "500" ] && break
+            sleep 2
+          done
+          H=$(curl -s -o /dev/null -w "%{http_code}" http://localhost:8787/)
+          S=$(curl -s -o /dev/null -w "%{http_code}" http://localhost:8787/settings)
+          echo "home=$H settings=$S"
+          if [ "$H" != "200" ] || [ "$S" != "200" ]; then
+            tail -n 60 .output/wrangler.log
+            exit 1
+          fi

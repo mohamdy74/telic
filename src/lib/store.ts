@@ -68,7 +68,15 @@ export const useStore = create<StoreState>(() => ({
 
 const DEBOUNCE_MS = 250;
 const timers = new Map<StorageKey, ReturnType<typeof setTimeout>>();
-const tabId = typeof crypto !== "undefined" && "randomUUID" in crypto ? uid() : "tab";
+// Cloudflare Workers (workerd) forbids generating random values in the global
+// scope, so the tab id is created lazily on first use, inside handlers.
+let cachedTabId: string | null = null;
+function tabId(): string {
+  if (cachedTabId === null) {
+    cachedTabId = typeof crypto !== "undefined" && "randomUUID" in crypto ? uid() : "tab";
+  }
+  return cachedTabId;
+}
 let channel: BroadcastChannel | null = null;
 
 function schedule(key: StorageKey) {
@@ -91,7 +99,7 @@ async function flushKey(key: StorageKey) {
       ...(res.merged && !stillDirty ? { [key]: res.data } : {}),
       ...(res.merged ? { lastMergeAt: nowIso() } : {}),
     } as Partial<StoreState>);
-    channel?.postMessage({ type: "changed", key, rev: res.rev, from: tabId });
+    channel?.postMessage({ type: "changed", key, rev: res.rev, from: tabId() });
   } catch (e) {
     useStore.setState({ error: String(e) });
   }
@@ -143,7 +151,7 @@ export async function bootStore() {
     channel = new BroadcastChannel("grove-sync");
     channel.onmessage = (ev) => {
       const msg = ev.data as { type: string; key: StorageKey; rev: number; from: string };
-      if (msg.from === tabId) return;
+      if (msg.from === tabId()) return;
       if (msg.type === "changed") void pullKey(msg.key);
       if (msg.type === "reload-all") window.location.reload();
     };
@@ -331,7 +339,7 @@ async function replaceAll(snap: Snapshot) {
   for (const k of STORAGE_KEYS) prev[k] = envs[k]?.rev ?? 0;
   const revs = await writeAll(snap, prev);
   useStore.setState({ ...snap, revs, pending: [] });
-  channel?.postMessage({ type: "reload-all", from: tabId });
+  channel?.postMessage({ type: "reload-all", from: tabId() });
 }
 
 /* ---------------- dev seed ---------------- */
