@@ -33,7 +33,7 @@ function dosDateTime(d: Date): { time: number; date: number } {
 export function zipFiles(
   files: { name: string; data: Uint8Array }[],
   at: Date = new Date(),
-): Uint8Array {
+): Uint8Array<ArrayBuffer> {
   const enc = new TextEncoder();
   const { time, date } = dosDateTime(at);
   const localChunks: Uint8Array[] = [];

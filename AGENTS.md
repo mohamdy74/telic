@@ -32,7 +32,7 @@ use the editor.
 ## Architecture (Tilth)
 
 - Structure: `src/routes/*` = pages (one per module, own `head()`); `src/components/app/*` = shell, nav, preferences provider; `src/lib/*` = pure logic (i18n, future domain engines) with colocated `*.test.ts`.
-- Offline-first: no backend/accounts; app data will live on-device (IndexedDB). Never use localStorage for app data (only tiny UI prefs like locale/theme).
+- Offline-first: no backend/accounts; app data will live on-device (IndexedDB). Never use localStorage for app data (only tiny UI prefs like locale/theme). Multi-device sync stays a documented future decision point — if it ever lands, the reconciliation model is local-first (merge, never overwrite), not a server-side source of truth.
 - All user-facing strings go through the typed dictionary in `src/lib/i18n.ts`; plurals via `plural()` (Intl.PluralRules), numbers/dates via Intl helpers. No string concatenation.
   Two deliberate exceptions: the root `ErrorComponent` crash boundary (it must render with zero context — the failure can be inside the provider itself) and physical key names in `<kbd>` (Space/Esc).
 - RTL: use CSS logical properties / Tailwind logical utilities (ps/pe, ms/me, start/end, text-start). Directional icons get `rtl-flip`. `<html dir/lang>` is set in an effect.
@@ -41,16 +41,16 @@ use the editor.
 - No hardcoded colors in components; all colors are oklch tokens in `src/styles.css`. Accent is driven by `--accent-hue` so themes can swap it.
 - Fonts are self-hosted via @fontsource (no CDN) so they work offline.
 
-## Data rules (schema v3)
+## Data rules (schema v4)
 
 - `localDay` is stored at creation time and never recomputed afterwards. A record's
   localDay must survive later changes of timezone or `dayStartHour`.
-- `meta.schemaVersion` is 3 (`CURRENT_SCHEMA_VERSION` in `src/lib/types.ts`). Any
+- `meta.schemaVersion` is 4 (`CURRENT_SCHEMA_VERSION` in `src/lib/types.ts`). Any
   stored-shape change bumps it and adds one entry to the ordered `migrations`
   array in `src/lib/migrations.ts` (index = from-version); migrations run on boot
   and on import. Exception: ADDITIVE OPTIONAL fields (absent in old records,
   defaulted on read) do not bump the version — e.g. `Task.seriesId`, `FocusSession.pausedAt`.
-- Storage keys: one IndexedDB key per collection — `tasks`, `habits`,
+- Storage keys: one IndexedDB key per collection — `tasks`, `notes`, `habits`,
   `habitLogs`, `focusSessions`, `xpLedger`, `achievements`, `shopItems`,
   `purchases`, `settings`, `meta` (idb-keyval store
   "tilth"). Writing one collection never rewrites the others; writes are
@@ -64,7 +64,7 @@ use the editor.
   deletion is soft (`deletedAt`) wherever undo matters.
 - Recurrence is a stored rule on the task; only the NEXT instance is generated
   on completion (`tasks.complete`) — never pre-generate instances.
-- Real pages so far: `/settings`, `/tasks`, `/habits`, `/focus`,
+- Real pages so far: `/settings`, `/tasks`, `/notes`, `/habits`, `/focus`,
   `/rewards`, `/insights`, `/` (the Today dashboard) — every nav
   section is a real page.
   The settings store-status panel is debug-only.
@@ -160,6 +160,35 @@ use the editor.
   groups by the stored day, never recomputed).
 - The focus UI NEVER writes `xpLedger` — `applyRewardEvent` awards
   on `focus.end(id, true)` for work sessions only (1 XP per planned minute).
+
+## Notes page (/notes)
+
+- Notes are free-form Markdown records in the `notes` collection (schema v4,
+  additive migration): `title` + `body` (plain Markdown text), optional
+  `linkedTaskId`, optional `pinned`. Notes sit OUTSIDE the XP economy — no
+  reward events, no ledger entries; `applyRewardEvent` is never called for
+  notes.
+- The engine is pure in `src/lib/notes.ts` (notes.test.ts): `sortNotes`
+  (pinned first, then updatedAt desc, id tiebreak — always returns a copy),
+  `filterNotes` (case-insensitive contains over title + body; an empty query
+  returns everything), `mdToHtml`, `noteToMarkdown`.
+- `mdToHtml` escapes HTML FIRST, then applies a small inline subset (bold,
+  italic, code, http(s)-only links with `rel="noopener noreferrer"` —
+  `javascript:` targets never become anchors). Every block element carries
+  `dir="auto"` so mixed Arabic/English notes read correctly; paragraph lines
+  join with `<br>`. Supported blocks: h1–h3, unordered/ordered lists,
+  blockquotes, rules, paragraphs.
+- Store API (`notes` in store.ts): add/update/remove follow the habits
+  pattern (soft delete via `deletedAt`). Deleting a note shows a toast with
+  undo.
+- Page: search box + new-note form; rows show title, a one-line body preview,
+  a linked-task chip and updatedAt. Expanding a row opens the editor with a
+  write/preview toggle (preview renders `mdToHtml` through child-selector
+  styling — links, lists, blockquotes) and a linked-task select over live
+  tasks.
+- ⌘K palette: "New note" sets sessionStorage `tilth.new-note`, routes to
+  /notes, and the page opens the new-note form (flag cleared on read).
+- The bottom nav shows 7 tabs (every section except rewards).
 
 ## Dashboard (/)
 
@@ -328,8 +357,9 @@ use the editor.
   recolor them with no chart-side changes.
 - seedSampleData (dev-only) now plants three weeks of history — done
   tasks with morning/afternoon completion hours, daily habit logs with a
-  few Exercise skips, and focus sessions — so the charts and all three
-  observations render right after seeding.
+  few Exercise skips, focus sessions and two sample notes (one English
+  Markdown welcome, one pinned Arabic week plan) — so the charts, all
+  three observations and the notes page render right after seeding.
 
 ## SSR constraints (Cloudflare Workers / workerd)
 
@@ -375,12 +405,19 @@ use the editor.
   `/manifest.webmanifest` and `/_shell.html` under workerd (workerd-smoke
   job). Keep them all at 200.
 
-## Backups & import (src/lib/backup.ts)
+## Backups & import (src/lib/backup.ts, src/lib/exportZip.ts, src/lib/zip.ts)
 
-- Export envelope: `{ schemaVersion, exportedAt, data: <full snapshot> }`;
-  filename `tilth-export-YYYY-MM-DD.json`. Every export stamps
-  `meta.lastExportedAt` (drives the 7-day backup reminder on /settings).
-- Import validates BEFORE any write: `parseBackup` is pure (rejects newer
-  schemaVersion, migrates older ones, returns counts); `importSnapshot`
-  (store.ts) only runs after the user confirms replace. A rejected file never
-  touches existing data.
+- One-press export (Settings → Export data) writes a ZIP:
+  `tilth-export-YYYY-MM-DD.zip` containing `tilth-backup.json` (the importable
+  envelope below), `tasks.csv` (UTF-8 with BOM, one row per task) and one
+  `notes/<id>.md` Markdown file per live note (pinned first). The archive is
+  byte-deterministic for the same snapshot + timestamp. `zip.ts` is a
+  hand-rolled STORE-method writer (CRC-32, UTF-8 names) — no new dependencies.
+  Soft-deleted notes stay in the JSON backup only.
+- Export envelope: `{ schemaVersion, exportedAt, data: <full snapshot> }`.
+  Every export stamps `meta.lastExportedAt` (drives the 7-day backup
+  reminder on /settings).
+- Import stays JSON-only and validates BEFORE any write: `parseBackup` is
+  pure (rejects newer schemaVersion, migrates older ones, returns counts);
+  `importSnapshot` (store.ts) only runs after the user confirms replace. A
+  rejected file never touches existing data.

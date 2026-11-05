@@ -47,7 +47,7 @@ export function tasksToCsv(tasks: Task[]): string {
 export function buildZipExport(
   snap: Snapshot,
   exportedAt: string = new Date().toISOString(),
-): Uint8Array {
+): Uint8Array<ArrayBuffer> {
   const enc = new TextEncoder();
   const files: { name: string; data: Uint8Array }[] = [
     {
