@@ -10,7 +10,7 @@
 @custom-variant dark (&:is(.dark *));
 
 /*
- * Grove design system — "Forest & Moss".
+ * Tilth design system — "Ember & Soil".
  * All colors are oklch tokens. --accent-hue drives the swappable accent
  * (future unlockable themes change only this variable).
  */
@@ -50,7 +50,7 @@
 
 :root {
   --radius: 0.75rem;
-  --accent-hue: 145;
+  --accent-hue: 55;
   --background: oklch(0.975 0.008 95);
   --foreground: oklch(0.24 0.04 155);
   --card: oklch(0.99 0.005 95);
@@ -77,23 +77,23 @@
 }
 
 .dark {
-  --background: oklch(0.2 0.035 158);
-  --foreground: oklch(0.94 0.02 130);
-  --card: oklch(0.245 0.04 157);
-  --popover: oklch(0.26 0.042 157);
+  --background: oklch(0.205 0.018 70);
+  --foreground: oklch(0.93 0.012 90);
+  --card: oklch(0.25 0.02 70);
+  --popover: oklch(0.265 0.022 70);
   --primary: oklch(0.78 0.09 var(--accent-hue));
   --primary-foreground: oklch(0.2 0.04 158);
-  --secondary: oklch(0.29 0.04 155);
-  --muted: oklch(0.27 0.035 156);
-  --muted-foreground: oklch(0.72 0.04 140);
+  --secondary: oklch(0.29 0.022 70);
+  --muted: oklch(0.27 0.02 70);
+  --muted-foreground: oklch(0.71 0.025 90);
   --accent: oklch(0.34 0.06 var(--accent-hue));
   --accent-foreground: oklch(0.9 0.06 var(--accent-hue));
   --destructive: oklch(0.68 0.17 28);
-  --border: oklch(0.33 0.035 155);
-  --input: oklch(0.33 0.035 155);
+  --border: oklch(0.33 0.022 70);
+  --input: oklch(0.33 0.022 70);
   --ring: oklch(0.72 0.1 var(--accent-hue));
-  --overlay: oklch(0.1 0.02 158 / 60%);
-  --sidebar: oklch(0.175 0.032 158);
+  --overlay: oklch(0.08 0.012 70 / 60%);
+  --sidebar: oklch(0.18 0.018 70);
   --shadow-elevated: 0 24px 60px -20px oklch(0 0 0 / 60%);
 }
 
@@ -115,10 +115,21 @@
   }
   :lang(ar) body {
     font-family: "IBM Plex Sans Arabic", var(--font-sans);
+    line-height: 1.75;
   }
   :lang(ar) .font-display {
     font-family: "IBM Plex Sans Arabic", var(--font-display);
     letter-spacing: 0;
+  }
+  :lang(ar) h1,
+  :lang(ar) h2,
+  :lang(ar) h3,
+  :lang(ar) h4 {
+    line-height: 1.4;
+  }
+  /* Arabic script never uses letter-spacing; tracking-* utilities break its flow. */
+  html[dir="rtl"] * {
+    letter-spacing: 0 !important;
   }
   :focus-visible {
     outline: 2px solid var(--color-ring);

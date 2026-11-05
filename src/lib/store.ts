@@ -148,7 +148,7 @@ export async function bootStore() {
 
   // multi-tab sync
   if ("BroadcastChannel" in window) {
-    channel = new BroadcastChannel("grove-sync");
+    channel = new BroadcastChannel("tilth-sync");
     channel.onmessage = (ev) => {
       const msg = ev.data as { type: string; key: StorageKey; rev: number; from: string };
       if (msg.from === tabId()) return;

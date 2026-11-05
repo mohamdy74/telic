@@ -4,9 +4,9 @@ import { PagePlaceholder } from "@/components/app/PagePlaceholder";
 export const Route = createFileRoute("/insights")({
   head: () => ({
     meta: [
-      { title: "Insights — Grove" },
+      { title: "Insights — Tilth" },
       { name: "description", content: "Clear weekly and monthly trends across tasks, habits and focus." },
-      { property: "og:title", content: "Insights — Grove" },
+      { property: "og:title", content: "Insights — Tilth" },
       { property: "og:description", content: "Clear weekly and monthly trends across tasks, habits and focus." },
     ],
   }),

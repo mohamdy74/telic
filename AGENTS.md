@@ -29,12 +29,13 @@ use the editor.
 - **Secrets.** Lovable manages them. Do not put secret values in the repo.
 <!-- LOVABLE:END -->
 
-## Architecture (Grove)
+## Architecture (Tilth)
 
 - Structure: `src/routes/*` = pages (one per module, own `head()`); `src/components/app/*` = shell, nav, preferences provider; `src/lib/*` = pure logic (i18n, future domain engines) with colocated `*.test.ts`.
 - Offline-first: no backend/accounts; app data will live on-device (IndexedDB). Never use localStorage for app data (only tiny UI prefs like locale/theme).
 - All user-facing strings go through the typed dictionary in `src/lib/i18n.ts`; plurals via `plural()` (Intl.PluralRules), numbers/dates via Intl helpers. No string concatenation.
 - RTL: use CSS logical properties / Tailwind logical utilities (ps/pe, ms/me, start/end, text-start). Directional icons get `rtl-flip`. `<html dir/lang>` is set in an effect.
+- Arabic-first: Arabic is the DEFAULT locale; SSR renders `<html lang="ar" dir="rtl">` and English users flip in a hydration effect. Arabic copy is natural MSA, never literal translations. `src/styles.css` raises Arabic line-height and zeroes letter-spacing under `[dir="rtl"]` (see the `:lang(ar)` rules).
 - No hardcoded colors in components; all colors are oklch tokens in `src/styles.css`. Accent is driven by `--accent-hue` so themes can swap it.
 - Fonts are self-hosted via @fontsource (no CDN) so they work offline.
 
@@ -48,12 +49,12 @@ use the editor.
   and on import.
 - Storage keys: one IndexedDB key per collection — `tasks`, `habits`,
   `habitLogs`, `focusSessions`, `xpLedger`, `settings`, `meta` (idb-keyval store
-  "grove"). Writing one collection never rewrites the others; writes are
+  "tilth"). Writing one collection never rewrites the others; writes are
   debounced (250 ms) and flushed on tab hide.
 - The store boots client-side AFTER hydration (`bootStore()` effect in
   `__root.tsx`), so SSR HTML matches the client. UI must render a skeleton until
   `ready` is true.
-- Multi-tab: `BroadcastChannel("grove-sync")` + per-key rev counters; concurrent
+- Multi-tab: `BroadcastChannel("tilth-sync")` + per-key rev counters; concurrent
   writes merge per record by `updatedAt` (`src/lib/storage/persistence.ts`).
 - IDs are `crypto.randomUUID()`; every record carries ISO `createdAt`/`updatedAt`;
   deletion is soft (`deletedAt`) wherever undo matters.

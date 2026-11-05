@@ -4,9 +4,9 @@ import { PagePlaceholder } from "@/components/app/PagePlaceholder";
 export const Route = createFileRoute("/tasks")({
   head: () => ({
     meta: [
-      { title: "Tasks — Grove" },
+      { title: "Tasks — Tilth" },
       { name: "description", content: "Capture, prioritize and finish tasks with Today, Upcoming and Kanban views." },
-      { property: "og:title", content: "Tasks — Grove" },
+      { property: "og:title", content: "Tasks — Tilth" },
       { property: "og:description", content: "Capture, prioritize and finish tasks with Today, Upcoming and Kanban views." },
     ],
   }),

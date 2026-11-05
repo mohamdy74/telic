@@ -12,10 +12,10 @@ type Ctx = {
 
 const PrefCtx = createContext<Ctx | null>(null);
 // UI preferences only (not app data) — persisted lightly.
-const KEY = "grove.prefs";
+const KEY = "tilth.prefs";
 
 export function PreferencesProvider({ children }: { children: ReactNode }) {
-  const [locale, setLocaleState] = useState<Locale>("en");
+  const [locale, setLocaleState] = useState<Locale>("ar");
   const [theme, setThemeState] = useState<Theme>("dark");
 
   useEffect(() => {

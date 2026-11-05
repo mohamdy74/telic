@@ -5,8 +5,8 @@ export const dirOf = (l: Locale) => (l === "ar" ? "rtl" : "ltr");
 type PluralForms = Partial<Record<Intl.LDMLPluralRule, string>> & { other: string };
 
 const en = {
-  appName: "Grove",
-  tagline: "Grow steady, not stressed.",
+  appName: "Tilth",
+  tagline: "Make room for what matters.",
   nav: {
     dashboard: "Today",
     tasks: "Tasks",
@@ -69,8 +69,8 @@ const en = {
 type Dict = typeof en;
 
 const ar: Dict = {
-  appName: "بستان",
-  tagline: "تقدّم بثبات، بلا ضغط.",
+  appName: "تيلث",
+  tagline: "اترك مساحة لما يهمّك.",
   nav: {
     dashboard: "اليوم",
     tasks: "المهام",
@@ -81,12 +81,12 @@ const ar: Dict = {
     settings: "الإعدادات",
   },
   pages: {
-    dashboard: { title: "يومك في لمحة", body: "ستظهر هنا أولوياتك وعاداتك وجلسات تركيزك بمجرد أن تبدأ." },
+    dashboard: { title: "يومك في لمحة", body: "بمجرد أن تبدأ، ستجد هنا أولوياتك وعاداتك وجلسات تركيزك." },
     tasks: { title: "لا توجد مهام بعد", body: "دوّن ما يشغل بالك، وسنساعدك على ترتيبه." },
     habits: { title: "ازرع عادتك الأولى", body: "خطوات صغيرة وثابتة. الأيام الفائتة لن تمحو تقدّمك." },
     focus: { title: "جاهز متى شئت", body: "ستكون جلسات التركيز والاستراحات هنا." },
     rewards: { title: "تقدّمك يُكافأ", body: "مستويات وإنجازات ومكافآت تختارها بنفسك." },
-    insights: { title: "الأنماط تحتاج وقتًا", body: "عد بعد بضعة أيام من النشاط لترى رؤى مفيدة." },
+    insights: { title: "الأنماط تحتاج وقتًا", body: "بعد أيام قليلة من الاستخدام ستبدأ الرؤى المفيدة بالظهور." },
     settings: { title: "الإعدادات", body: "اللغة والمظهر. خيارات أخرى قريبًا." },
   },
   comingSoon: "قريبًا",

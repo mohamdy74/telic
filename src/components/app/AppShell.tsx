@@ -1,5 +1,5 @@
 import { Link, useNavigate } from "@tanstack/react-router";
-import { ChevronRight, Leaf, Search } from "lucide-react";
+import { ChevronRight, Search, Target } from "lucide-react";
 import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { NAV } from "./nav";
 import { usePrefs } from "./preferences";
@@ -25,7 +25,7 @@ export function AppShell({ children }: { children: ReactNode }) {
       <aside className="fixed inset-y-0 start-0 z-30 hidden w-60 flex-col border-e border-border bg-sidebar px-3 py-5 md:flex">
         <div className="mb-6 flex items-center gap-2 px-2">
           <span className="grid size-8 place-items-center rounded-lg bg-primary text-primary-foreground">
-            <Leaf className="size-4" aria-hidden />
+            <Target className="size-4" aria-hidden />
           </span>
           <span className="font-display text-lg font-semibold">{t.appName}</span>
         </div>

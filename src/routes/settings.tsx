@@ -7,10 +7,10 @@ import { flushAll, seedSampleData, useStore } from "@/lib/store";
 export const Route = createFileRoute("/settings")({
   head: () => ({
     meta: [
-      { title: "Settings — Grove" },
-      { name: "description", content: "Choose your language and appearance in Grove." },
-      { property: "og:title", content: "Settings — Grove" },
-      { property: "og:description", content: "Choose your language and appearance in Grove." },
+      { title: "Settings — Tilth" },
+      { name: "description", content: "Choose your language and appearance in Tilth." },
+      { property: "og:title", content: "Settings — Tilth" },
+      { property: "og:description", content: "Choose your language and appearance in Tilth." },
     ],
   }),
   component: SettingsPage,

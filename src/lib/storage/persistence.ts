@@ -9,7 +9,7 @@ export interface Envelope<T = unknown> {
 
 let _db: UseStore | null = null;
 export function db(): UseStore {
-  if (!_db) _db = createStore("grove", "kv");
+  if (!_db) _db = createStore("tilth", "kv");
   return _db;
 }
 /** Test hook. */

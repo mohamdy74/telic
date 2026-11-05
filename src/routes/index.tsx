@@ -4,9 +4,9 @@ import { PagePlaceholder } from "@/components/app/PagePlaceholder";
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "Today — Grove" },
+      { title: "Today — Tilth" },
       { name: "description", content: "Your daily dashboard: priorities, habits, focus and progress in one calm view." },
-      { property: "og:title", content: "Today — Grove" },
+      { property: "og:title", content: "Today — Tilth" },
       { property: "og:description", content: "Your daily dashboard: priorities, habits, focus and progress in one calm view." },
     ],
   }),

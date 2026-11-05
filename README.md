@@ -1,10 +1,10 @@
-# Telic
+# Tilth
 
 Implement exactly the screenshot and nothing else
 
 This project was built with [Lovable](https://lovable.dev).
 
-**Live app**: https://telic.lovable.app
+**Live app**: https://tilth.lovable.app
 
 ## Build with Lovable
 
