@@ -39,14 +39,14 @@ export const TASK_MIN_AGE_MS = 120_000;
  *     totalXpForLevel(L) = sum of xpForLevel(n) for n = 1 .. L - 1
  */
 export function xpForLevel(n: number): number {
-  void n;
-  return 0; // RED stub
+  return Math.round(100 * Math.pow(n, 1.5));
 }
 
 /** Cumulative XP required to reach the given level from level 1. */
 export function totalXpForLevel(level: number): number {
-  void level;
-  return 0; // RED stub
+  let total = 0;
+  for (let n = 1; n < level; n++) total += xpForLevel(n);
+  return total;
 }
 
 export interface LevelInfo {
@@ -59,6 +59,13 @@ export interface LevelInfo {
 
 /** Where a total XP amount lands on the curve. */
 export function levelFromXp(xp: number): LevelInfo {
-  void xp;
-  return { level: 1, xpIntoLevel: 0, xpForNextLevel: 0 }; // RED stub
+  let level = 1;
+  let remaining = Math.max(0, xp);
+  let step = xpForLevel(level);
+  while (remaining >= step) {
+    remaining -= step;
+    level += 1;
+    step = xpForLevel(level);
+  }
+  return { level, xpIntoLevel: remaining, xpForNextLevel: step };
 }

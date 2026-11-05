@@ -3,6 +3,7 @@ import {
   CalendarClock,
   CheckCircle2,
   Circle,
+  Coins,
   ListTodo,
   Sparkles,
   Sprout,
@@ -22,6 +23,7 @@ import {
   type HabitDue,
 } from "@/lib/dashboard";
 import { workMinutesToday } from "@/lib/focusTime";
+import { totalsFromLedger } from "@/lib/rewards";
 import { habits as habitsApi, tasks as tasksApi, todayLocal, useStore } from "@/lib/store";
 import type { Task } from "@/lib/types";
 
@@ -155,13 +157,7 @@ function DashboardPage() {
           {cards.focus && (
             <FocusCard minutes={focusMinutes} target={target} footer={footerLink("/focus", t.dash.startFocus)} />
           )}
-          {cards.level && (
-            <SoonCard
-              icon={<Sparkles className="size-4" aria-hidden />}
-              title={t.settings.cards.level}
-              body={t.dash.levelBody}
-            />
-          )}
+          {cards.level && <LevelCard />}
           {cards.achievements && (
             <SoonCard
               icon={<Trophy className="size-4" aria-hidden />}
@@ -455,6 +451,41 @@ function FocusCard({ minutes, target, footer }: { minutes: number; target: numbe
         <div className="h-2 overflow-hidden rounded-full bg-accent/40">
           <div className="h-full rounded-full bg-primary transition-all" style={{ width: pct + "%" }} />
         </div>
+      </div>
+    </Card>
+  );
+}
+
+/* ---------------- level (rewards readout) ---------------- */
+
+function LevelCard() {
+  const { t, locale } = usePrefs();
+  const ledger = useStore((s) => s.xpLedger);
+  const totals = totalsFromLedger(ledger);
+  const pct =
+    totals.xpForNextLevel <= 0
+      ? 0
+      : Math.min(100, Math.round((totals.xpIntoLevel / totals.xpForNextLevel) * 100));
+  return (
+    <Card title={t.settings.cards.level} icon={<Sparkles className="size-4" aria-hidden />}>
+      <div className="flex h-full flex-col justify-center gap-2 py-2">
+        <p className="font-display text-4xl font-semibold tabular-nums">
+          {formatNumber(locale, totals.level)}
+        </p>
+        <div className="h-2 overflow-hidden rounded-full bg-accent/40">
+          <div className="h-full rounded-full bg-primary transition-all" style={{ width: pct + "%" }} />
+        </div>
+        <p className="text-xs text-muted-foreground tabular-nums">
+          {formatNumber(locale, totals.xpIntoLevel) +
+            " / " +
+            formatNumber(locale, totals.xpForNextLevel) +
+            " " +
+            t.dash.xpUnit}
+        </p>
+        <p className="flex items-center gap-1.5 text-xs text-muted-foreground tabular-nums">
+          <Coins className="size-3.5 text-primary" aria-hidden />
+          {formatNumber(locale, totals.coins) + " " + t.dash.coins}
+        </p>
       </div>
     </Card>
   );

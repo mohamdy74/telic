@@ -3,6 +3,7 @@ import { currentTimeZone, defaultWeekStartsOn, toLocalDay } from "./dates";
 import { runMigrations, type AnySnapshot } from "./migrations";
 import { nextOccurrence } from "./recurrence";
 import { shiftEndsAfterResume } from "./focusTime";
+import { awardXp, revokeXp, totalsFromLedger, type AwardEvent } from "./rewards";
 import { readAll, readKey, writeAll, writeKey, mergeValue } from "./storage/persistence";
 import {
   COLLECTION_KEYS,
@@ -204,8 +205,64 @@ export const selectHabitLogs = (s: StoreState) => live(s.habitLogs);
 export const selectFocusSessions = (s: StoreState) => live(s.focusSessions);
 export const selectXpLedger = (s: StoreState) => live(s.xpLedger);
 export const selectSettings = (s: StoreState) => s.settings;
-export const selectTotals = (s: StoreState) =>
-  live(s.xpLedger).reduce((a, e) => ({ xp: a.xp + e.xp, coins: a.coins + e.coins }), { xp: 0, coins: 0 });
+export const selectTotals = (s: StoreState) => {
+  const totals = totalsFromLedger(s.xpLedger);
+  return { xp: totals.xp, coins: totals.coins };
+};
+
+/* ---------------- rewards (single wiring point) ---------------- */
+
+/**
+ * The ONE service function wiring the pure rewards engine (src/lib/rewards.ts)
+ * into the store. Task complete/reopen, habit log/unlog and focus end all flow
+ * through here; no component ever calls the engine or writes xpLedger.
+ */
+type RewardEvent =
+  | { kind: "task-completed"; task: Task & { completedAt: string }; localDay: string }
+  | { kind: "task-reopened"; taskId: string }
+  | { kind: "habit-logged"; habitId: string; localDay: string; status: HabitLog["status"] }
+  | { kind: "habit-unlogged"; habitId: string; localDay: string }
+  | { kind: "focus-ended"; session: FocusSession };
+
+function applyRewardEvent(event: RewardEvent) {
+  const state = useStore.getState();
+  let award: AwardEvent | null = null;
+  let revoke: { sourceType: "task" | "habit" | "focus"; sourceId: string; localDay?: string | undefined } | null =
+    null;
+
+  if (event.kind === "task-completed") {
+    award = { kind: "task-completed", task: event.task, localDay: event.localDay };
+  } else if (event.kind === "task-reopened") {
+    revoke = { sourceType: "task", sourceId: event.taskId };
+  } else if (event.kind === "habit-logged") {
+    if (event.status === "done") {
+      award = { kind: "habit-done", habitId: event.habitId, localDay: event.localDay };
+    } else {
+      revoke = { sourceType: "habit", sourceId: event.habitId, localDay: event.localDay };
+    }
+  } else if (event.kind === "habit-unlogged") {
+    revoke = { sourceType: "habit", sourceId: event.habitId, localDay: event.localDay };
+  } else if (event.session.completed && event.session.mode !== "break") {
+    award = { kind: "focus-completed", session: event.session };
+  } else {
+    // incomplete or break sessions never keep an award
+    revoke = { sourceType: "focus", sourceId: event.session.id };
+  }
+
+  if (award) {
+    const res = awardXp(award, state.xpLedger);
+    if (res.entry) xp.add(res.entry);
+    return;
+  }
+  if (revoke) {
+    const doomed = revokeXp(revoke, state.xpLedger);
+    if (doomed.length > 0) {
+      const t = nowIso();
+      const ids = new Set(doomed.map((e) => e.id));
+      setCollection("xpLedger", (l) => l.map((e) => (ids.has(e.id) ? { ...e, deletedAt: t, updatedAt: t } : e)));
+    }
+  }
+}
 
 /* ---------------- actions ---------------- */
 
@@ -229,6 +286,11 @@ export const tasks = {
     if (!task || task.status === "done") return;
     const t = nowIso();
     tasks.update(id, { status: "done", completedAt: t });
+    applyRewardEvent({
+      kind: "task-completed",
+      task: { ...task, status: "done", completedAt: t },
+      localDay: toLocalDay(new Date(t), useStore.getState().settings.dayStartHour, currentTimeZone()),
+    });
     if (task.recurrence) {
       const base = task.dueDate ?? todayLocal();
       const { id: _i, createdAt: _c, updatedAt: _u, completedAt: _d, ...rest } = task;
@@ -238,6 +300,7 @@ export const tasks = {
   },
   reopen(id: string) {
     tasks.update(id, { status: "todo", completedAt: undefined });
+    applyRewardEvent({ kind: "task-reopened", taskId: id });
   },
   remove(id: string) {
     tasks.update(id, { deletedAt: nowIso() });
@@ -274,10 +337,12 @@ export const habits = {
       if (existing) return l.map((x) => (x === existing ? { ...x, status, updatedAt: t } : x));
       return [...l, { id: uid(), habitId, localDay, status, createdAt: t, updatedAt: t }];
     });
+    applyRewardEvent({ kind: "habit-logged", habitId, localDay, status });
   },
   unlog(habitId: string, localDay = todayLocal()) {
     const t = nowIso();
     setCollection("habitLogs", (l) => l.map((x) => x.habitId === habitId && x.localDay === localDay && !x.deletedAt ? { ...x, deletedAt: t, updatedAt: t } : x));
+    applyRewardEvent({ kind: "habit-unlogged", habitId, localDay });
   },
 };
 
@@ -308,8 +373,12 @@ export const focus = {
     setCollection("focusSessions", (l) => l.map((x) => (x.id === id ? { ...x, endsAt, pausedAt: undefined, updatedAt: nowIso() } : x)));
   },
   end(id: string, completed: boolean) {
+    const existing = useStore.getState().focusSessions.find((x) => x.id === id);
     const t = nowIso();
     setCollection("focusSessions", (l) => l.map((x) => (x.id === id ? { ...x, endedAt: t, completed, updatedAt: t } : x)));
+    if (existing && existing.endedAt === undefined) {
+      applyRewardEvent({ kind: "focus-ended", session: { ...existing, endedAt: t, completed } });
+    }
   },
 };
 
@@ -385,8 +454,7 @@ export function seedSampleData() {
   habits.log(h1.id, "done", today);
   habits.log(h2.id, "skipped", plus(-1));
   const s = focus.start("pomodoro", 25);
-  focus.end(s.id, true);
-  xp.add({ sourceType: "focus", sourceId: s.id, xp: 25, coins: 5 });
+  focus.end(s.id, true); // XP is awarded automatically through applyRewardEvent
 }
 
 export { COLLECTION_KEYS };

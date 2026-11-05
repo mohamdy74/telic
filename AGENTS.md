@@ -78,7 +78,8 @@ use the editor.
   never recompute a record's day.
 - Complete/uncomplete is an idempotent toggle through `tasks.complete` /
   `tasks.reopen` (`completedAt` set/cleared). The tasks UI NEVER writes
-  `xpLedger` — the rewards engine will subscribe to completion later.
+  `xpLedger` — `applyRewardEvent` in store.ts awards XP on
+  complete and revokes it on reopen.
 - Kanban: columns are `Task.status` (todo/doing/done); `kanbanOrder` is a
   per-task number reassigned wholesale by `tasks.reorder(ids)` after a drop.
   Board RTL: DOM order todo→doing→done flows with direction; column move
@@ -113,7 +114,8 @@ use the editor.
   nothing was scheduled.
 - Logging is one HabitLog per (habitId, localDay): `habits.log` replaces the
   status (idempotent), `habits.unlog` soft-deletes. The habits UI NEVER
-  writes `xpLedger` — the rewards engine will subscribe to completion later.
+  writes `xpLedger` — `applyRewardEvent` awards on done-logs
+  and revokes on skip/unlog.
 - Heatmap (12 weeks): done / skipped / missed / upcoming / not-scheduled are
   distinct beyond color (solid fill, hollow ring, tint, tooltips via
   title/aria-label, and a legend). Clicking a scheduled day within the last 7
@@ -152,8 +154,8 @@ use the editor.
   modal).
 - Sessions crossing midnight keep startedAt's localDay (`groupByDay`
   groups by the stored day, never recomputed).
-- The focus UI NEVER writes `xpLedger` — the rewards engine will
-  subscribe to completed sessions later.
+- The focus UI NEVER writes `xpLedger` — `applyRewardEvent` awards
+  on `focus.end(id, true)` for work sessions only (1 XP per planned minute).
 
 ## Dashboard (/)
 
@@ -173,11 +175,45 @@ use the editor.
   stays within 0..1; completing an overdue task does not move it.
 - Focus card: `workMinutesToday` (completed work sessions, breaks excluded)
   vs `settings.dailyFocusTargetMinutes`.
-- Level and achievements cards are "coming soon" placeholders until XP rules
-  exist. The dashboard NEVER writes `xpLedger` — the rewards engine
-  will subscribe to completions later.
+- The Level card shows live level, XP progress and coins via `totalsFromLedger` from
+  `src/lib/rewards.ts`; achievements stays a placeholder. The dashboard
+  never writes `xpLedger`.
 - First run (no tasks, no habits, no focus sessions) shows a welcome panel
   linking to /tasks and /habits. All cards are skeletons until `ready`.
+
+## Rewards engine (`src/lib/rewards.ts`)
+
+- PURE engine: `awardXp` / `revokeXp` / `totalsFromLedger` take the
+  ledger and return results; they never touch the store, `Date.now()` or
+  localStorage. All tunables (XP per source, `DAILY_XP_CAP`, coin ratio, task
+  minimum age, level curve) live in `src/lib/rewardsConfig.ts` — change values
+  there, never in the engine.
+- XP and coins are DERIVED from the `xpLedger` — no running totals anywhere.
+  Entry identity is (sourceType, sourceId, localDay): at most one live entry per
+  identity. XP is never spent; only coins are (shop entries: xp 0, negative coins).
+  Award entries carry coins: 0 — the balance is
+  floor(total positive XP / `COINS_PER_XP`) plus every entry coins value,
+  so odd XP remainders are never lost per-entry.
+- Level curve convention (single source of truth):
+  `xpForLevel(n) = round(100 * n^1.5)` is the PER-STEP cost to advance from
+  level n to level n+1 — NOT cumulative. Total XP to reach level L is
+  `totalXpForLevel(L)` = sum of steps 1..L-1 (level 1 starts at 0 XP).
+- Wiring: ONE service function, `applyRewardEvent` in `src/lib/store.ts`,
+  is the only caller of the engine — hooked into `tasks.complete` /
+  `tasks.reopen`, `habits.log` / `habits.unlog` and `focus.end`.
+  Pages and components never call the engine and never write `xpLedger`.
+  Undo paths revoke (soft-delete the entry), so complete -> undo -> redo can
+  never award twice for one final state.
+- Guardrails (all tested in `rewards.test.ts`): daily XP cap per stored localDay
+  with exact partial awards at the boundary; a task completed within
+  `TASK_MIN_AGE_MS` (2 min) of the instance creation earns 0 — recurring
+  instances measure from their spawn time; habits pay once per localDay;
+  focus XP only for completed work sessions (breaks and early stops give 0).
+  Awards always use the localDay stored on the event, never a recomputed now,
+  so clock edits cannot re-open a capped day.
+- Honest limits: these rules are a guardrail against self-cheating and double
+  awards, NOT security — the ledger lives in the browser and import can
+  overwrite it.
 
 ## SSR constraints (Cloudflare Workers / workerd)
 

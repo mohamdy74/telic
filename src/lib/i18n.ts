@@ -142,6 +142,8 @@ const en = {
     deadlinesEmpty: "No deadlines in the next 7 days.",
     andMore: "+{n} more",
     levelBody: "Levels and XP arrive with rewards.",
+    xpUnit: "XP",
+    coins: "Coins",
     achievementsBody: "Your milestones will be celebrated here.",
     hiddenCards: "All cards are hidden — turn some back on in Settings.",
     welcome: {
@@ -408,6 +410,8 @@ const ar: Dict = {
     deadlinesEmpty: "لا مواعيد خلال الأيام السبعة القادمة.",
     andMore: "+{n} أخرى",
     levelBody: "المستويات والخبرة قادمة مع المكافآت.",
+    xpUnit: "نقطة خبرة",
+    coins: "عملات",
     achievementsBody: "إنجازاتك ستُحتفى بها هنا.",
     hiddenCards: "كل الكروت مخفية — فعّل بعضها من الإعدادات.",
     welcome: {
