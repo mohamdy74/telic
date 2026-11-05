@@ -353,7 +353,10 @@ export const ACHIEVEMENTS: Achievement[] = [
   {
     id: "consistentMonth",
     icon: "TrendingUp",
-    predicate: (s) => bestConsistency(s) !== null && bestConsistency(s) >= 0.8,
+    predicate: (s) => {
+      const c = bestConsistency(s);
+      return c !== null && c >= 0.8;
+    },
     progress: (s) => ({
       current: bestConsistency(s) === null ? 0 : Math.round(bestConsistency(s)! * 100),
       target: 80,
