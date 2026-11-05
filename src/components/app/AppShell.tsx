@@ -43,7 +43,6 @@ export function AppShell({ children }: { children: ReactNode }) {
     return () => window.clearTimeout(id);
   }, [unlockToast]);
 
-
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "k") {
@@ -62,7 +61,9 @@ export function AppShell({ children }: { children: ReactNode }) {
 
   return (
     <div className="min-h-screen bg-background text-foreground">
-      <a href="#main" className="skip-link">{t.skip}</a>
+      <a href="#main" className="skip-link">
+        {t.skip}
+      </a>
       <aside className="fixed inset-y-0 start-0 z-30 hidden w-60 flex-col border-e border-border bg-sidebar px-3 py-5 md:flex">
         <div className="mb-6 flex items-center gap-2 px-2">
           <span className="grid size-8 place-items-center rounded-lg bg-primary text-primary-foreground">
@@ -100,19 +101,24 @@ export function AppShell({ children }: { children: ReactNode }) {
         <div className="mx-auto max-w-5xl px-5 py-8 md:px-10 md:py-12 animate-rise">{children}</div>
       </main>
 
-      <nav aria-label="Main" className="fixed inset-x-0 bottom-0 z-30 grid grid-cols-5 border-t border-border bg-sidebar/95 backdrop-blur md:hidden">
-        {NAV.filter((n) => n.key !== "insights" && n.key !== "rewards").map(({ key, to, icon: Icon }) => (
-          <Link
-            key={key}
-            to={to}
-            activeOptions={{ exact: to === "/" }}
-            className="tab-link"
-            activeProps={{ "aria-current": "page", className: "tab-link-active" }}
-          >
-            <Icon className="size-5" aria-hidden />
-            <span>{t.nav[key]}</span>
-          </Link>
-        ))}
+      <nav
+        aria-label="Main"
+        className="fixed inset-x-0 bottom-0 z-30 grid grid-cols-5 border-t border-border bg-sidebar/95 backdrop-blur md:hidden"
+      >
+        {NAV.filter((n) => n.key !== "insights" && n.key !== "rewards").map(
+          ({ key, to, icon: Icon }) => (
+            <Link
+              key={key}
+              to={to}
+              activeOptions={{ exact: to === "/" }}
+              className="tab-link"
+              activeProps={{ "aria-current": "page", className: "tab-link-active" }}
+            >
+              <Icon className="size-5" aria-hidden />
+              <span>{t.nav[key]}</span>
+            </Link>
+          ),
+        )}
       </nav>
 
       {needRefresh && (
