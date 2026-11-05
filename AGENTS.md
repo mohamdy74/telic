@@ -47,7 +47,7 @@ use the editor.
   stored-shape change bumps it and adds one entry to the ordered `migrations`
   array in `src/lib/migrations.ts` (index = from-version); migrations run on boot
   and on import. Exception: ADDITIVE OPTIONAL fields (absent in old records,
-  defaulted on read) do not bump the version — e.g. `Task.seriesId`.
+  defaulted on read) do not bump the version — e.g. `Task.seriesId`, `FocusSession.pausedAt`.
 - Storage keys: one IndexedDB key per collection — `tasks`, `habits`,
   `habitLogs`, `focusSessions`, `xpLedger`, `settings`, `meta` (idb-keyval store
   "tilth"). Writing one collection never rewrites the others; writes are
@@ -121,6 +121,39 @@ use the editor.
   with inline direction, so the timeline mirrors automatically in RTL.
 - Archive is `habits.update(id, { archived: true })`; the All-habits tab lists
   archived habits with restore + delete (soft delete, toast with undo).
+
+## Focus page (/focus)
+
+- Timer correctness (critical): the countdown NEVER counts with interval
+  ticks. `remainingMs` in `src/lib/focusTime.ts` computes
+  remaining time from stored timestamps (startedAt/endsAt/pausedAt) vs the
+  wall clock on every render; the 500ms interval only triggers re-render.
+  Background tabs and sleeping phones are therefore always correct; the
+  overdue effect marks a session completed the moment the user returns
+  after it ended (it re-runs on every tick and on visibilitychange).
+- Pausing stores `FocusSession.pausedAt` (additive optional field);
+  resuming shifts `endsAt` forward via the pure
+  `shiftEndsAfterResume` (store actions `focus.pause` /
+  `focus.resume`). The active session lives in the store, so a
+  reload resumes it automatically.
+- Modes: pomodoro (25 min work / 5 min break, long break 15 after every 4
+  completed work sessions today, `nextBreakMinutes`) and custom
+  (work/break minutes, UI state only). Breaks are separate sessions with
+  `mode: "break"`. `linkedTaskId` optionally ties a session
+  to a task.
+- A session is completed ONLY when it ran to endsAt; cancel/early stop calls
+  `focus.end(id, false)` and is saved with completed=false.
+- Today's focus = planned minutes of completed work sessions whose stored
+  localDay is today (`workMinutesToday`, breaks excluded), shown
+  against `settings.dailyFocusTargetMinutes`.
+- Completion plays a short WebAudio chime + vibration; the toggle persists in
+  localStorage `tilth.focus-sound` (tiny UI pref). No push notifications
+  in v1 — the UI says so. Keyboard: Space start/pause, Esc cancel (confirm
+  modal).
+- Sessions crossing midnight keep startedAt's localDay (`groupByDay`
+  groups by the stored day, never recomputed).
+- The focus UI NEVER writes `xpLedger` — the rewards engine will
+  subscribe to completed sessions later.
 
 ## SSR constraints (Cloudflare Workers / workerd)
 
