@@ -14,6 +14,11 @@ export const migrations: Migration[] = [
     focusSessions: Array.isArray(d["focusSessions"]) ? d["focusSessions"] : [],
     xpLedger: Array.isArray(d["xpLedger"]) ? d["xpLedger"] : [],
   }),
+  // v1 -> v2: add the achievements (unlocks) collection.
+  (d) => ({
+    ...d,
+    achievements: Array.isArray(d["achievements"]) ? d["achievements"] : [],
+  }),
 ];
 
 export function runMigrations(

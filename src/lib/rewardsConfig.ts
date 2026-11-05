@@ -7,8 +7,9 @@
  *   They are derived from the XP ledger, never stored as a running total.
  * - sinks: shop spending is recorded as ledger entries with sourceType
  *   "shop", xp 0 and a negative coins value. XP is never spent; only coins are.
- * - future: "challenge" / "achievement" entries may grant coins directly
- *   (positive coins value); totalsFromLedger counts them too.
+ * - challenge bonuses: completed challenges grant coins directly (see
+ *   DAILY_CHALLENGE_COINS / WEEKLY_CHALLENGE_COINS below) — coins-only
+ *   entries (xp 0), so they never touch DAILY_XP_CAP or levels.
  */
 
 import type { Priority } from "./types";
@@ -30,6 +31,21 @@ export const COINS_PER_XP = 2;
 
 /** A task completed less than this many ms after its creation earns 0 XP. */
 export const TASK_MIN_AGE_MS = 120_000;
+
+/*
+ * Challenge bonuses: coins-only ledger entries (xp 0) granted once per
+ * completed challenge per period (daily anchor = today, weekly anchor =
+ * week start). Zero XP means they NEVER count toward DAILY_XP_CAP and
+ * never advance levels; the ledger identity rule (sourceType "challenge",
+ * sourceId, anchor day) makes each grant once per period. Undoing the
+ * underlying actions keeps the bonus (no claw-back) but can never trigger
+ * a second grant.
+ */
+/** Coins for one completed daily challenge. */
+export const DAILY_CHALLENGE_COINS = 15;
+
+/** Coins for one completed weekly challenge. */
+export const WEEKLY_CHALLENGE_COINS = 40;
 
 /*
  * Level curve — ONE convention (read before touching anything):

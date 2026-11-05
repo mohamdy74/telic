@@ -34,4 +34,12 @@ describe("migrations", () => {
     expect(data["habits"]).toEqual([]);
     expect(data["tasks"]).toEqual([{ id: "x" }]);
   });
+
+  it("real v1 -> v2 adds the achievements collection", () => {
+    const { data, from, to } = runMigrations({ meta: { schemaVersion: 1 }, tasks: [] });
+    expect(from).toBe(1);
+    expect(to).toBe(2);
+    expect(data["achievements"]).toEqual([]);
+    expect(data.meta?.schemaVersion).toBe(2);
+  });
 });

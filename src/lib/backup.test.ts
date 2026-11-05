@@ -11,6 +11,7 @@ const snapshot = (n = 1): Snapshot =>
     habits: [],
     habitLogs: [{ ...rec("l1"), habitId: "h1", localDay: "2026-01-01", status: "done" }],
     focusSessions: [],
+    achievements: [],
     xpLedger: [
       { ...rec("x1"), sourceType: "focus", sourceId: "s1", localDay: "2026-01-01", xp: 10, coins: 2 },
       { ...rec("x2"), sourceType: "task", sourceId: "t0", localDay: "2026-01-01", xp: 5, coins: 1 },
@@ -119,6 +120,7 @@ describe("parseBackup migration", () => {
     expect(parsed.exportedAt).toBe("2026-01-02T03:04:05.000Z");
     expect(parsed.snapshot.meta.schemaVersion).toBe(CURRENT_SCHEMA_VERSION);
     expect(parsed.snapshot.habits).toEqual([]);
+    expect(parsed.snapshot.achievements).toEqual([]);
     expect(parsed.counts.tasks).toBe(2);
   });
 

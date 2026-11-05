@@ -40,7 +40,7 @@ export function defaultSettings(language: "en" | "ar" = "en"): Settings {
 function emptySnapshot(): Snapshot {
   const t = nowIso();
   return {
-    tasks: [], habits: [], habitLogs: [], focusSessions: [], xpLedger: [],
+    tasks: [], habits: [], habitLogs: [], focusSessions: [], xpLedger: [], achievements: [],
     settings: defaultSettings(),
     meta: { schemaVersion: CURRENT_SCHEMA_VERSION, createdAt: t, updatedAt: t },
   };

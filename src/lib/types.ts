@@ -1,5 +1,5 @@
-/** Schema v1 entity types. Bump CURRENT_SCHEMA_VERSION + add a migration when changing. */
-export const CURRENT_SCHEMA_VERSION = 1;
+/** Schema entity types. Bump CURRENT_SCHEMA_VERSION + add a migration when changing. */
+export const CURRENT_SCHEMA_VERSION = 2;
 
 export type ISODate = string; // full ISO timestamp
 export type LocalDay = string; // 'YYYY-MM-DD', stored at creation, never recomputed
@@ -80,6 +80,13 @@ export interface XpLedgerEntry extends BaseRecord {
   coins: number;
 }
 
+/** An achievement unlocked once; written by the store after reward checks. */
+export interface AchievementUnlock extends BaseRecord {
+  achievementId: string;
+  unlockedAt: ISODate;
+  localDay: LocalDay;
+}
+
 export type DashboardCard = "priorities" | "progress" | "deadlines" | "habits" | "focus" | "level" | "achievements";
 
 export interface Settings {
@@ -107,9 +114,10 @@ export interface Collections {
   habitLogs: HabitLog[];
   focusSessions: FocusSession[];
   xpLedger: XpLedgerEntry[];
+  achievements: AchievementUnlock[];
 }
 export type CollectionKey = keyof Collections;
-export const COLLECTION_KEYS: CollectionKey[] = ["tasks", "habits", "habitLogs", "focusSessions", "xpLedger"];
+export const COLLECTION_KEYS: CollectionKey[] = ["tasks", "habits", "habitLogs", "focusSessions", "xpLedger", "achievements"];
 
 /** Full snapshot = every storage key. Used for load, export, import and migrations. */
 export interface Snapshot extends Collections {
