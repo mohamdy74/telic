@@ -2,7 +2,8 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import { Check, Database, Download, FileWarning, Monitor, Moon, Smartphone, Sprout, Sun, Upload } from "lucide-react";
 import { usePrefs, type Theme } from "@/components/app/preferences";
-import { BackupError, backupFileName, buildBackup, parseBackup, type ParsedBackup } from "@/lib/backup";
+import { BackupError, parseBackup, type ParsedBackup } from "@/lib/backup";
+import { buildZipExport, exportZipFileName } from "@/lib/exportZip";
 import { formatDate, formatNumber, type Locale } from "@/lib/i18n";
 import { isStandalone } from "@/lib/pwa";
 import {
@@ -353,13 +354,11 @@ function DataSection() {
     !lastExportedAt || Date.now() - new Date(lastExportedAt).getTime() > BACKUP_STALE_MS;
 
   const doExport = () => {
-    const blob = new Blob([JSON.stringify(buildBackup(exportSnapshot()), null, 2)], {
-      type: "application/json",
-    });
+    const blob = new Blob([buildZipExport(exportSnapshot())], { type: "application/zip" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    a.download = backupFileName();
+    a.download = exportZipFileName();
     a.click();
     URL.revokeObjectURL(url);
     metaActions.update({ lastExportedAt: new Date().toISOString() });

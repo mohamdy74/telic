@@ -13,6 +13,7 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as FocusRouteImport } from './routes/focus'
 import { Route as HabitsRouteImport } from './routes/habits'
 import { Route as InsightsRouteImport } from './routes/insights'
+import { Route as NotesRouteImport } from './routes/notes'
 import { Route as RewardsRouteImport } from './routes/rewards'
 import { Route as SettingsRouteImport } from './routes/settings'
 import { Route as TasksRouteImport } from './routes/tasks'
@@ -37,6 +38,11 @@ const InsightsRoute = InsightsRouteImport.update({
   path: '/insights',
   getParentRoute: () => rootRouteImport,
 } as any)
+const NotesRoute = NotesRouteImport.update({
+  id: '/notes',
+  path: '/notes',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const RewardsRoute = RewardsRouteImport.update({
   id: '/rewards',
   path: '/rewards',
@@ -58,6 +64,7 @@ export interface FileRoutesByFullPath {
   '/focus': typeof FocusRoute
   '/habits': typeof HabitsRoute
   '/insights': typeof InsightsRoute
+  '/notes': typeof NotesRoute
   '/rewards': typeof RewardsRoute
   '/settings': typeof SettingsRoute
   '/tasks': typeof TasksRoute
@@ -67,6 +74,7 @@ export interface FileRoutesByTo {
   '/focus': typeof FocusRoute
   '/habits': typeof HabitsRoute
   '/insights': typeof InsightsRoute
+  '/notes': typeof NotesRoute
   '/rewards': typeof RewardsRoute
   '/settings': typeof SettingsRoute
   '/tasks': typeof TasksRoute
@@ -77,6 +85,7 @@ export interface FileRoutesById {
   '/focus': typeof FocusRoute
   '/habits': typeof HabitsRoute
   '/insights': typeof InsightsRoute
+  '/notes': typeof NotesRoute
   '/rewards': typeof RewardsRoute
   '/settings': typeof SettingsRoute
   '/tasks': typeof TasksRoute
@@ -88,6 +97,7 @@ export interface FileRouteTypes {
     | '/focus'
     | '/habits'
     | '/insights'
+    | '/notes'
     | '/rewards'
     | '/settings'
     | '/tasks'
@@ -97,6 +107,7 @@ export interface FileRouteTypes {
     | '/focus'
     | '/habits'
     | '/insights'
+    | '/notes'
     | '/rewards'
     | '/settings'
     | '/tasks'
@@ -106,6 +117,7 @@ export interface FileRouteTypes {
     | '/focus'
     | '/habits'
     | '/insights'
+    | '/notes'
     | '/rewards'
     | '/settings'
     | '/tasks'
@@ -116,6 +128,7 @@ export interface RootRouteChildren {
   FocusRoute: typeof FocusRoute
   HabitsRoute: typeof HabitsRoute
   InsightsRoute: typeof InsightsRoute
+  NotesRoute: typeof NotesRoute
   RewardsRoute: typeof RewardsRoute
   SettingsRoute: typeof SettingsRoute
   TasksRoute: typeof TasksRoute
@@ -151,6 +164,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof InsightsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/notes': {
+      id: '/notes'
+      path: '/notes'
+      fullPath: '/notes'
+      preLoaderRoute: typeof NotesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/rewards': {
       id: '/rewards'
       path: '/rewards'
@@ -180,6 +200,7 @@ const rootRouteChildren: RootRouteChildren = {
   FocusRoute: FocusRoute,
   HabitsRoute: HabitsRoute,
   InsightsRoute: InsightsRoute,
+  NotesRoute: NotesRoute,
   RewardsRoute: RewardsRoute,
   SettingsRoute: SettingsRoute,
   TasksRoute: TasksRoute,

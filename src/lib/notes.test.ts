@@ -45,7 +45,7 @@ describe("filterNotes", () => {
   const list = [
     note({ id: "t1", title: "Grocery plan", body: "milk and bread" }),
     note({ id: "t2", title: "خطة الأسبوع", body: "خطة كاملة" }),
-    note({ id: "t3", title: "Book notes", body: "دروس من الكتاب" }),
+    note({ id: "t3", title: "Book notes", body: "خطة قراءة الكتاب" }),
   ];
 
   it("an empty query returns every note", () => {

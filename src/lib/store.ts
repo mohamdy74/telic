@@ -18,6 +18,7 @@ import {
   type Habit,
   type HabitLog,
   type Meta,
+  type Note,
   type Purchase,
   type Settings,
   type ShopItem,
@@ -407,6 +408,30 @@ export const habits = {
   },
 };
 
+/** Notes are plain records — no reward events; they sit outside the XP economy. */
+export const notes = {
+  add(input: { title: string; body?: string | undefined; linkedTaskId?: string | undefined; pinned?: boolean | undefined }): Note {
+    const t = nowIso();
+    const n: Note = {
+      id: uid(),
+      title: input.title,
+      body: input.body ?? "",
+      ...(input.linkedTaskId !== undefined ? { linkedTaskId: input.linkedTaskId } : {}),
+      ...(input.pinned !== undefined ? { pinned: input.pinned } : {}),
+      createdAt: t,
+      updatedAt: t,
+    };
+    setCollection("notes", (l) => [...l, n]);
+    return n;
+  },
+  update(id: string, patch: Partial<Omit<Note, "id" | "createdAt">>) {
+    setCollection("notes", (l) => l.map((x) => (x.id === id ? { ...x, ...patch, updatedAt: nowIso() } : x)));
+  },
+  remove(id: string) {
+    notes.update(id, { deletedAt: nowIso() });
+  },
+};
+
 export const focus = {
   start(mode: FocusSession["mode"], plannedMinutes: number, linkedTaskId?: string): FocusSession {
     const now = new Date();
@@ -590,6 +615,15 @@ export function seedSampleData() {
   habits.log(h2.id, "skipped", plus(-1));
   const s = focus.start("pomodoro", 25);
   focus.end(s.id, true); // XP is awarded automatically through applyRewardEvent
+  notes.add({
+    title: "Welcome to notes",
+    body: "Markdown works here — # headings, **bold**, lists, [links](https://example.com).\nEdit or delete this note anytime.",
+  });
+  notes.add({
+    title: "خطة الأسبوع",
+    body: "- خلّص المهام المعلّقة\n- جلسة تركيز واحدة على الأقل",
+    pinned: true,
+  });
 
   // Three weeks of history so /insights has real series to chart (dev-only).
   const mkDone = (title: string, day: string, hourUtc: number) => {

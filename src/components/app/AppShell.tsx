@@ -1,5 +1,5 @@
 import { Link, useNavigate } from "@tanstack/react-router";
-import { ChevronRight, Plus, Search, Target, Trophy, type LucideIcon } from "lucide-react";
+import { ChevronRight, Plus, Search, StickyNote, Target, Trophy, type LucideIcon } from "lucide-react";
 import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { NAV } from "./nav";
 import { usePrefs } from "./preferences";
@@ -121,7 +121,7 @@ export function AppShell({ children }: { children: ReactNode }) {
 
       <nav
         aria-label="Main"
-        className="fixed inset-x-0 bottom-0 z-30 grid grid-cols-6 border-t border-border bg-sidebar/95 backdrop-blur md:hidden"
+        className="fixed inset-x-0 bottom-0 z-30 grid grid-cols-7 border-t border-border bg-sidebar/95 backdrop-blur md:hidden"
       >
         {NAV.filter((n) => n.key !== "rewards").map(
           ({ key, to, icon: Icon }) => (
@@ -206,6 +206,20 @@ function CommandPalette({ onClose }: { onClose: () => void }) {
           }
           onClose();
           navigate({ to: "/tasks" });
+        },
+      },
+      {
+        key: "newNote",
+        label: t.command.newNote,
+        icon: StickyNote,
+        run: () => {
+          try {
+            window.sessionStorage.setItem("tilth.new-note", "1");
+          } catch {
+            /* ignore */
+          }
+          onClose();
+          navigate({ to: "/notes" });
         },
       },
       ...NAV.map((n): Cmd => ({

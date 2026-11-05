@@ -133,7 +133,7 @@ describe("tasksToCsv", () => {
         "," +
         stamp +
         "\n" +
-        "t2,Read a book,todo,low,,,,," +
+        "t2,Read a book,todo,low,,,," +
         stamp +
         "," +
         stamp +
