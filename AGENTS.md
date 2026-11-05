@@ -46,7 +46,8 @@ use the editor.
 - `meta.schemaVersion` is 1 (`CURRENT_SCHEMA_VERSION` in `src/lib/types.ts`). Any
   stored-shape change bumps it and adds one entry to the ordered `migrations`
   array in `src/lib/migrations.ts` (index = from-version); migrations run on boot
-  and on import.
+  and on import. Exception: ADDITIVE OPTIONAL fields (absent in old records,
+  defaulted on read) do not bump the version — e.g. `Task.seriesId`.
 - Storage keys: one IndexedDB key per collection — `tasks`, `habits`,
   `habitLogs`, `focusSessions`, `xpLedger`, `settings`, `meta` (idb-keyval store
   "tilth"). Writing one collection never rewrites the others; writes are
@@ -60,8 +61,36 @@ use the editor.
   deletion is soft (`deletedAt`) wherever undo matters.
 - Recurrence is a stored rule on the task; only the NEXT instance is generated
   on completion (`tasks.complete`) — never pre-generate instances.
-- `/settings` is a temporary debug page (store status + dev-only seed); the real
-  settings UI comes later.
+- `/settings` is the real settings page (language/theme/system, day prefs,
+  dashboard cards, export/import/reset). Its store-status panel is debug-only.
+
+## Tasks page (/tasks)
+
+- Quick add parses inline syntax in `src/lib/quickAdd.ts` (PURE:
+  `parseQuickAdd(input, today)`): `!high` / `!عالي` (also `!med`/`!low` and AR
+  aliases), `#tag` tokens, and date words (today/tomorrow/tmr and
+  النهاردة/اليوم/بكرة/بكره/غدا…). Unknown `!flags` stay in the title; a later
+  date word wins. Extend the alias sets in quickAdd.ts, never the route.
+- Views bucket tasks purely from the stored `dueDate` (LocalDay) vs
+  `todayLocal()`: today / upcoming / overdue; `inbox` = no due date;
+  `completed` = `status === "done"`. Overdue always compares stored localDays —
+  never recompute a record's day.
+- Complete/uncomplete is an idempotent toggle through `tasks.complete` /
+  `tasks.reopen` (`completedAt` set/cleared). The tasks UI NEVER writes
+  `xpLedger` — the rewards engine will subscribe to completion later.
+- Kanban: columns are `Task.status` (todo/doing/done); `kanbanOrder` is a
+  per-task number reassigned wholesale by `tasks.reorder(ids)` after a drop.
+  Board RTL: DOM order todo→doing→done flows with direction; column move
+  buttons use `rtl-flip` chevrons. Drag & drop always has the button
+  alternative.
+- Recurring series: tasks with a rule carry `seriesId` (additive optional
+  field). Generated instances inherit it via `tasks.complete`. Deleting a
+  recurring task asks instance vs series; series = same `seriesId`, or same
+  title+rule for legacy rows without one.
+- Undo: complete/delete show a toast; undo reuses soft delete
+  (`tasks.restore`) and removes a spawned next instance when one was created.
+- ⌘K palette: "New task" sets sessionStorage `tilth.new-task`, routes to
+  /tasks, and the page focuses the quick-add input (flag cleared on read).
 
 ## SSR constraints (Cloudflare Workers / workerd)
 
