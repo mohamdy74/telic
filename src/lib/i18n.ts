@@ -17,7 +17,7 @@ const en = {
     settings: "Settings",
   },
   pages: {
-    dashboard: { title: "Your day, at a glance", body: "Priorities, habits and focus will gather here once you start." },
+    dashboard: { title: "Your day, at a glance", body: "Everything due today, in one calm view." },
     tasks: { title: "Tasks", body: "Capture first, sort later — today, upcoming or the board." },
     habits: { title: "Habits", body: "Small, steady actions. Missed days won't erase your progress." },
     focus: { title: "Focus", body: "One session at a time — work, then a real break." },
@@ -135,6 +135,22 @@ const en = {
     minutes: "min",
   },
 
+  dash: {
+    viewAll: "View all",
+    startFocus: "Start a session",
+    progressEmpty: "Nothing on your plate today — enjoy the calm.",
+    deadlinesEmpty: "No deadlines in the next 7 days.",
+    andMore: "+{n} more",
+    levelBody: "Levels and XP arrive with rewards.",
+    achievementsBody: "Your milestones will be celebrated here.",
+    hiddenCards: "All cards are hidden — turn some back on in Settings.",
+    welcome: {
+      title: "Welcome to Tilth",
+      body: "Start small: add your first task, or plant a habit worth keeping.",
+      addTask: "Add a task",
+      addHabit: "Add a habit",
+    },
+  },
   comingSoon: "Coming soon",
   command: {
     open: "Search or jump to…",
@@ -255,7 +271,7 @@ const ar: Dict = {
     settings: "الإعدادات",
   },
   pages: {
-    dashboard: { title: "يومك في لمحة", body: "بمجرد أن تبدأ، ستجد هنا أولوياتك وعاداتك وجلسات تركيزك." },
+    dashboard: { title: "يومك في لمحة", body: "كل ما يستحق اليوم، في لمحة واحدة هادئة." },
     tasks: { title: "المهام", body: "دوّن أولًا ورتّب بعدها — اليوم أو القادمة أو اللوحة." },
     habits: { title: "العادات", body: "خطوات صغيرة وثابتة. الأيام الفائتة لن تمحو تقدّمك." },
     focus: { title: "التركيز", body: "جلسة واحدة في كل مرة — تركيز ثم استراحة حقيقية." },
@@ -373,6 +389,22 @@ const ar: Dict = {
     minutes: "دقيقة",
   },
 
+  dash: {
+    viewAll: "عرض الكل",
+    startFocus: "ابدأ جلسة",
+    progressEmpty: "لا شيء في قائمتك اليوم — استمتع بالهدوء.",
+    deadlinesEmpty: "لا مواعيد خلال الأيام السبعة القادمة.",
+    andMore: "+{n} أخرى",
+    levelBody: "المستويات والخبرة قادمة مع المكافآت.",
+    achievementsBody: "إنجازاتك ستُحتفى بها هنا.",
+    hiddenCards: "كل الكروت مخفية — فعّل بعضها من الإعدادات.",
+    welcome: {
+      title: "أهلًا بك في تيلث",
+      body: "ابدأ صغيرًا: أضف مهمتك الأولى، أو ازرع عادة تستحق المثابرة.",
+      addTask: "أضف مهمة",
+      addHabit: "أضف عادة",
+    },
+  },
   comingSoon: "قريبًا",
   command: {
     open: "ابحث أو انتقل إلى…",

@@ -61,9 +61,9 @@ use the editor.
   deletion is soft (`deletedAt`) wherever undo matters.
 - Recurrence is a stored rule on the task; only the NEXT instance is generated
   on completion (`tasks.complete`) — never pre-generate instances.
-- Real pages so far: `/settings`, `/tasks`, `/habits`.
-  Dashboard, focus, rewards and insights are still placeholders. The settings
-  store-status panel is debug-only.
+- Real pages so far: `/settings`, `/tasks`, `/habits`, `/focus`,
+  `/` (the Today dashboard). Rewards and insights are still
+  placeholders. The settings store-status panel is debug-only.
 
 ## Tasks page (/tasks)
 
@@ -154,6 +154,30 @@ use the editor.
   groups by the stored day, never recomputed).
 - The focus UI NEVER writes `xpLedger` — the rewards engine will
   subscribe to completed sessions later.
+
+## Dashboard (/)
+
+- Cards are pure math in `src/lib/dashboard.ts` (`todaysPriorities`,
+  `upcomingDeadlines`, `habitsDueToday`, `dailyProgress`) over stored
+  LocalDay strings vs `todayLocal()` — a record's day is never recomputed.
+  Each card shows/hides via `settings.dashboardCards`; when all are off
+  the page says so and links to Settings.
+- Priorities: open tasks due today or overdue — priority first, then earlier
+  dates — with one-tap `tasks.complete` and a toast. Deadlines: open tasks
+  due within the next 7 days (today excluded). Habits: scheduled today with a
+  one-tap done toggle (`habits.log` / `habits.unlog` for today only).
+- Daily progress ring: (tasks due today that are done + habits due today that
+  are done) / (tasks due today + habits due today). `dailyProgress` returns
+  ratio null when nothing is due today — the UI shows a friendly state, never
+  a divide by zero. Scope note: both sides are today's plate only, so the ring
+  stays within 0..1; completing an overdue task does not move it.
+- Focus card: `workMinutesToday` (completed work sessions, breaks excluded)
+  vs `settings.dailyFocusTargetMinutes`.
+- Level and achievements cards are "coming soon" placeholders until XP rules
+  exist. The dashboard NEVER writes `xpLedger` — the rewards engine
+  will subscribe to completions later.
+- First run (no tasks, no habits, no focus sessions) shows a welcome panel
+  linking to /tasks and /habits. All cards are skeletons until `ready`.
 
 ## SSR constraints (Cloudflare Workers / workerd)
 
