@@ -184,7 +184,7 @@ export function todayLocal(): string {
   return toLocalDay(new Date(), useStore.getState().settings.dayStartHour, currentTimeZone());
 }
 
-const live = <T extends { deletedAt?: string }>(l: T[]) => l.filter((r) => !r.deletedAt);
+const live = <T extends { deletedAt?: string | undefined }>(l: T[]) => l.filter((r) => !r.deletedAt);
 
 /* ---------------- selectors ---------------- */
 
