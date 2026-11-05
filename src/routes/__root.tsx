@@ -14,6 +14,7 @@ import { PreferencesProvider } from "@/components/app/preferences";
 import { AppShell } from "@/components/app/AppShell";
 import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
+import { bootStore } from "../lib/store";
 
 function NotFoundComponent() {
   return (
@@ -117,6 +118,12 @@ function RootShell({ children }: { children: ReactNode }) {
 
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
+
+  // Boot the store AFTER hydration so SSR HTML matches the client. Pages show a
+  // skeleton until the store's `ready` flag flips true.
+  useEffect(() => {
+    void bootStore();
+  }, []);
 
   return (
     <QueryClientProvider client={queryClient}>

@@ -37,3 +37,28 @@ use the editor.
 - RTL: use CSS logical properties / Tailwind logical utilities (ps/pe, ms/me, start/end, text-start). Directional icons get `rtl-flip`. `<html dir/lang>` is set in an effect.
 - No hardcoded colors in components; all colors are oklch tokens in `src/styles.css`. Accent is driven by `--accent-hue` so themes can swap it.
 - Fonts are self-hosted via @fontsource (no CDN) so they work offline.
+
+## Data rules (schema v1)
+
+- `localDay` is stored at creation time and never recomputed afterwards. A record's
+  localDay must survive later changes of timezone or `dayStartHour`.
+- `meta.schemaVersion` is 1 (`CURRENT_SCHEMA_VERSION` in `src/lib/types.ts`). Any
+  stored-shape change bumps it and adds one entry to the ordered `migrations`
+  array in `src/lib/migrations.ts` (index = from-version); migrations run on boot
+  and on import.
+- Storage keys: one IndexedDB key per collection — `tasks`, `habits`,
+  `habitLogs`, `focusSessions`, `xpLedger`, `settings`, `meta` (idb-keyval store
+  "grove"). Writing one collection never rewrites the others; writes are
+  debounced (250 ms) and flushed on tab hide.
+- The store boots client-side AFTER hydration (`bootStore()` effect in
+  `__root.tsx`), so SSR HTML matches the client. UI must render a skeleton until
+  `ready` is true.
+- Multi-tab: `BroadcastChannel("grove-sync")` + per-key rev counters; concurrent
+  writes merge per record by `updatedAt` (`src/lib/storage/persistence.ts`).
+- IDs are `crypto.randomUUID()`; every record carries ISO `createdAt`/`updatedAt`;
+  deletion is soft (`deletedAt`) wherever undo matters.
+- Recurrence is a stored rule on the task; only the NEXT instance is generated
+  on completion (`tasks.complete`) — never pre-generate instances.
+- `/settings` is a temporary debug page (store status + dev-only seed); the real
+  settings UI comes later.
+
