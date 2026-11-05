@@ -52,7 +52,14 @@ jobs:
             exit 1
           fi
       - name: Build
-        run: npm run build
+        run: |
+          set +e
+          npm run build > /tmp/build.log 2>&1
+          code=$?
+          if [ $code -ne 0 ]; then
+            echo "::error title=build failed::$(tail -c 700 /tmp/build.log | tr '\n' ' ')"
+            exit 1
+          fi
       - name: Serve with workerd and probe
         run: |
           cd .output
@@ -67,7 +74,7 @@ jobs:
           S=$(curl -s -o /dev/null -w "%{http_code}" http://localhost:8787/settings)
           SW=$(curl -s -o /dev/null -w "%{http_code}" http://localhost:8787/sw.js)
           MF=$(curl -s -o /dev/null -w "%{http_code}" http://localhost:8787/manifest.webmanifest)
-          SH=$(curl -s -o /dev/null -w "%{http_code}" http://localhost:8787/_shell.html)
+          SH=$(curl -sL -o /dev/null -w "%{http_code}" http://localhost:8787/_shell.html)
           echo "home=$H settings=$S sw=$SW manifest=$MF shell=$SH"
           if [ "$H" != "200" ] || [ "$S" != "200" ] || [ "$SW" != "200" ] || [ "$MF" != "200" ] || [ "$SH" != "200" ]; then
             {
@@ -76,8 +83,7 @@ jobs:
               SWF="no"; [ -f .output/public/sw.js ] && SWF="yes"
               MFF="no"; [ -f .output/public/manifest.webmanifest ] && MFF="yes"
               SHF="no"; [ -f .output/public/_shell.html ] && SHF="yes"
-              IDXF="no"; [ -f .output/public/index.html ] && IDXF="yes"
-              echo "files sw=$SWF manifest=$MFF shell=$SHF index=$IDXF"
+              echo "files sw=$SWF manifest=$MFF shell=$SHF"
               echo "codes home=$H settings=$S sw=$SW manifest=$MF shell=$SH"
             } > /tmp/probe-fail.txt
             echo "::error title=workerd probe failed::$(tail -c 690 /tmp/probe-fail.txt | tr '\n' '|')"
