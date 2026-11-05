@@ -1,25 +1,56 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { Database, Moon, Sprout, Sun } from "lucide-react";
-import { usePrefs } from "@/components/app/preferences";
+import { useEffect, useRef, useState, type ReactNode } from "react";
+import { Database, Download, FileWarning, Monitor, Moon, Sprout, Sun, Upload } from "lucide-react";
+import { usePrefs, type Theme } from "@/components/app/preferences";
+import { BackupError, backupFileName, buildBackup, parseBackup, type ParsedBackup } from "@/lib/backup";
 import { formatDate, formatNumber, type Locale } from "@/lib/i18n";
-import { flushAll, seedSampleData, useStore } from "@/lib/store";
+import {
+  exportSnapshot,
+  flushAll,
+  importSnapshot,
+  metaActions,
+  resetAll,
+  seedSampleData,
+  settings as settingsApi,
+  useStore,
+} from "@/lib/store";
+import { COLLECTION_KEYS, type DashboardCard } from "@/lib/types";
 
 export const Route = createFileRoute("/settings")({
   head: () => ({
     meta: [
       { title: "Settings — Tilth" },
-      { name: "description", content: "Choose your language and appearance in Tilth." },
+      { name: "description", content: "Language, appearance, your day and your data in Tilth." },
       { property: "og:title", content: "Settings — Tilth" },
-      { property: "og:description", content: "Choose your language and appearance in Tilth." },
+      { property: "og:description", content: "Language, appearance, your day and your data in Tilth." },
     ],
   }),
   component: SettingsPage,
 });
 
 const COLLECTIONS = ["tasks", "habits", "habitLogs", "focusSessions", "xpLedger"] as const;
+const DAY_START_HOURS = [0, 4] as const;
+const WEEKDAYS = [0, 1, 2, 3, 4, 5, 6] as const;
+const DASHBOARD_CARDS: DashboardCard[] = [
+  "priorities",
+  "progress",
+  "deadlines",
+  "habits",
+  "focus",
+  "level",
+  "achievements",
+];
+const BACKUP_STALE_MS = 7 * 24 * 60 * 60 * 1000;
+
+const PRIMARY_BTN =
+  "inline-flex items-center justify-center gap-2 rounded-md bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary/90 disabled:pointer-events-none disabled:opacity-50";
+const OUTLINE_BTN =
+  "inline-flex items-center justify-center gap-2 rounded-md border border-border bg-background px-4 py-2 text-sm font-medium text-foreground transition-colors hover:bg-accent/40 disabled:pointer-events-none disabled:opacity-50";
+const DANGER_BTN =
+  "inline-flex items-center justify-center gap-2 rounded-md bg-destructive px-4 py-2 text-sm font-semibold text-destructive-foreground transition-colors hover:bg-destructive/90 disabled:pointer-events-none disabled:opacity-50";
 
 function SettingsPage() {
-  const { t, locale, setLocale, theme, setTheme } = usePrefs();
+  const { t } = usePrefs();
   return (
     <section>
       <p className="mb-2 text-sm font-medium text-primary">{t.nav.settings}</p>
@@ -28,50 +59,15 @@ function SettingsPage() {
       </h1>
       <p className="mt-2 text-muted-foreground">{t.pages.settings.body}</p>
 
-      <div className="mt-8 grid gap-4 md:grid-cols-2">
-        <fieldset className="panel">
-          <legend className="panel-title">{t.settings.language}</legend>
-          <div className="segmented" role="radiogroup" aria-label={t.settings.language}>
-            {(["en", "ar"] as const).map((l) => (
-              <button
-                key={l}
-                type="button"
-                role="radio"
-                aria-checked={locale === l}
-                onClick={() => setLocale(l)}
-                className="segment"
-              >
-                {l === "en" ? "English" : "العربية"}
-              </button>
-            ))}
-          </div>
-          <p className="mt-3 text-xs text-muted-foreground" suppressHydrationWarning>
-            {formatDate(locale, new Date())}
-          </p>
-        </fieldset>
-        <fieldset className="panel">
-          <legend className="panel-title">{t.settings.theme}</legend>
-          <div className="segmented" role="radiogroup" aria-label={t.settings.theme}>
-            <button
-              type="button"
-              role="radio"
-              aria-checked={theme === "light"}
-              onClick={() => setTheme("light")}
-              className="segment"
-            >
-              <Sun className="size-4" aria-hidden /> {t.settings.light}
-            </button>
-            <button
-              type="button"
-              role="radio"
-              aria-checked={theme === "dark"}
-              onClick={() => setTheme("dark")}
-              className="segment"
-            >
-              <Moon className="size-4" aria-hidden /> {t.settings.dark}
-            </button>
-          </div>
-        </fieldset>
+      <div className="mt-8 grid items-start gap-4 md:grid-cols-2">
+        <LanguageSection />
+        <YourDaySection />
+        <ThemeSection />
+        <DashboardCardsSection />
+      </div>
+
+      <div className="mt-4">
+        <DataSection />
       </div>
 
       <div className="mt-4">
@@ -81,7 +77,489 @@ function SettingsPage() {
   );
 }
 
-/** Temporary debug view of the data layer. Real settings UI comes later. */
+function SkeletonPanel() {
+  return (
+    <fieldset className="panel" aria-busy="true" aria-hidden="true">
+      <div className="mt-4 space-y-2">
+        <div className="h-5 w-1/3 animate-pulse rounded bg-accent/30" />
+        <div className="h-4 w-2/3 animate-pulse rounded bg-accent/30" />
+        <div className="h-4 w-1/2 animate-pulse rounded bg-accent/30" />
+      </div>
+    </fieldset>
+  );
+}
+
+function LanguageSection() {
+  const { t, locale, setLocale } = usePrefs();
+  const ready = useStore((s) => s.ready);
+  const pick = (l: Locale) => {
+    setLocale(l);
+    if (ready) settingsApi.update({ language: l });
+  };
+  return (
+    <fieldset className="panel">
+      <legend className="panel-title">{t.settings.language}</legend>
+      <div className="segmented" role="radiogroup" aria-label={t.settings.language}>
+        {(["en", "ar"] as const).map((l) => (
+          <button
+            key={l}
+            type="button"
+            role="radio"
+            aria-checked={locale === l}
+            onClick={() => pick(l)}
+            className="segment"
+          >
+            {l === "en" ? "English" : "العربية"}
+          </button>
+        ))}
+      </div>
+    </fieldset>
+  );
+}
+
+function ThemeSection() {
+  const { t, theme, setTheme } = usePrefs();
+  const ready = useStore((s) => s.ready);
+  const pick = (th: Theme) => {
+    setTheme(th);
+    if (ready) settingsApi.update({ theme: th });
+  };
+  const options: Array<{ value: Theme; label: string; icon: ReactNode }> = [
+    { value: "light", label: t.settings.light, icon: <Sun className="size-4" aria-hidden /> },
+    { value: "dark", label: t.settings.dark, icon: <Moon className="size-4" aria-hidden /> },
+    { value: "system", label: t.settings.system, icon: <Monitor className="size-4" aria-hidden /> },
+  ];
+  return (
+    <fieldset className="panel">
+      <legend className="panel-title">{t.settings.theme}</legend>
+      <div className="segmented" role="radiogroup" aria-label={t.settings.theme}>
+        {options.map((o) => (
+          <button
+            key={o.value}
+            type="button"
+            role="radio"
+            aria-checked={theme === o.value}
+            onClick={() => pick(o.value)}
+            className="segment"
+          >
+            {o.icon} {o.label}
+          </button>
+        ))}
+      </div>
+      {theme === "system" && (
+        <p className="mt-3 text-xs text-muted-foreground">{t.settings.systemHint}</p>
+      )}
+    </fieldset>
+  );
+}
+
+function YourDaySection() {
+  const { t, locale } = usePrefs();
+  const ready = useStore((s) => s.ready);
+  const settings = useStore((s) => s.settings);
+  const [draft, setDraft] = useState(String(settings.dailyFocusTargetMinutes));
+
+  useEffect(() => {
+    setDraft(String(settings.dailyFocusTargetMinutes));
+  }, [settings.dailyFocusTargetMinutes]);
+
+  if (!ready) return <SkeletonPanel />;
+
+  const commitTarget = () => {
+    const n = Math.min(1440, Math.max(0, Math.round(Number(draft) || 0)));
+    setDraft(String(n));
+    if (n !== settings.dailyFocusTargetMinutes) settingsApi.update({ dailyFocusTargetMinutes: n });
+  };
+
+  return (
+    <fieldset className="panel">
+      <legend className="panel-title">{t.settings.yourDay}</legend>
+
+      <div className="mt-2">
+        <p className="text-sm font-medium">{t.settings.dayStart}</p>
+        <p className="text-xs text-muted-foreground">{t.settings.dayStartHint}</p>
+        <div className="segmented" role="radiogroup" aria-label={t.settings.dayStart}>
+          {DAY_START_HOURS.map((h) => (
+            <button
+              key={h}
+              type="button"
+              role="radio"
+              aria-checked={settings.dayStartHour === h}
+              onClick={() => settingsApi.update({ dayStartHour: h })}
+              className="segment tabular-nums"
+            >
+              {dayHourLabel(h)}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      <div className="mt-4">
+        <p className="text-sm font-medium">{t.settings.weekStart}</p>
+        <div
+          className="mt-2 grid max-w-sm grid-cols-4 gap-1.5 sm:grid-cols-7"
+          role="radiogroup"
+          aria-label={t.settings.weekStart}
+        >
+          {WEEKDAYS.map((d) => (
+            <button
+              key={d}
+              type="button"
+              role="radio"
+              aria-checked={settings.weekStartsOn === d}
+              onClick={() => settingsApi.update({ weekStartsOn: d })}
+              className="segment justify-center"
+            >
+              {weekdayShort(locale, d)}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      <div className="mt-4">
+        <label htmlFor="focus-target" className="text-sm font-medium">
+          {t.settings.focusTarget}
+        </label>
+        <div className="mt-2 flex items-center gap-2">
+          <input
+            id="focus-target"
+            type="number"
+            inputMode="numeric"
+            min={0}
+            max={1440}
+            step={5}
+            value={draft}
+            onChange={(e) => setDraft(e.target.value)}
+            onBlur={commitTarget}
+            className="w-24 rounded-md border border-input bg-background px-2 py-1.5 text-sm tabular-nums text-foreground"
+          />
+          <span className="text-sm text-muted-foreground">{t.settings.minutes}</span>
+        </div>
+      </div>
+    </fieldset>
+  );
+}
+
+function DashboardCardsSection() {
+  const { t } = usePrefs();
+  const ready = useStore((s) => s.ready);
+  const cards = useStore((s) => s.settings.dashboardCards);
+  if (!ready) return <SkeletonPanel />;
+
+  return (
+    <fieldset className="panel">
+      <legend className="panel-title">{t.settings.dashboardCards}</legend>
+      <p className="text-xs text-muted-foreground">{t.settings.dashboardHint}</p>
+      <ul className="mt-3 space-y-1">
+        {DASHBOARD_CARDS.map((c) => (
+          <li
+            key={c}
+            className="flex items-center justify-between gap-4 rounded-md px-2 py-1.5 transition-colors hover:bg-accent/20"
+          >
+            <span className="text-sm">{t.settings.cards[c]}</span>
+            <Switch
+              checked={cards[c]}
+              onChange={(v) => settingsApi.update({ dashboardCards: { ...cards, [c]: v } })}
+              label={t.settings.cards[c]}
+            />
+          </li>
+        ))}
+      </ul>
+    </fieldset>
+  );
+}
+
+function DataSection() {
+  const { t, locale } = usePrefs();
+  const ready = useStore((s) => s.ready);
+  const persisted = useStore((s) => s.persisted);
+  const lastExportedAt = useStore((s) => s.meta.lastExportedAt);
+  const [flash, setFlash] = useState<string | null>(null);
+  const [importErr, setImportErr] = useState<string | null>(null);
+  const [pending, setPending] = useState<ParsedBackup | null>(null);
+  const [resetOpen, setResetOpen] = useState(false);
+  const [resetWord, setResetWord] = useState("");
+  const fileRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    if (!flash) return;
+    const id = window.setTimeout(() => setFlash(null), 6000);
+    return () => window.clearTimeout(id);
+  }, [flash]);
+
+  if (!ready) return <SkeletonPanel />;
+
+  const stale =
+    !lastExportedAt || Date.now() - new Date(lastExportedAt).getTime() > BACKUP_STALE_MS;
+
+  const doExport = () => {
+    const blob = new Blob([JSON.stringify(buildBackup(exportSnapshot()), null, 2)], {
+      type: "application/json",
+    });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = backupFileName();
+    a.click();
+    URL.revokeObjectURL(url);
+    metaActions.update({ lastExportedAt: new Date().toISOString() });
+    setFlash(t.data.exportDone);
+  };
+
+  const onFile = async (f: File) => {
+    try {
+      setPending(parseBackup(await f.text()));
+      setImportErr(null);
+    } catch (e) {
+      setPending(null);
+      setImportErr(
+        e instanceof BackupError
+          ? e.code === "newer-schema"
+            ? t.data.errNewer
+            : e.code === "empty"
+              ? t.data.errEmpty
+              : t.data.errInvalid
+          : t.data.errInvalid,
+      );
+    }
+  };
+
+  const confirmImport = async () => {
+    if (!pending) return;
+    const snap = pending.snapshot;
+    setPending(null);
+    try {
+      await importSnapshot(snap);
+      setFlash(t.data.importDone);
+    } catch {
+      setFlash(t.data.importFailed);
+    }
+  };
+
+  return (
+    <>
+      <fieldset className="panel">
+        <legend className="panel-title">{t.data.title}</legend>
+        <p className="text-sm text-muted-foreground">{t.data.localOnly}</p>
+        <p className="mt-1 text-xs text-muted-foreground">{t.data.backupWhy}</p>
+
+        <div className="mt-3 flex items-center justify-between gap-4 border-b border-border/60 py-1.5 text-sm">
+          <span className="text-muted-foreground">{t.data.persisted}</span>
+          <span className="font-medium">
+            {persisted === null ? t.debug.unknown : persisted ? t.data.granted : t.data.notGranted}
+          </span>
+        </div>
+
+        {stale && (
+          <div className="mt-4 flex flex-wrap items-center justify-between gap-3 rounded-md border border-accent/60 bg-accent/20 px-4 py-3">
+            <div className="flex items-start gap-2">
+              <FileWarning className="mt-0.5 size-4 text-primary" aria-hidden />
+              <div>
+                <p className="text-sm font-medium">{t.data.reminderTitle}</p>
+                <p className="text-xs text-muted-foreground">{t.data.reminderBody}</p>
+              </div>
+            </div>
+            <button type="button" onClick={doExport} className={OUTLINE_BTN}>
+              {t.data.exportBtn}
+            </button>
+          </div>
+        )}
+
+        <div className="mt-4 flex flex-wrap gap-2">
+          <button type="button" onClick={doExport} className={PRIMARY_BTN}>
+            <Download className="size-4" aria-hidden /> {t.data.export}
+          </button>
+          <button type="button" onClick={() => fileRef.current?.click()} className={OUTLINE_BTN}>
+            <Upload className="size-4" aria-hidden /> {t.data.import}
+          </button>
+        </div>
+        <p className="mt-2 text-xs text-muted-foreground">{t.data.exportHint}</p>
+        <p className="text-xs text-muted-foreground">{t.data.importHint}</p>
+        <input
+          ref={fileRef}
+          type="file"
+          accept="application/json,.json"
+          className="hidden"
+          onChange={(e) => {
+            const f = e.target.files?.[0];
+            e.target.value = "";
+            if (f) void onFile(f);
+          }}
+        />
+
+        {importErr && (
+          <p className="mt-3 text-sm text-destructive" role="alert">
+            {importErr}
+          </p>
+        )}
+        {flash && (
+          <p className="mt-3 text-sm font-medium text-primary" role="status">
+            {flash}
+          </p>
+        )}
+
+        <div className="mt-5 border-t border-border/60 pt-4">
+          <button
+            type="button"
+            onClick={() => {
+              setResetWord("");
+              setResetOpen(true);
+            }}
+            className={DANGER_BTN}
+          >
+            {t.data.reset}
+          </button>
+          <p className="mt-2 text-xs text-muted-foreground">{t.data.resetHint}</p>
+        </div>
+      </fieldset>
+
+      {pending && (
+        <Modal title={t.data.importTitle} onClose={() => setPending(null)}>
+          <h2 className="font-display text-lg font-semibold">{t.data.importTitle}</h2>
+          <p className="mt-2 text-sm text-muted-foreground">{t.data.importBody}</p>
+          {pending.exportedAt && (
+            <p className="mt-3 text-sm font-medium">
+              {t.data.importFrom.replace(
+                "{date}",
+                formatDate(locale, new Date(pending.exportedAt), { dateStyle: "medium" }),
+              )}
+            </p>
+          )}
+          {pending.migratedFrom !== null && (
+            <p className="mt-1 text-xs text-muted-foreground">{t.data.migratedNote}</p>
+          )}
+          <ul className="mt-3 space-y-1 text-sm">
+            {COLLECTION_KEYS.map((c) => (
+              <li key={c} className="flex justify-between gap-4">
+                <span className="text-muted-foreground">{t.data.collections[c]}</span>
+                <span className="font-medium tabular-nums">
+                  {formatNumber(locale, pending.counts[c])}
+                </span>
+              </li>
+            ))}
+          </ul>
+          <div className="mt-5 flex flex-wrap justify-end gap-2">
+            <button type="button" onClick={() => setPending(null)} className={OUTLINE_BTN}>
+              {t.data.cancel}
+            </button>
+            <button type="button" onClick={() => void confirmImport()} className={PRIMARY_BTN}>
+              {t.data.replaceBtn}
+            </button>
+          </div>
+        </Modal>
+      )}
+
+      {resetOpen && (
+        <Modal title={t.data.resetTitle} onClose={() => setResetOpen(false)}>
+          <h2 className="font-display text-lg font-semibold">{t.data.resetTitle}</h2>
+          <p className="mt-2 text-sm text-muted-foreground">{t.data.resetBody}</p>
+          <button type="button" onClick={doExport} className={OUTLINE_BTN + " mt-4 w-full"}>
+            <Download className="size-4" aria-hidden /> {t.data.resetExportFirst}
+          </button>
+          <label htmlFor="reset-confirm" className="mt-4 block text-sm font-medium">
+            {t.data.resetWordPrompt}
+          </label>
+          <input
+            id="reset-confirm"
+            value={resetWord}
+            onChange={(e) => setResetWord(e.target.value)}
+            autoComplete="off"
+            className="mt-2 w-full rounded-md border border-input bg-background px-3 py-2 text-sm text-foreground"
+          />
+          <div className="mt-5 flex flex-wrap justify-end gap-2">
+            <button type="button" onClick={() => setResetOpen(false)} className={OUTLINE_BTN}>
+              {t.data.cancel}
+            </button>
+            <button
+              type="button"
+              disabled={resetWord.trim() !== t.data.resetWord}
+              onClick={() => {
+                setResetOpen(false);
+                void resetAll();
+              }}
+              className={DANGER_BTN}
+            >
+              {t.data.resetBtn}
+            </button>
+          </div>
+        </Modal>
+      )}
+    </>
+  );
+}
+
+function Switch({
+  checked,
+  onChange,
+  label,
+}: {
+  checked: boolean;
+  onChange: (v: boolean) => void;
+  label: string;
+}) {
+  return (
+    <button
+      type="button"
+      role="switch"
+      aria-checked={checked}
+      aria-label={label}
+      onClick={() => onChange(!checked)}
+      className={
+        "rtl-flip relative inline-flex h-6 w-11 shrink-0 items-center rounded-full border border-border transition-colors " +
+        (checked ? "bg-primary" : "bg-muted")
+      }
+    >
+      <span
+        aria-hidden
+        className={
+          "pointer-events-none absolute start-0.5 block size-4 rounded-full bg-background shadow transition-transform " +
+          (checked ? "translate-x-[22px]" : "translate-x-0")
+        }
+      />
+    </button>
+  );
+}
+
+function Modal({
+  title,
+  onClose,
+  children,
+}: {
+  title: string;
+  onClose: () => void;
+  children: ReactNode;
+}) {
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") onClose();
+    };
+    window.addEventListener("keydown", onKey);
+    document.body.style.overflow = "hidden";
+    return () => {
+      window.removeEventListener("keydown", onKey);
+      document.body.style.overflow = "";
+    };
+  }, [onClose]);
+
+  return (
+    <div
+      className="animate-fade fixed inset-0 z-50 flex items-center justify-center bg-overlay px-4"
+      role="dialog"
+      aria-modal="true"
+      aria-label={title}
+      onClick={onClose}
+    >
+      <div
+        className="animate-pop w-full max-w-md rounded-lg border border-border bg-card p-5 shadow-elevated"
+        onClick={(e) => e.stopPropagation()}
+      >
+        {children}
+      </div>
+    </div>
+  );
+}
+
+/** Temporary debug view of the data layer. */
 function StoreStatus() {
   const { t, locale } = usePrefs();
   const ready = useStore((s) => s.ready);
@@ -228,6 +706,14 @@ function weekdayName(locale: Locale, weekStartsOn: number): string {
   const day = new Date(Date.UTC(2023, 0, 1 + weekStartsOn));
   return new Intl.DateTimeFormat(locale === "ar" ? "ar-EG" : "en-US", {
     weekday: "long",
+    timeZone: "UTC",
+  }).format(day);
+}
+
+function weekdayShort(locale: Locale, d: number): string {
+  const day = new Date(Date.UTC(2023, 0, 1 + d));
+  return new Intl.DateTimeFormat(locale === "ar" ? "ar-EG" : "en-US", {
+    weekday: "short",
     timeZone: "UTC",
   }).format(day);
 }

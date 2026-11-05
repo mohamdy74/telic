@@ -1,7 +1,7 @@
 import { createContext, useCallback, useContext, useEffect, useState, type ReactNode } from "react";
 import { dictionaries, dirOf, type Dict, type Locale } from "@/lib/i18n";
 
-type Theme = "light" | "dark";
+export type Theme = "light" | "dark" | "system";
 type Ctx = {
   locale: Locale;
   setLocale: (l: Locale) => void;
@@ -22,7 +22,9 @@ export function PreferencesProvider({ children }: { children: ReactNode }) {
     try {
       const saved = JSON.parse(window.localStorage.getItem(KEY) || "{}");
       if (saved.locale === "en" || saved.locale === "ar") setLocaleState(saved.locale);
-      if (saved.theme === "light" || saved.theme === "dark") setThemeState(saved.theme);
+      if (saved.theme === "light" || saved.theme === "dark" || saved.theme === "system") {
+        setThemeState(saved.theme);
+      }
     } catch {
       /* ignore */
     }
@@ -32,9 +34,23 @@ export function PreferencesProvider({ children }: { children: ReactNode }) {
     const html = document.documentElement;
     html.lang = locale;
     html.dir = dirOf(locale);
-    html.classList.toggle("dark", theme === "dark");
     window.localStorage.setItem(KEY, JSON.stringify({ locale, theme }));
   }, [locale, theme]);
+
+  // Resolve the visual theme: an explicit choice, or the OS preference when "system".
+  useEffect(() => {
+    const html = document.documentElement;
+    const apply = (dark: boolean) => html.classList.toggle("dark", dark);
+    if (theme !== "system") {
+      apply(theme === "dark");
+      return;
+    }
+    const mq = window.matchMedia("(prefers-color-scheme: dark)");
+    apply(mq.matches);
+    const onChange = (e: MediaQueryListEvent) => apply(e.matches);
+    mq.addEventListener("change", onChange);
+    return () => mq.removeEventListener("change", onChange);
+  }, [theme]);
 
   const setLocale = useCallback((l: Locale) => setLocaleState(l), []);
   const setTheme = useCallback((t: Theme) => setThemeState(t), []);
