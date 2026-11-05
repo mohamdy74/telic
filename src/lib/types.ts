@@ -80,7 +80,7 @@ export type DashboardCard = "priorities" | "progress" | "deadlines" | "habits" |
 
 export interface Settings {
   language: "en" | "ar";
-  theme: "light" | "dark";
+  theme: "light" | "dark" | "system";
   accent: string;
   dayStartHour: 0 | 4;
   weekStartsOn: number; // 0=Sun..6=Sat
@@ -93,6 +93,8 @@ export interface Meta {
   schemaVersion: number;
   createdAt: ISODate;
   updatedAt: ISODate;
+  /** ISO timestamp of the last export; drives the 7-day backup reminder. */
+  lastExportedAt?: ISODate | undefined;
 }
 
 export interface Collections {

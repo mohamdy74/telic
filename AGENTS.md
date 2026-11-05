@@ -74,3 +74,13 @@ use the editor.
 - The `workerd-smoke` CI job builds the app, serves it with wrangler (workerd),
   and requires 200 from `/` and `/settings`. Keep it passing; it is the only
   gate that runs the real production runtime.
+
+## Backups & import (src/lib/backup.ts)
+
+- Export envelope: `{ schemaVersion, exportedAt, data: <full snapshot> }`;
+  filename `tilth-export-YYYY-MM-DD.json`. Every export stamps
+  `meta.lastExportedAt` (drives the 7-day backup reminder on /settings).
+- Import validates BEFORE any write: `parseBackup` is pure (rejects newer
+  schemaVersion, migrates older ones, returns counts); `importSnapshot`
+  (store.ts) only runs after the user confirms replace. A rejected file never
+  touches existing data.

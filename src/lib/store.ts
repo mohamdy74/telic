@@ -11,6 +11,7 @@ import {
   type FocusSession,
   type Habit,
   type HabitLog,
+  type Meta,
   type Settings,
   type Snapshot,
   type StorageKey,
@@ -306,6 +307,14 @@ export const settings = {
   update(patch: Partial<Omit<Settings, "updatedAt">>) {
     useStore.setState({ settings: { ...useStore.getState().settings, ...patch, updatedAt: nowIso() } });
     schedule("settings");
+  },
+};
+
+/** Meta writes (e.g. lastExportedAt for the backup reminder). */
+export const metaActions = {
+  update(patch: Partial<Omit<Meta, "updatedAt">>) {
+    useStore.setState({ meta: { ...useStore.getState().meta, ...patch, updatedAt: nowIso() } });
+    schedule("meta");
   },
 };
 
