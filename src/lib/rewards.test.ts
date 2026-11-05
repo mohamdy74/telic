@@ -238,27 +238,24 @@ describe("awardXp: idempotency and undo", () => {
   it("rapid toggle spam ends with one entry or zero, matching the final state", () => {
     const habitId = "h1";
     const source = { sourceType: "habit" as const, sourceId: habitId, localDay: DAY };
-    // 10 toggles ending on done
+    const live = (l: XpLedgerEntry[]) => l.filter((e) => !e.deletedAt);
+    // Same guards the store uses: denied awards commit nothing.
+    const markDone = (l: XpLedgerEntry[]) => {
+      const res = awardXp({ kind: "habit-done", habitId, localDay: DAY }, l);
+      return res.entry ? commit(l, res.entry) : l;
+    };
+    const markUndone = (l: XpLedgerEntry[]) => softDelete(l, revokeXp(source, l));
+
+    // 9 alternating toggles starting undone end on done: exactly one live entry.
     let ledger: XpLedgerEntry[] = [];
-    for (let i = 0; i < 10; i++) {
-      if (i % 2 === 0) {
-        const res = awardXp({ kind: "habit-done", habitId, localDay: DAY }, ledger);
-        ledger = commit(ledger, res.entry!);
-      } else {
-        ledger = softDelete(ledger, revokeXp(source, ledger));
-      }
-    }
-    expect(ledger.filter((e) => !e.deletedAt)).toHaveLength(1);
-    // 9 more toggles ending on undone
-    for (let i = 0; i < 9; i++) {
-      if (i % 2 === 0) {
-        ledger = softDelete(ledger, revokeXp(source, ledger));
-      } else {
-        const res = awardXp({ kind: "habit-done", habitId, localDay: DAY }, ledger);
-        ledger = commit(ledger, res.entry!);
-      }
-    }
-    expect(ledger.filter((e) => !e.deletedAt)).toHaveLength(0);
+    for (let i = 0; i < 9; i++) ledger = i % 2 === 0 ? markDone(ledger) : markUndone(ledger);
+    expect(live(ledger)).toHaveLength(1);
+    expect(totalsFromLedger(ledger).xp).toBe(HABIT_XP);
+
+    // 10 more alternating toggles starting done end on undone: zero live entries.
+    for (let i = 0; i < 10; i++) ledger = i % 2 === 0 ? markUndone(ledger) : markDone(ledger);
+    expect(live(ledger)).toHaveLength(0);
+    expect(totalsFromLedger(ledger).xp).toBe(0);
   });
 });
 
