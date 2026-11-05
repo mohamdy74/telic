@@ -1,8 +1,10 @@
 import { Link, useNavigate } from "@tanstack/react-router";
-import { ChevronRight, Search, Target } from "lucide-react";
+import { ChevronRight, Plus, Search, Target, type LucideIcon } from "lucide-react";
 import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { NAV } from "./nav";
 import { usePrefs } from "./preferences";
+
+type Cmd = { key: string; label: string; icon: LucideIcon; run: () => void };
 
 export function AppShell({ children }: { children: ReactNode }) {
   const { t } = usePrefs();
@@ -87,10 +89,35 @@ function CommandPalette({ onClose }: { onClose: () => void }) {
   const inputRef = useRef<HTMLInputElement>(null);
   const prevFocus = useRef<Element | null>(null);
 
-  const items = useMemo(
-    () => NAV.filter((n) => t.nav[n.key].toLowerCase().includes(q.trim().toLowerCase())),
-    [q, t],
-  );
+  const items = useMemo<Cmd[]>(() => {
+    const nq = q.trim().toLowerCase();
+    const cmds: Cmd[] = [
+      {
+        key: "newTask",
+        label: t.command.newTask,
+        icon: Plus,
+        run: () => {
+          try {
+            window.sessionStorage.setItem("tilth.new-task", "1");
+          } catch {
+            /* ignore */
+          }
+          onClose();
+          navigate({ to: "/tasks" });
+        },
+      },
+      ...NAV.map((n): Cmd => ({
+        key: n.key,
+        label: t.nav[n.key],
+        icon: n.icon,
+        run: () => {
+          onClose();
+          navigate({ to: n.to });
+        },
+      })),
+    ];
+    return cmds.filter((c) => c.label.toLowerCase().includes(nq));
+  }, [q, t, onClose, navigate]);
 
   useEffect(() => {
     prevFocus.current = document.activeElement;
@@ -102,8 +129,7 @@ function CommandPalette({ onClose }: { onClose: () => void }) {
   const go = (i: number) => {
     const item = items[i];
     if (!item) return;
-    onClose();
-    navigate({ to: item.to });
+    item.run();
   };
 
   return (
@@ -145,7 +171,7 @@ function CommandPalette({ onClose }: { onClose: () => void }) {
               className="flex cursor-pointer items-center gap-3 rounded-lg px-3 py-2 text-sm aria-selected:bg-accent aria-selected:text-accent-foreground"
             >
               <n.icon className="size-4" aria-hidden />
-              <span className="flex-1">{t.nav[n.key]}</span>
+              <span className="flex-1">{n.label}</span>
               <ChevronRight className="size-4 opacity-60 rtl-flip" aria-hidden />
             </li>
           ))}

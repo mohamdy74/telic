@@ -215,13 +215,14 @@ export const tasks = {
     const t = nowIso();
     const order = Math.max(0, ...useStore.getState().tasks.map((x) => x.kanbanOrder)) + 1;
     const task: Task = { priority: "medium", tags: [], subtasks: [], status: "todo", kanbanOrder: order, ...input, id: uid(), createdAt: t, updatedAt: t };
+    if (task.recurrence && task.seriesId === undefined) task.seriesId = uid();
     setCollection("tasks", (l) => [...l, task]);
     return task;
   },
   update(id: string, patch: Partial<Omit<Task, "id" | "createdAt">>) {
     setCollection("tasks", (l) => l.map((x) => (x.id === id ? { ...x, ...patch, updatedAt: nowIso() } : x)));
   },
-  /** Completes a task; if recurring, creates only the NEXT instance. */
+  /** Completes a task; if recurring, creates only the NEXT instance (same seriesId). */
   complete(id: string): Task | undefined {
     const task = useStore.getState().tasks.find((x) => x.id === id);
     if (!task || task.status === "done") return;
@@ -242,6 +243,12 @@ export const tasks = {
   },
   restore(id: string) {
     tasks.update(id, { deletedAt: undefined });
+  },
+  /** Reassigns kanbanOrder to match the given order (ids of one kanban column). */
+  reorder(orderedIds: string[]) {
+    const rank = new Map(orderedIds.map((id, i) => [id, i] as const));
+    const t = nowIso();
+    setCollection("tasks", (l) => l.map((x) => (rank.has(x.id) ? { ...x, kanbanOrder: rank.get(x.id)!, updatedAt: t } : x)));
   },
 };
 
@@ -269,7 +276,7 @@ export const habits = {
   },
   unlog(habitId: string, localDay = todayLocal()) {
     const t = nowIso();
-    setCollection("habitLogs", (l) => l.map((x) => (x.habitId === habitId && x.localDay === localDay && !x.deletedAt ? { ...x, deletedAt: t, updatedAt: t } : x)));
+    setCollection("habitLogs", (l) => l.map((x) => x.habitId === habitId && x.localDay === localDay && !x.deletedAt ? { ...x, deletedAt: t, updatedAt: t } : x));
   },
 };
 

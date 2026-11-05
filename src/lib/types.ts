@@ -36,6 +36,8 @@ export interface Task extends BaseRecord {
   status: TaskStatus;
   completedAt?: ISODate | undefined;
   recurrence?: RecurrenceRule | undefined;
+  /** Identifies one recurring series; generated instances inherit it (additive optional field). */
+  seriesId?: string | undefined;
   kanbanOrder: number;
 }
 
