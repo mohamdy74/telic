@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { buildWeek, weekDays } from "./weekView";
+import { buildWeek, monthWeeks, weekDays } from "./weekView";
 import type { FocusSession, Habit, HabitLog, LocalDay, Task } from "./types";
 
 const stamp = "2026-11-03T10:00:00.000Z";
@@ -160,5 +160,27 @@ describe("buildWeek", () => {
     const cells = buildWeek({ ...INPUT, weekStartsOn: 6 });
     expect(cells[0]!.day).toBe("2026-10-31");
     expect(cells.map((c) => c.day)).toEqual(weekDays(TUE, 6));
+  });
+});
+
+describe("monthWeeks (TIL-F09 month view)", () => {
+  it("returns full 7-day weeks covering the anchored month (Saturday start)", () => {
+    const weeks = monthWeeks("2026-02-15", 6);
+    expect(weeks.length).toBeGreaterThanOrEqual(4);
+    expect(weeks.length).toBeLessThanOrEqual(6);
+    for (const w of weeks) expect(w.length).toBe(7);
+    const flat = weeks.flat();
+    expect(flat.includes("2026-02-01")).toBe(true);
+    expect(flat.includes("2026-02-28")).toBe(true);
+    expect(new Set(flat).size).toBe(flat.length);
+    for (let i = 1; i < flat.length; i++) {
+      const prev = new Date(flat[i - 1]!);
+      const cur = new Date(flat[i]!);
+      expect(cur.getTime() - prev.getTime()).toBe(86400000);
+    }
+  });
+
+  it("same month regardless of which day anchors it", () => {
+    expect(monthWeeks("2026-03-01", 0)).toEqual(monthWeeks("2026-03-31", 0));
   });
 });

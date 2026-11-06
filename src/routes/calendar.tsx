@@ -1,13 +1,14 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { ChevronLeft, ChevronRight, Sprout, Timer } from "lucide-react";
+import { CalendarDays, ChevronLeft, ChevronRight, Columns, Sprout, Timer } from "lucide-react";
 import { useState } from "react";
 import { usePrefs } from "@/components/app/preferences";
 import { PageHeader } from "@/components/app/PageHeader";
 import { OUTLINE_BTN } from "@/components/ui/button";
-import { addDays, weekdayOf } from "@/lib/dates";
+import { Segmented } from "@/components/app/Segmented";
+import { addDays, addMonths, startOfMonth, weekdayOf } from "@/lib/dates";
 import { formatDate, formatNumber, type Locale } from "@/lib/i18n";
 import { todayLocal, useStore } from "@/lib/store";
-import { buildWeek, type WeekCell } from "@/lib/weekView";
+import { buildWeek, monthWeeks, type WeekCell } from "@/lib/weekView";
 import type { LocalDay, Priority } from "@/lib/types";
 
 export const Route = createFileRoute("/calendar")({
@@ -46,6 +47,7 @@ function CalendarPage() {
   const allSessions = useStore((s) => s.focusSessions);
   const weekStartsOn = useStore((s) => s.settings.weekStartsOn);
   const [anchor, setAnchor] = useState<LocalDay | null>(null);
+  const [calMode, setCalMode] = useState<"week" | "month">("week");
   const [selected, setSelected] = useState<LocalDay | null>(null);
 
   if (!ready) return <CalendarSkeleton />;
@@ -61,6 +63,32 @@ function CalendarPage() {
     today,
     weekStartsOn,
   });
+
+  // Month heat-grid (TIL-F09): week rows covering the anchored month, with
+  // each day's load counted straight from stored LocalDay strings — the same
+  // data rule the week grid follows; nothing is recomputed across timezones.
+  const monthGrid = calMode === "month" ? monthWeeks(current, weekStartsOn) : null;
+  const monthLoad = new Map<LocalDay, number>();
+  if (calMode === "month") {
+    const add = (day: LocalDay | undefined, n: number) => {
+      if (!day) return;
+      monthLoad.set(day, (monthLoad.get(day) ?? 0) + n);
+    };
+    for (const task of allTasks) {
+      if (task.deletedAt || task.dueDate === undefined) continue;
+      add(task.dueDate, 2);
+    }
+    for (const log of allLogs) {
+      if (log.deletedAt) continue;
+      add(log.localDay, 1);
+    }
+    for (const s of allSessions) {
+      if (s.deletedAt || s.mode === "break") continue;
+      add(s.localDay, 1);
+    }
+  }
+  const maxMonthLoad = Math.max(0, ...monthLoad.values());
+  const monthEmpty = calMode === "month" && maxMonthLoad === 0;
 
   const weekHasAnything = cells.some(
     (c) =>
@@ -79,7 +107,9 @@ function CalendarPage() {
         <div className="flex items-center gap-1.5">
           <button
             type="button"
-            onClick={() => setAnchor(addDays(current, -7))}
+            onClick={() =>
+              setAnchor(calMode === "week" ? addDays(current, -7) : addMonths(current, -1))
+            }
             aria-label={t.cal.prevWeek}
             className={OUTLINE_BTN + " px-2"}
           >
@@ -87,13 +117,33 @@ function CalendarPage() {
           </button>
           <button
             type="button"
-            onClick={() => setAnchor(addDays(current, 7))}
+            onClick={() =>
+              setAnchor(calMode === "week" ? addDays(current, 7) : addMonths(current, 1))
+            }
             aria-label={t.cal.nextWeek}
             className={OUTLINE_BTN + " px-2"}
           >
             <ChevronRight className="size-4 rtl-flip" aria-hidden />
           </button>
         </div>
+        <Segmented
+          label={t.cal.view}
+          value={calMode}
+          onChange={(v) => setCalMode(v as "week" | "month")}
+          options={[
+            {
+              value: "week",
+              label: t.cal.week,
+              icon: <Columns className="size-3.5" aria-hidden />,
+            },
+            {
+              value: "month",
+              label: t.cal.month,
+              icon: <CalendarDays className="size-3.5" aria-hidden />,
+            },
+          ]}
+        />
+
         <button
           type="button"
           onClick={() => {
@@ -107,60 +157,119 @@ function CalendarPage() {
         </button>
       </div>
 
-      {!weekHasAnything && <p className="mt-6 text-sm text-muted-foreground">{t.cal.empty}</p>}
+      {calMode === "week" && !weekHasAnything && (
+        <p className="mt-6 text-sm text-muted-foreground">{t.cal.empty}</p>
+      )}
+      {calMode === "month" && monthEmpty && (
+        <p className="mt-6 text-sm text-muted-foreground">{t.cal.monthEmpty}</p>
+      )}
 
-      <div className="mt-4 grid grid-cols-4 gap-1.5 sm:grid-cols-7">
-        {cells.map((c) => {
-          const active = selected === c.day;
-          return (
-            <button
-              key={c.day}
-              type="button"
-              aria-pressed={active}
-              onClick={() => setSelected(active ? null : c.day)}
-              className={
-                CELL_BTN +
-                " " +
-                (active
-                  ? "border-primary bg-accent/40"
-                  : c.isToday
-                    ? "border-primary/60"
-                    : "border-border")
-              }
-            >
-              <span className="text-[10px] font-medium text-muted-foreground">
-                {weekdayShort(locale, weekdayOf(c.day))}
-              </span>
-              <span
+      {calMode === "month" && monthGrid && (
+        <div className="mt-4 space-y-1.5">
+          {monthGrid.map((wk) => (
+            <div key={wk[0]} className="grid grid-cols-7 gap-1.5">
+              {wk.map((day) => {
+                const inMonth = day.startsWith(startOfMonth(current).slice(0, 7));
+                const load = monthLoad.get(day) ?? 0;
+                const heat = maxMonthLoad === 0 ? 0 : load / maxMonthLoad;
+                const isToday = day === today;
+                return (
+                  <button
+                    key={day}
+                    type="button"
+                    title={t.cal.openWeek}
+                    aria-label={t.cal.openWeek + " — " + dayNumber(locale, day)}
+                    onClick={() => {
+                      setAnchor(day);
+                      setSelected(day);
+                      setCalMode("week");
+                    }}
+                    className={
+                      "flex min-h-12 flex-col items-center justify-center gap-1 rounded-md border p-1 text-center transition-colors hover:bg-accent/40 " +
+                      (isToday
+                        ? "border-primary/60"
+                        : inMonth
+                          ? "border-border"
+                          : "border-transparent opacity-45")
+                    }
+                  >
+                    <span
+                      className={
+                        "text-[11px] font-semibold tabular-nums " + (isToday ? "text-primary" : "")
+                      }
+                    >
+                      {dayNumber(locale, day)}
+                    </span>
+                    <span
+                      aria-hidden
+                      className="block h-1.5 w-6 rounded-full bg-primary"
+                      style={{
+                        opacity: Math.min(0.95, 0.1 + heat * 0.9),
+                        visibility: load === 0 ? "hidden" : "visible",
+                      }}
+                    />
+                  </button>
+                );
+              })}
+            </div>
+          ))}
+        </div>
+      )}
+
+      {calMode === "week" && (
+        <div className="mt-4 grid grid-cols-4 gap-1.5 sm:grid-cols-7">
+          {cells.map((c) => {
+            const active = selected === c.day;
+            return (
+              <button
+                key={c.day}
+                type="button"
+                aria-pressed={active}
+                onClick={() => setSelected(active ? null : c.day)}
                 className={
-                  "text-sm font-semibold tabular-nums " + (c.isToday ? "text-primary" : "")
+                  CELL_BTN +
+                  " " +
+                  (active
+                    ? "border-primary bg-accent/40"
+                    : c.isToday
+                      ? "border-primary/60"
+                      : "border-border")
                 }
               >
-                {dayNumber(locale, c.day)}
-              </span>
-              <span className="flex flex-col items-center gap-0.5 text-[10px] leading-tight text-muted-foreground">
-                {c.openTasks.length > 0 && (
-                  <span className="tabular-nums">
-                    {t.cal.tasksCount.replace("{n}", formatNumber(locale, c.openTasks.length))}
-                  </span>
-                )}
-                {c.habitsScheduled > 0 && (
-                  <span className="tabular-nums">
-                    {t.cal.habitsCount
-                      .replace("{n}", formatNumber(locale, c.habitsDone))
-                      .replace("{m}", formatNumber(locale, c.habitsScheduled))}
-                  </span>
-                )}
-                {c.focusMinutes > 0 && (
-                  <span className="tabular-nums">
-                    {t.cal.focusCount.replace("{n}", formatNumber(locale, c.focusMinutes))}
-                  </span>
-                )}
-              </span>
-            </button>
-          );
-        })}
-      </div>
+                <span className="text-[10px] font-medium text-muted-foreground">
+                  {weekdayShort(locale, weekdayOf(c.day))}
+                </span>
+                <span
+                  className={
+                    "text-sm font-semibold tabular-nums " + (c.isToday ? "text-primary" : "")
+                  }
+                >
+                  {dayNumber(locale, c.day)}
+                </span>
+                <span className="flex flex-col items-center gap-0.5 text-[10px] leading-tight text-muted-foreground">
+                  {c.openTasks.length > 0 && (
+                    <span className="tabular-nums">
+                      {t.cal.tasksCount.replace("{n}", formatNumber(locale, c.openTasks.length))}
+                    </span>
+                  )}
+                  {c.habitsScheduled > 0 && (
+                    <span className="tabular-nums">
+                      {t.cal.habitsCount
+                        .replace("{n}", formatNumber(locale, c.habitsDone))
+                        .replace("{m}", formatNumber(locale, c.habitsScheduled))}
+                    </span>
+                  )}
+                  {c.focusMinutes > 0 && (
+                    <span className="tabular-nums">
+                      {t.cal.focusCount.replace("{n}", formatNumber(locale, c.focusMinutes))}
+                    </span>
+                  )}
+                </span>
+              </button>
+            );
+          })}
+        </div>
+      )}
 
       {detail && <DayDetail cell={detail} locale={locale} />}
     </section>

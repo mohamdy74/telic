@@ -368,6 +368,11 @@ const en = {
     dayDone: "Completed",
     dayHabits: "Habits",
     dayFocus: "Focus",
+    week: "Week",
+    month: "Month",
+    view: "View",
+    openWeek: "Open that week",
+    monthEmpty: "Nothing scheduled this month.",
     none: "Nothing on this day.",
   },
   dig: {
@@ -886,6 +891,11 @@ const ar: Dict = {
     dayDone: "المكتملة",
     dayHabits: "العادات",
     dayFocus: "التركيز",
+    week: "الأسبوع",
+    month: "الشهر",
+    view: "العرض",
+    openWeek: "افتح هذا الأسبوع",
+    monthEmpty: "لا شيء مجدول هذا الشهر.",
     none: "لا شيء في هذا اليوم.",
   },
   dig: {

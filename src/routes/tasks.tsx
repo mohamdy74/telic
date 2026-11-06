@@ -17,6 +17,7 @@ import {
 } from "lucide-react";
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import { usePrefs } from "@/components/app/preferences";
+import { Segmented } from "@/components/app/Segmented";
 import { PageHeader } from "@/components/app/PageHeader";
 import { Modal } from "@/components/app/Modal";
 import { DANGER_BTN, OUTLINE_BTN, PRIMARY_BTN } from "@/components/ui/button";
@@ -1077,35 +1078,6 @@ function CheckButton({
     >
       <Check className="size-3" aria-hidden />
     </button>
-  );
-}
-
-function Segmented({
-  options,
-  value,
-  onChange,
-  label,
-}: {
-  options: Array<{ value: string; label: string }>;
-  value: string;
-  onChange: (v: string) => void;
-  label: string;
-}) {
-  return (
-    <div className="segmented m-0" role="radiogroup" aria-label={label}>
-      {options.map((o) => (
-        <button
-          key={o.value}
-          type="button"
-          role="radio"
-          aria-checked={value === o.value}
-          onClick={() => onChange(o.value)}
-          className="segment"
-        >
-          {o.label}
-        </button>
-      ))}
-    </div>
   );
 }
 

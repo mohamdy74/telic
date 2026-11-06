@@ -2,6 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { Eye, Link2, Pencil, Pin, PinOff, Plus, Search, StickyNote, Trash2 } from "lucide-react";
 import { useEffect, useRef, useState, type RefObject } from "react";
 import { usePrefs } from "@/components/app/preferences";
+import { Segmented } from "@/components/app/Segmented";
 import { PageHeader } from "@/components/app/PageHeader";
 import { OUTLINE_BTN, PRIMARY_BTN } from "@/components/ui/button";
 import { toast } from "sonner";
@@ -281,27 +282,19 @@ function NoteEditor({
         dir="auto"
       />
       <div className="flex items-center justify-between gap-2">
-        <div className="segmented m-0" role="radiogroup" aria-label={t.notes.body}>
-          <button
-            type="button"
-            role="radio"
-            aria-checked={!preview}
-            onClick={() => setPreview(false)}
-            className="segment"
-          >
-            {t.notes.write}
-          </button>
-          <button
-            type="button"
-            role="radio"
-            aria-checked={preview}
-            onClick={() => setPreview(true)}
-            className="segment"
-          >
-            <Eye className="size-3.5" aria-hidden />
-            {t.notes.preview}
-          </button>
-        </div>
+        <Segmented
+          label={t.notes.body}
+          value={preview ? "preview" : "write"}
+          onChange={(v) => setPreview(v === "preview")}
+          options={[
+            { value: "write", label: t.notes.write },
+            {
+              value: "preview",
+              label: t.notes.preview,
+              icon: <Eye className="size-3.5" aria-hidden />,
+            },
+          ]}
+        />
         <label className="flex items-center gap-2 text-sm text-muted-foreground">
           <span className="whitespace-nowrap">{t.notes.linkedTask}</span>
           <select

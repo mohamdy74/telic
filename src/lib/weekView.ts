@@ -1,4 +1,4 @@
-import { addDays, startOfWeek } from "./dates";
+import { addDays, endOfMonth, startOfMonth, startOfWeek } from "./dates";
 import { isScheduledOn } from "./streaks";
 import type { FocusSession, Habit, HabitLog, LocalDay, Task } from "./types";
 
@@ -43,6 +43,25 @@ const PRIORITY_RANK: Record<Task["priority"], number> = { high: 0, medium: 1, lo
 export function weekDays(anchor: LocalDay, weekStartsOn: number): LocalDay[] {
   const first = startOfWeek(anchor, weekStartsOn);
   return Array.from({ length: 7 }, (_, i) => addDays(first, i));
+}
+
+/**
+ * Days of the anchored month as full week rows (TIL-F09 month view): leading
+ * days of the first partial week are included so every row is 7 long, keeping
+ * the grid visually aligned. Stored LocalDay strings only.
+ */
+export function monthWeeks(anchor: LocalDay, weekStartsOn: number): LocalDay[][] {
+  const first = startOfWeek(startOfMonth(anchor), weekStartsOn);
+  const last = endOfMonth(anchor); // endOfWeek(firstOfNextMonth) - 1
+  const weeks: LocalDay[][] = [];
+  let cur = first;
+  while (cur <= last || weeks[weeks.length - 1]?.length !== 7) {
+    if (!weeks.length || weeks[weeks.length - 1]!.length === 7) weeks.push([]);
+    weeks[weeks.length - 1]!.push(cur);
+    cur = addDays(cur, 1);
+    if (cur > addDays(last, 7)) break; // belt-and-braces bound
+  }
+  return weeks.slice(0, 6); // months never span more than 6 week rows
 }
 
 /** Builds one cell per day of the anchored week. */
