@@ -283,7 +283,7 @@ function NoteEditor({
       />
       <div className="flex items-center justify-between gap-2">
         <Segmented
-          label={t.notes.body}
+          label={t.notes.editorView}
           value={preview ? "preview" : "write"}
           onChange={(v) => setPreview(v === "preview")}
           options={[

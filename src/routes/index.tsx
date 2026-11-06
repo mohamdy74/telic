@@ -14,6 +14,7 @@ import {
 import { useEffect, useState, type ReactNode } from "react";
 import { usePrefs } from "@/components/app/preferences";
 import { PageHeader } from "@/components/app/PageHeader";
+import { PriorityMark } from "@/components/app/PriorityMark";
 import { OUTLINE_BTN, PRIMARY_BTN } from "@/components/ui/button";
 import { toast } from "sonner";
 import { ACHIEVEMENT_ICONS } from "@/components/app/achievementIcons";
@@ -64,12 +65,6 @@ const LINK_FOOTER = "text-xs font-medium text-primary transition-colors hover:te
 const RING_R = 45; // pure geometry, workerd-safe at module level
 const RING_C = 2 * Math.PI * RING_R;
 const MAX_ROWS = 5;
-
-const PRIORITY_DOT: Record<Task["priority"], string> = {
-  high: "bg-destructive",
-  medium: "bg-primary",
-  low: "bg-muted-foreground/50",
-};
 
 function DashboardPage() {
   const { t, locale } = usePrefs();
@@ -306,10 +301,7 @@ function PrioritiesCard({
         <ul className="space-y-1.5">
           {items.map((x) => (
             <li key={x.id} className="flex items-center gap-2">
-              <span
-                className={"size-2 shrink-0 rounded-full " + PRIORITY_DOT[x.priority]}
-                aria-hidden
-              />
+              <PriorityMark priority={x.priority} label={t.tasks.priority[x.priority]} />
               <span className="min-w-0 flex-1 truncate text-sm">{x.title}</span>
               {(x.dueDate ?? today) < today && (
                 <span className="shrink-0 text-xs text-destructive">{t.tasks.view.overdue}</span>

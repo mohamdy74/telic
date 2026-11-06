@@ -161,6 +161,14 @@ function FocusPage() {
       const el = e.target as HTMLElement | null;
       if (el && (el.tagName === "INPUT" || el.tagName === "TEXTAREA" || el.tagName === "SELECT"))
         return;
+      // TIL-F18: Space is a global shortcut only when focus is NOT on an
+      // interactive control — otherwise it hijacks buttons and radios.
+      if (
+        el?.closest?.(
+          "button, a[href], [role='button'], [role='radio'], [role='checkbox'], [role='switch'], [role='tab'], [contenteditable]",
+        )
+      )
+        return;
       if (e.code === "Space") {
         e.preventDefault();
         if (active) togglePause();

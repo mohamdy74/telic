@@ -19,6 +19,7 @@ import { useEffect, useRef, useState, type ReactNode } from "react";
 import { usePrefs } from "@/components/app/preferences";
 import { Segmented } from "@/components/app/Segmented";
 import { PageHeader } from "@/components/app/PageHeader";
+import { PriorityMark } from "@/components/app/PriorityMark";
 import { Modal } from "@/components/app/Modal";
 import { DANGER_BTN, OUTLINE_BTN, PRIMARY_BTN } from "@/components/ui/button";
 import { toast } from "sonner";
@@ -53,11 +54,6 @@ const VIEWS: ViewKey[] = ["today", "upcoming", "overdue", "completed", "inbox"];
 const PRIORITIES: Priority[] = ["low", "medium", "high"];
 const STS: TaskStatus[] = ["todo", "doing", "done"];
 const WEEKDAYS = [0, 1, 2, 3, 4, 5, 6] as const;
-const PRIO_CLS: Record<Priority, string> = {
-  high: "bg-destructive",
-  medium: "bg-primary",
-  low: "bg-muted-foreground",
-};
 
 function TasksPage() {
   const { t, locale } = usePrefs();
@@ -522,7 +518,7 @@ function TaskRow({
           <span className="mt-1 flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
             {task.priority !== "medium" && (
               <span className="inline-flex items-center gap-1">
-                <span className={"size-2 rounded-full " + PRIO_CLS[task.priority]} aria-hidden />
+                <PriorityMark priority={task.priority} label={t.tasks.priority[task.priority]} />
                 {t.tasks.priority[task.priority]}
               </span>
             )}
@@ -747,7 +743,7 @@ function BoardCard({
           </span>
           <span className="mt-1 flex flex-wrap items-center gap-1.5 text-xs text-muted-foreground">
             {task.priority !== "medium" && (
-              <span className={"size-2 rounded-full " + PRIO_CLS[task.priority]} aria-hidden />
+              <PriorityMark priority={task.priority} label={t.tasks.priority[task.priority]} />
             )}
             {task.dueDate && (
               <span className={"inline-flex items-center gap-1 " + dueChipCls(task, today)}>
