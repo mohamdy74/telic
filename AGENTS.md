@@ -65,8 +65,8 @@ use the editor.
 - Recurrence is a stored rule on the task; only the NEXT instance is generated
   on completion (`tasks.complete`) — never pre-generate instances.
 - Real pages so far: `/settings`, `/tasks`, `/notes`, `/habits`, `/focus`,
-  `/rewards`, `/insights`, `/` (the Today dashboard) — every nav
-  section is a real page.
+  `/rewards`, `/insights`, `/calendar`, `/` (the Today dashboard) — every
+  nav section is a real page.
   The settings store-status panel is debug-only.
 
 ## Tasks page (/tasks)
@@ -188,7 +188,75 @@ use the editor.
   tasks.
 - ⌘K palette: "New note" sets sessionStorage `tilth.new-note`, routes to
   /notes, and the page opens the new-note form (flag cleared on read).
-- The bottom nav shows 7 tabs (every section except rewards).
+- Note templates live in `src/lib/templates.ts` (templates.test.ts):
+  `NOTE_TEMPLATES` is four hand-written bilingual templates (study, freelance,
+  content plan, Ramadan). The Arabic and English copy were written separately
+  for their locale — never machine-translated, never one skeleton with two
+  word swaps. `templateFor(id, locale)` returns the locale's copy or null for
+  unknown ids. The new-note form shows template chips that fill title + body
+  in one tap.
+- The bottom nav shows 8 tabs (every section except rewards).
+
+## Calendar page (/calendar)
+
+- PURE engine in `src/lib/weekView.ts` (weekView.test.ts):
+  `weekDays(anchor, weekStartsOn)` returns the anchored week's seven LocalDays,
+  oldest first (Monday start for weekStartsOn 1; Saturday — the Arabic
+  default — for 6). `buildWeek` buckets tasks by their STORED `dueDate` only,
+  counts habits via `isScheduledOn`, and sums PLANNED minutes of completed
+  non-break sessions by their stored localDay (the workMinutesToday
+  convention, not wall-clock elapsed time). Soft-deleted tasks, undated
+  tasks, archived habits and incomplete sessions never reach a cell. Every
+  cell works on stored LocalDay strings — a record's day is never recomputed.
+- Page: `anchor` state (null = the current week, so the Today button is
+  disabled then); prev/next chevrons (`rtl-flip`) step whole weeks. The grid
+  is `grid-cols-4 sm:grid-cols-7` with weekday headers from `weekdayOf`;
+  per-cell counts render only when nonzero, always through `formatNumber`.
+  Tapping a cell opens a DayDetail panel below: the day's tasks with priority
+  dots (done = line-through), habits done/scheduled and focus minutes — or
+  the "nothing scheduled" line. An empty week shows the empty state, never
+  a fake grid.
+
+## Quiet digest (My Day)
+
+- PURE engine in `src/lib/digest.ts` (digest.test.ts): `morningDigest` =
+  open tasks due today, overdue, habits due (via `isScheduledOn`), and
+  `firstTask` (priority, then dueDate, then createdAt). `eveningDigest` =
+  `completedToday` (done tasks grouped by `toLocalDay(completedAt,
+  dayStartHour, timeZone)` — the same convention as the insights engine),
+  `habitsDone` (scheduled-today habits with a done log), `focusMinutes`
+  (planned minutes of completed non-break sessions stored today),
+  `stillOpen` (open due ≤ today) and `tomorrowOpen` (due tomorrow).
+  `digestFor` picks the morning digest before 17:00 and the evening digest
+  from 17:00.
+- `settings.digest` is an ADDITIVE OPTIONAL field — `DigestPrefs`
+  (enabled, morningAt/eveningAt "HH:MM") — so no schema bump (the
+  additive-optional rule in Data rules). Absent = off.
+- Silence is the default: the digest exists only if the user turns it on
+  in Settings → Notifications. Delivery is the local Notification API,
+  while the app is open — there is no push server and none is planned
+  (Tilth is local-first). Without permission the toggle row shows an
+  explicit allow button; denied shows a warning.
+- AppShell effect: a 60 s interval fires AT MOST once per slot per day;
+  localStorage `tilth.digest` (slot → day) is a tiny UI pref, not app
+  data. Slot times are the user's morningAt/eveningAt; morning applies
+  before 17:00. Notifications carry a tag so a repeat replaces, never
+  stacks.
+- The dashboard renders the same digest under the title as a plain text
+  line (greeting + counts) — the summary is visible with notifications
+  off entirely.
+
+## Command palette & shortcuts (⌘K)
+
+- Palette entries never mutate the store directly. Capture entries set a
+  sessionStorage flag and navigate; the target page consumes it on mount
+  and clears it on read: `tilth.new-task` (/tasks, focuses quick add),
+  `tilth.new-note` (/notes, opens the new-note form), `tilth.new-habit`
+  (/habits, opens the new-habit form). Instant entries: toggle language
+  (ar ↔ en) and toggle theme (dark ↔ light).
+- Settings documents ONLY shortcuts that are wired in code today:
+  Ctrl/⌘ K (palette), Space (focus start/pause), Esc (cancel/close
+  dialogs). Never list a shortcut that does not exist.
 
 ## Dashboard (/)
 
@@ -373,6 +441,26 @@ use the editor.
 - The `workerd-smoke` CI job builds the app, serves it with wrangler (workerd),
   and requires 200 from `/` and `/settings`. Keep it passing; it is the only
   gate that runs the real production runtime.
+
+## CI & tooling notes
+
+- CI on main runs two jobs: "typecheck and tests" (tsc --noEmit, vitest run,
+  eslint) and "workerd SSR smoke (production runtime)". A phase gate closes
+  only when BOTH are green on the GREEN commit.
+- routeTree.gen.ts is normally written by @tanstack/router-plugin at
+  dev/build time. When a route is added without running a dev server it is
+  edited BY HAND: import the route file, add the Route const in the
+  plugin's exact `as any` style, and append it to the parent's children.
+  Match the generator's byte style; the file is diffed against the parent
+  before pushing.
+- Never retype or copy file text from a browser/proxy render as a push
+  base — hard line-wraps corrupt it. Base edits on the get_file_contents
+  transcription or the locally authored file from the session that wrote
+  it, and diff against the parent before pushing.
+- RED specs are code: hand-trace every fixture against the engine before
+  declaring GREEN. Example: weekView.test.ts indexed the anchored Tuesday
+  at cells[2], but weekDays(TUE, 1) starts Monday so the anchor sits at
+  cells[1] — the TEST was wrong, the engine was right (fixed in b066ab3).
 
 ## PWA (offline & install)
 
