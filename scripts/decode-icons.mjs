@@ -1,6 +1,7 @@
 /*
- * Materializes the PWA's real PNG icons into public/icons/ from
- * scripts/icons.base64.json, before every build.
+ * Materializes the PWA's real PNG icons into public/icons/ and the tab
+ * favicon (public/favicon.png) from scripts/icons.base64.json, before every
+ * build.
  *
  * Why base64: binary files cannot be committed through the text-only push
  * path this repo is developed with, so the icons' exact PNG bytes live in
@@ -34,6 +35,12 @@ for (const [relPath, entry] of Object.entries(manifest.icons)) {
   }
   writeFileSync(join(root, "public", relPath), bytes);
 }
+
+// The tab favicon reuses icon-192's exact bytes: the browser tab, bookmarks
+// and history must show the Tilth logo, never a scaffold default.
+const faviconBytes = Buffer.from(manifest.icons["icons/icon-192.png"].base64, "base64");
+writeFileSync(join(root, "public", "favicon.png"), faviconBytes);
+console.log("decode-icons: wrote favicon.png into public/");
 
 console.log(
   `decode-icons: wrote ${Object.keys(manifest.icons).length} PNG icons into public/icons/`,

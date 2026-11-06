@@ -27,7 +27,7 @@ export default defineConfig({
         registerType: "prompt",
         // Registration is manual and guarded in src/lib/pwa.ts (never in dev or preview).
         injectRegister: false,
-        includeAssets: ["favicon.ico"],
+        includeAssets: ["favicon.png"],
         manifest: {
           name: "Tilth",
           short_name: "Tilth",

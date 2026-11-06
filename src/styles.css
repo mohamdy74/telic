@@ -269,3 +269,15 @@
     transition-duration: 0.01ms !important;
   }
 }
+
+/* Permanently hide the injected Lovable badge ("Made with Lovable" on the
+ * published app, "Edit with Lovable" in the editor preview) — the DOWNFORCE
+ * pattern; Tilth never shows third-party branding. */
+#lovable-badge,
+[id^="lovable-badge"],
+a[href*="lovable.dev"] {
+  display: none !important;
+  visibility: hidden !important;
+  opacity: 0 !important;
+  pointer-events: none !important;
+}

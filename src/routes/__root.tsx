@@ -88,6 +88,9 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { property: "og:description", content: "An offline-first home for your tasks, habits, focus and progress." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
+      // Suppress the browser's "Translate page?" popup — the app ships its own
+      // EN/AR dictionary, and machine translation corrupts the typed UI copy.
+      { name: "google", content: "notranslate" },
       { name: "theme-color", media: "(prefers-color-scheme: light)", content: "#f8f7f1" },
       { name: "theme-color", media: "(prefers-color-scheme: dark)", content: "#1d160e" },
           ],
@@ -96,7 +99,12 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
         rel: "stylesheet",
         href: appCss,
       },
-      { rel: "icon", href: "/favicon.ico", type: "image/x-icon" },
+      // PNG first, SVG last (the DOWNFORCE order): engines that take the last
+      // supported icon (Chrome/Firefox) use the small SVG; engines without SVG
+      // favicon support fall back to the PNG. favicon.png is materialized at
+      // build time by scripts/decode-icons.mjs.
+      { rel: "icon", href: "/favicon.png", type: "image/png" },
+      { rel: "icon", href: "/icons/icon.svg", type: "image/svg+xml" },
       { rel: "manifest", href: "/manifest.webmanifest" },
       { rel: "apple-touch-icon", href: "/icons/apple-touch-icon.png" },
     ],
@@ -109,7 +117,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
 
 function RootShell({ children }: { children: ReactNode }) {
   return (
-    <html lang="ar" dir="rtl" className="dark">
+    <html lang="ar" dir="rtl" translate="no" className="dark">
       <head>
         <HeadContent />
       </head>

@@ -1,4 +1,4 @@
-import { readFileSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 
@@ -112,5 +112,43 @@ describe("PWA icon build chain", () => {
   it("links the iOS apple-touch-icon as a PNG", () => {
     const head = readRepo("src/routes/__root.tsx");
     expect(head).toMatch(/rel:\s*"apple-touch-icon",\s*href:\s*"\/icons\/apple-touch-icon\.png"/);
+  });
+});
+
+describe("Brand parity with DOWNFORCE (badge, translate, favicon)", () => {
+  it("permanently hides the injected Lovable badge", () => {
+    const css = readRepo("src/styles.css");
+    expect(css).toMatch(/#lovable-badge/);
+    expect(css).toMatch(/\[id\^="lovable-badge"\]/);
+    expect(css).toMatch(/a\[href\*="lovable\.dev"\]/);
+  });
+
+  it("suppresses the browser translate popup (the app ships its own EN/AR switch)", () => {
+    const head = readRepo("src/routes/__root.tsx");
+    expect(head).toMatch(/name:\s*"google",\s*content:\s*"notranslate"/);
+    expect(head).toMatch(/translate="no"/);
+  });
+
+  it("declares the favicon PNG first and the SVG last — never the scaffold ico", () => {
+    const head = readRepo("src/routes/__root.tsx");
+    expect(head).not.toMatch(/favicon\.ico/);
+    const png = head.indexOf("/favicon.png");
+    expect(png).toBeGreaterThan(-1);
+    expect(png).toBeLessThan(head.indexOf("/icons/icon.svg"));
+  });
+
+  it("materializes favicon.png from the icon-192 bytes at build time", () => {
+    const script = readRepo("scripts/decode-icons.mjs");
+    expect(script).toMatch(/favicon\.png/);
+    expect(script).toMatch(/manifest\.icons\["icons\/icon-192\.png"\]/);
+  });
+
+  it("precache includeAssets tracks favicon.png, not the scaffold ico", () => {
+    expect(readRepo("vite.config.ts")).toMatch(/includeAssets:\s*\["favicon\.png"\]/);
+  });
+
+  it("gitignores the generated favicon and ships no favicon.ico", () => {
+    expect(readRepo(".gitignore")).toMatch(/public\/favicon\.png/);
+    expect(existsSync(join(root, "public", "favicon.ico"))).toBe(false);
   });
 });

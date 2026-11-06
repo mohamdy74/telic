@@ -32,5 +32,7 @@ dist-ssr
 *.sw?
 
 # PWA PNG icons are generated at build time (scripts/decode-icons.mjs decodes
-# scripts/icons.base64.json into public/icons/) — never committed.
+# scripts/icons.base64.json into public/icons/ + public/favicon.png) — never
+# committed.
 public/icons/*.png
+public/favicon.png
