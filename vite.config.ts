@@ -39,16 +39,25 @@ export default defineConfig({
           theme_color: "#1d160e",
           lang: "ar",
           dir: "rtl",
+          // Real PNG icons only (the DOWNFORCE pattern): SVG manifest icons
+          // never render in Android's WebAPK nor on the iOS home screen, so an
+          // installed app showed a screenshot instead of the Tilth logo. The
+          // PNGs are materialized into public/icons/ at build time from
+          // scripts/icons.base64.json (see scripts/decode-icons.mjs).
           icons: [
-            { src: "icons/icon.svg", sizes: "192x192", type: "image/svg+xml", purpose: "any" },
-            { src: "icons/icon.svg", sizes: "512x512", type: "image/svg+xml", purpose: "any" },
-            { src: "icons/maskable.svg", sizes: "192x192", type: "image/svg+xml", purpose: "maskable" },
-            { src: "icons/maskable.svg", sizes: "512x512", type: "image/svg+xml", purpose: "maskable" },
+            { src: "icons/icon-192.png", sizes: "192x192", type: "image/png", purpose: "any" },
+            { src: "icons/icon-512.png", sizes: "512x512", type: "image/png", purpose: "any" },
+            { src: "icons/icon-maskable-512.png", sizes: "512x512", type: "image/png", purpose: "maskable" },
           ],
         },
         workbox: {
           navigateFallback: "_shell.html",
           globPatterns: ["**/*.{js,css,woff2,svg,png,ico,webmanifest}"],
+          // Manifest/home-screen icons are fetched by the OS browser in its
+          // own context at install time — it never consults this service
+          // worker's cache, so precaching them is dead weight (DOWNFORCE
+          // lesson).
+          globIgnores: ["icons/*.png"],
           additionalManifestEntries: [{ url: "_shell.html", revision: SHELL_REVISION }],
           cleanupOutdatedCaches: true,
           skipWaiting: false,

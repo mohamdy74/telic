@@ -152,7 +152,7 @@ export function AppShell({ children }: { children: ReactNode }) {
       try {
         const seen: Record<string, string> = JSON.parse(window.localStorage.getItem("tilth.digest") || "{}");
         if (seen[slot] === today) return;
-        new Notification(title, { body, tag: "tilth-digest-" + slot });
+        new Notification(title, { body, tag: "tilth-digest-" + slot, icon: "/icons/icon-192.png" });
         seen[slot] = today;
         window.localStorage.setItem("tilth.digest", JSON.stringify(seen));
       } catch {

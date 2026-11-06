@@ -30,3 +30,7 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# PWA PNG icons are generated at build time (scripts/decode-icons.mjs decodes
+# scripts/icons.base64.json into public/icons/) — never committed.
+public/icons/*.png
