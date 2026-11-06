@@ -11,6 +11,8 @@ import {
 } from "lucide-react";
 import { useEffect, useRef, useState, type RefObject } from "react";
 import { usePrefs } from "@/components/app/preferences";
+import { OUTLINE_BTN, PRIMARY_BTN } from "@/components/ui/button";
+import { toast } from "sonner";
 import { addDays, startOfWeek } from "@/lib/dates";
 import { formatDate, formatNumber, plural, type Locale } from "@/lib/i18n";
 import { habits as habitApi, todayLocal, useStore } from "@/lib/store";
@@ -43,7 +45,6 @@ export const Route = createFileRoute("/habits")({
 });
 
 type TabKey = "today" | "all";
-type Toast = { msg: string; undo?: (() => void) | undefined };
 
 const WEEKDAYS = [0, 1, 2, 3, 4, 5, 6] as const;
 const HEAT_WEEKS = 12;
@@ -59,11 +60,6 @@ const KIND_CLS: Record<DayKind, string> = {
 };
 const KIND_LEGEND: DayKind[] = ["done", "skipped", "missed", "upcoming", "off"];
 
-const PRIMARY_BTN =
-  "inline-flex items-center justify-center gap-2 rounded-md bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary/90 disabled:pointer-events-none disabled:opacity-50";
-const OUTLINE_BTN =
-  "inline-flex items-center justify-center gap-2 rounded-md border border-border bg-background px-4 py-2 text-sm font-medium text-foreground transition-colors hover:bg-accent/40 disabled:pointer-events-none disabled:opacity-50";
-
 function HabitsPage() {
   const { t, locale } = usePrefs();
   const ready = useStore((s) => s.ready);
@@ -73,14 +69,8 @@ function HabitsPage() {
   const [tab, setTab] = useState<TabKey>("today");
   const [showNew, setShowNew] = useState(false);
   const [expandedId, setExpandedId] = useState<string | null>(null);
-  const [toast, setToast] = useState<Toast | null>(null);
   const nameRef = useRef<HTMLInputElement>(null);
 
-  useEffect(() => {
-    if (!toast) return;
-    const id = window.setTimeout(() => setToast(null), 6000);
-    return () => window.clearTimeout(id);
-  }, [toast]);
 
   useEffect(() => {
     if (showNew) nameRef.current?.focus();
@@ -114,7 +104,8 @@ function HabitsPage() {
     if (!prev || l.updatedAt > prev.updatedAt) todayLog.set(l.habitId, l);
   }
 
-  const showToast = (msg: string, undo?: () => void) => setToast({ msg, undo });
+  const showToast = (msg: string, undo?: () => void) =>
+    toast(msg, undo ? { action: { label: t.habits.toasts.undo, onClick: undo } } : {});
 
   // One-tap done/skip on today; clicking the current state clears it.
   const toggleToday = (habit: Habit, status: "done" | "skipped") => {
@@ -264,26 +255,6 @@ function HabitsPage() {
         </div>
       )}
 
-      {toast && (
-        <div
-          role="status"
-          className="animate-pop fixed inset-x-0 bottom-20 z-50 mx-auto flex w-fit max-w-[90vw] items-center gap-3 rounded-full border border-border bg-card px-4 py-2 shadow-elevated md:bottom-6"
-        >
-          <span className="text-sm">{toast.msg}</span>
-          {toast.undo && (
-            <button
-              type="button"
-              className="text-sm font-semibold text-primary"
-              onClick={() => {
-                toast.undo?.();
-                setToast(null);
-              }}
-            >
-              {t.habits.toasts.undo}
-            </button>
-          )}
-        </div>
-      )}
     </section>
   );
 }

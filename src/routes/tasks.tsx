@@ -17,6 +17,9 @@ import {
 } from "lucide-react";
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import { usePrefs } from "@/components/app/preferences";
+import { Modal } from "@/components/app/Modal";
+import { DANGER_BTN, OUTLINE_BTN, PRIMARY_BTN } from "@/components/ui/button";
+import { toast } from "sonner";
 import { weekdayOf } from "@/lib/dates";
 import { formatDate, formatNumber, type Locale } from "@/lib/i18n";
 import { parseQuickAdd } from "@/lib/quickAdd";
@@ -37,20 +40,12 @@ export const Route = createFileRoute("/tasks")({
 
 type ViewKey = "today" | "upcoming" | "overdue" | "completed" | "inbox";
 type Mode = "list" | "board";
-type Toast = { msg: string; undo?: (() => void) | undefined };
 
 const VIEWS: ViewKey[] = ["today", "upcoming", "overdue", "completed", "inbox"];
 const PRIORITIES: Priority[] = ["low", "medium", "high"];
 const STS: TaskStatus[] = ["todo", "doing", "done"];
 const WEEKDAYS = [0, 1, 2, 3, 4, 5, 6] as const;
 const PRIO_CLS: Record<Priority, string> = { high: "bg-destructive", medium: "bg-primary", low: "bg-muted-foreground" };
-
-const PRIMARY_BTN =
-  "inline-flex items-center justify-center gap-2 rounded-md bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary/90 disabled:pointer-events-none disabled:opacity-50";
-const OUTLINE_BTN =
-  "inline-flex items-center justify-center gap-2 rounded-md border border-border bg-background px-4 py-2 text-sm font-medium text-foreground transition-colors hover:bg-accent/40 disabled:pointer-events-none disabled:opacity-50";
-const DANGER_BTN =
-  "inline-flex items-center justify-center gap-2 rounded-md bg-destructive px-4 py-2 text-sm font-semibold text-destructive-foreground transition-colors hover:bg-destructive/90 disabled:pointer-events-none disabled:opacity-50";
 
 function TasksPage() {
   const { t, locale } = usePrefs();
@@ -63,7 +58,6 @@ function TasksPage() {
   const [tagFilter, setTagFilter] = useState("all");
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [seriesTask, setSeriesTask] = useState<Task | null>(null);
-  const [toast, setToast] = useState<Toast | null>(null);
   const [draft, setDraft] = useState("");
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -79,11 +73,6 @@ function TasksPage() {
     }
   }, []);
 
-  useEffect(() => {
-    if (!toast) return;
-    const id = window.setTimeout(() => setToast(null), 6000);
-    return () => window.clearTimeout(id);
-  }, [toast]);
 
   if (!ready) return <TasksSkeleton />;
 
@@ -119,7 +108,8 @@ function TasksPage() {
   byView.overdue.sort(byDue);
   byView.completed.sort((a, b) => (b.completedAt ?? "").localeCompare(a.completedAt ?? ""));
 
-  const showToast = (msg: string, undo?: () => void) => setToast({ msg, undo });
+  const showToast = (msg: string, undo?: () => void) =>
+    toast(msg, undo ? { action: { label: t.tasks.toasts.undo, onClick: undo } } : {});
 
   const quickAdd = () => {
     const parsed = parseQuickAdd(draft, today);
@@ -334,26 +324,6 @@ function TasksPage() {
         </Modal>
       )}
 
-      {toast && (
-        <div
-          role="status"
-          className="animate-pop fixed inset-x-0 bottom-20 z-50 mx-auto flex w-fit max-w-[90vw] items-center gap-3 rounded-full border border-border bg-card px-4 py-2 shadow-elevated md:bottom-6"
-        >
-          <span className="text-sm">{toast.msg}</span>
-          {toast.undo && (
-            <button
-              type="button"
-              className="text-sm font-semibold text-primary"
-              onClick={() => {
-                toast.undo?.();
-                setToast(null);
-              }}
-            >
-              {t.tasks.toasts.undo}
-            </button>
-          )}
-        </div>
-      )}
     </section>
   );
 }
@@ -947,62 +917,6 @@ function Segmented({
           {o.label}
         </button>
       ))}
-    </div>
-  );
-}
-
-function Modal({ title, onClose, children }: { title: string; onClose: () => void; children: ReactNode }) {
-  const panelRef = useRef<HTMLDivElement>(null);
-  useEffect(() => {
-    const prev = document.activeElement as HTMLElement | null;
-    panelRef.current?.focus();
-    return () => prev?.focus?.();
-  }, []);
-  useEffect(() => {
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") onClose();
-      else if (e.key === "Tab") {
-        const items = panelRef.current?.querySelectorAll<HTMLElement>(
-          "button, [href], input, select, textarea, [tabindex]:not([tabindex='-1'])",
-        );
-        const first = items?.[0];
-        const last = items?.[items.length - 1];
-        if (!first || !last) {
-          e.preventDefault();
-          return;
-        }
-        if (e.shiftKey && document.activeElement === first) {
-          e.preventDefault();
-          last.focus();
-        } else if (!e.shiftKey && document.activeElement === last) {
-          e.preventDefault();
-          first.focus();
-        }
-      }
-    };
-    window.addEventListener("keydown", onKey);
-    document.body.style.overflow = "hidden";
-    return () => {
-      window.removeEventListener("keydown", onKey);
-      document.body.style.overflow = "";
-    };
-  }, [onClose]);
-  return (
-    <div
-      className="animate-fade fixed inset-0 z-50 flex items-center justify-center bg-overlay px-4"
-      role="dialog"
-      aria-modal="true"
-      aria-label={title}
-      onClick={onClose}
-    >
-      <div
-        ref={panelRef}
-        tabIndex={-1}
-        className="animate-pop w-full max-w-md rounded-lg border border-border bg-card p-5 shadow-elevated outline-none"
-        onClick={(e) => e.stopPropagation()}
-      >
-        {children}
-      </div>
     </div>
   );
 }

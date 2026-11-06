@@ -12,6 +12,9 @@ import {
 } from "lucide-react";
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import { usePrefs } from "@/components/app/preferences";
+import { Modal } from "@/components/app/Modal";
+import { OUTLINE_BTN, PRIMARY_BTN } from "@/components/ui/button";
+import { toast } from "sonner";
 import { formatDate, formatNumber } from "@/lib/i18n";
 import { focus as focusApi, todayLocal, useStore } from "@/lib/store";
 import {
@@ -44,11 +47,6 @@ export const Route = createFileRoute("/focus")({
   component: FocusPage,
 });
 
-const PRIMARY_BTN =
-  "inline-flex items-center justify-center gap-2 rounded-md bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary/90 disabled:pointer-events-none disabled:opacity-50";
-const OUTLINE_BTN =
-  "inline-flex items-center justify-center gap-2 rounded-md border border-border bg-background px-4 py-2 text-sm font-medium text-foreground transition-colors hover:bg-accent/40 disabled:pointer-events-none disabled:opacity-50";
-
 function FocusPage() {
   const { t, locale } = usePrefs();
   const ready = useStore((s) => s.ready);
@@ -63,16 +61,10 @@ function FocusPage() {
   const [soundOn, setSoundOn] = useState(true);
   const [breakReady, setBreakReady] = useState<number | null>(null);
   const [confirming, setConfirming] = useState(false);
-  const [toast, setToast] = useState<string | null>(null);
   const [tick, setTick] = useState(0);
   const soundRef = useRef(soundOn);
   soundRef.current = soundOn;
 
-  useEffect(() => {
-    if (!toast) return;
-    const id = window.setTimeout(() => setToast(null), 6000);
-    return () => window.clearTimeout(id);
-  }, [toast]);
 
   // localStorage is a tiny UI pref (see AGENTS.md); read after mount to avoid hydration drift.
   useEffect(() => {
@@ -111,7 +103,7 @@ function FocusPage() {
     };
   }, []);
 
-  const showToast = (msg: string) => setToast(msg);
+  const showToast = (msg: string) => toast(msg);
 
   const startWork = () => {
     const minutes = mode === "pomodoro" ? 25 : customWork;
@@ -316,14 +308,6 @@ function FocusPage() {
         </Modal>
       )}
 
-      {toast && (
-        <div
-          role="status"
-          className="animate-pop fixed inset-x-0 bottom-20 z-50 mx-auto flex w-fit max-w-[90vw] items-center rounded-full border border-border bg-card px-4 py-2 shadow-elevated md:bottom-6"
-        >
-          <span className="text-sm">{toast}</span>
-        </div>
-      )}
     </section>
   );
 }
@@ -513,62 +497,6 @@ function Segmented({
           {o.label}
         </button>
       ))}
-    </div>
-  );
-}
-
-function Modal({ title, onClose, children }: { title: string; onClose: () => void; children: ReactNode }) {
-  const panelRef = useRef<HTMLDivElement>(null);
-  useEffect(() => {
-    const prev = document.activeElement as HTMLElement | null;
-    panelRef.current?.focus();
-    return () => prev?.focus?.();
-  }, []);
-  useEffect(() => {
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") onClose();
-      else if (e.key === "Tab") {
-        const items = panelRef.current?.querySelectorAll<HTMLElement>(
-          "button, [href], input, select, textarea, [tabindex]:not([tabindex='-1'])",
-        );
-        const first = items?.[0];
-        const last = items?.[items.length - 1];
-        if (!first || !last) {
-          e.preventDefault();
-          return;
-        }
-        if (e.shiftKey && document.activeElement === first) {
-          e.preventDefault();
-          last.focus();
-        } else if (!e.shiftKey && document.activeElement === last) {
-          e.preventDefault();
-          first.focus();
-        }
-      }
-    };
-    window.addEventListener("keydown", onKey);
-    document.body.style.overflow = "hidden";
-    return () => {
-      window.removeEventListener("keydown", onKey);
-      document.body.style.overflow = "";
-    };
-  }, [onClose]);
-  return (
-    <div
-      className="animate-fade fixed inset-0 z-50 flex items-center justify-center bg-overlay px-4"
-      role="dialog"
-      aria-modal="true"
-      aria-label={title}
-      onClick={onClose}
-    >
-      <div
-        ref={panelRef}
-        tabIndex={-1}
-        className="animate-pop w-full max-w-md rounded-lg border border-border bg-card p-5 shadow-elevated outline-none"
-        onClick={(e) => e.stopPropagation()}
-      >
-        {children}
-      </div>
     </div>
   );
 }

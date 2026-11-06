@@ -2,6 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { ChevronLeft, ChevronRight, Sprout, Timer } from "lucide-react";
 import { useState } from "react";
 import { usePrefs } from "@/components/app/preferences";
+import { OUTLINE_BTN } from "@/components/ui/button";
 import { addDays, weekdayOf } from "@/lib/dates";
 import { formatDate, formatNumber, type Locale } from "@/lib/i18n";
 import { todayLocal, useStore } from "@/lib/store";
@@ -26,10 +27,8 @@ export const Route = createFileRoute("/calendar")({
   component: CalendarPage,
 });
 
-const OUTLINE_BTN =
-  "inline-flex items-center justify-center gap-2 rounded-md border border-border bg-background px-3 py-1.5 text-sm font-medium text-foreground transition-colors hover:bg-accent/40 disabled:pointer-events-none disabled:opacity-50";
 const CELL_BTN =
-  "flex min-h-24 flex-col items-center gap-0.5 rounded-lg border p-1.5 text-center transition-colors hover:bg-accent/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/60";
+  "flex min-h-24 flex-col items-center gap-0.5 rounded-lg border p-1.5 text-center transition-colors hover:bg-accent/40";
 
 const PRIORITY_DOT: Record<Priority, string> = {
   high: "bg-destructive",

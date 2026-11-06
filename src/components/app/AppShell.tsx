@@ -1,6 +1,7 @@
-import { Link, useNavigate } from "@tanstack/react-router";
+import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
 import {
   ChevronRight,
+  Ellipsis,
   FileText,
   Languages,
   Plus,
@@ -13,7 +14,16 @@ import {
   type LucideIcon,
 } from "lucide-react";
 import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
-import { NAV } from "./nav";
+import { NAV, type NavKey } from "./nav";
+import { cn } from "@/lib/utils";
+import { toast } from "sonner";
+import { Toaster } from "@/components/ui/sonner";
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+} from "@/components/ui/sheet";
 import { usePrefs } from "./preferences";
 import { useStore } from "@/lib/store";
 import { totalsFromLedger } from "@/lib/rewards";
@@ -24,6 +34,20 @@ import { toLocalDay } from "@/lib/dates";
 import { eveningDigest, morningDigest } from "@/lib/digest";
 
 type Cmd = { key: string; label: string; icon: LucideIcon; run: () => void };
+
+// TIL-F06: the desktop sidebar groups nine peer destinations into four labeled
+// sections; Settings is pinned at the bottom. TIL-F01: the mobile bar shows the
+// four daily-action surfaces plus a "More" sheet holding the rest — so Rewards
+// and every other route stays reachable on phones.
+const NAV_GROUPS: { label: "plan" | "do" | "keep" | "grow"; keys: NavKey[] }[] = [
+  { label: "plan", keys: ["dashboard", "calendar"] },
+  { label: "do", keys: ["tasks", "habits", "focus"] },
+  { label: "keep", keys: ["notes"] },
+  { label: "grow", keys: ["rewards", "insights"] },
+];
+const MOBILE_PRIMARY: NavKey[] = ["dashboard", "tasks", "focus", "habits"];
+const MOBILE_MORE: NavKey[] = ["calendar", "notes", "rewards", "insights", "settings"];
+const navOf = (key: NavKey) => NAV.find((n) => n.key === key)!;
 
 export function AppShell({ children }: { children: ReactNode }) {
   const { t, setAccent } = usePrefs();
@@ -39,7 +63,10 @@ export function AppShell({ children }: { children: ReactNode }) {
   const habits = useStore((s) => s.habits);
   const logs = useStore((s) => s.habitLogs);
   const sessions = useStore((s) => s.focusSessions);
-  const [unlockToast, setUnlockToast] = useState<string | null>(null);
+  const [moreOpen, setMoreOpen] = useState(false);
+  const pathname = useRouterState({ select: (s) => s.location.pathname });
+  const moreActive = MOBILE_MORE.some((k) => pathname === navOf(k).to);
+  const settingsItem = navOf("settings");
   const seenUnlocks = useRef<Set<string> | null>(null);
 
   // Sync the persisted accent (app data) into the live UI accent, resolving
@@ -70,15 +97,11 @@ export function AppShell({ children }: { children: ReactNode }) {
       const name =
         (t.ach as Record<string, { name: string }>)[newest.achievementId]?.name ??
         newest.achievementId;
-      setUnlockToast(t.achUnlocked.replace("{name}", name));
+      toast(t.achUnlocked.replace("{name}", name), {
+        icon: <Trophy className="size-4 text-primary" aria-hidden />,
+      });
     }
   }, [unlocks, t]);
-
-  useEffect(() => {
-    if (!unlockToast) return;
-    const id = window.setTimeout(() => setUnlockToast(null), 4000);
-    return () => window.clearTimeout(id);
-  }, [unlockToast]);
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -185,21 +208,45 @@ export function AppShell({ children }: { children: ReactNode }) {
           <span className="flex-1 truncate">{t.command.open}</span>
           <kbd className="rounded border border-border px-1.5 text-[10px]">⌘K</kbd>
         </button>
-        <nav aria-label="Main" className="flex flex-col gap-1">
-          {NAV.map(({ key, to, icon: Icon }) => (
-            <Link
-              key={key}
-              to={to}
-              activeOptions={{ exact: to === "/" }}
-              className="nav-link"
-              activeProps={{ "aria-current": "page", className: "nav-link-active" }}
-            >
-              <Icon className="size-4" aria-hidden />
-              {t.nav[key]}
-            </Link>
+        <nav aria-label="Main" className="flex flex-col gap-5">
+          {NAV_GROUPS.map((group) => (
+            <div key={group.label}>
+              <p className="px-3 pb-1 text-[10px] font-semibold uppercase tracking-[0.14em] text-muted-foreground/70">
+                {t.navGroups[group.label]}
+              </p>
+              <div className="flex flex-col gap-0.5">
+                {group.keys.map((key) => {
+                  const { to, icon: Icon } = navOf(key);
+                  return (
+                    <Link
+                      key={key}
+                      to={to}
+                      activeOptions={{ exact: to === "/" }}
+                      className="nav-link"
+                      activeProps={{ "aria-current": "page", className: "nav-link-active" }}
+                    >
+                      <Icon className="size-4" aria-hidden />
+                      {t.nav[key]}
+                    </Link>
+                  );
+                })}
+              </div>
+            </div>
           ))}
         </nav>
-        <p className="mt-auto px-2 text-xs text-muted-foreground">{t.tagline}</p>
+        <div className="mt-auto pt-5">
+          <Link
+            to={settingsItem.to}
+            className="nav-link"
+            activeProps={{ "aria-current": "page", className: "nav-link-active" }}
+          >
+            <settingsItem.icon className="size-4" aria-hidden />
+            {t.nav.settings}
+          </Link>
+          <p className="mt-3 border-t border-border/60 px-2 pt-3 text-xs text-muted-foreground">
+            {t.tagline}
+          </p>
+        </div>
       </aside>
 
       <main id="main" className="pb-24 md:ps-60 md:pb-0">
@@ -208,22 +255,35 @@ export function AppShell({ children }: { children: ReactNode }) {
 
       <nav
         aria-label="Main"
-        className="fixed inset-x-0 bottom-0 z-30 grid grid-cols-8 border-t border-border bg-sidebar/95 backdrop-blur md:hidden"
+        className="fixed inset-x-0 bottom-0 z-30 border-t border-border bg-sidebar/95 pb-[env(safe-area-inset-bottom)] backdrop-blur md:hidden"
       >
-        {NAV.filter((n) => n.key !== "rewards").map(
-          ({ key, to, icon: Icon }) => (
-            <Link
-              key={key}
-              to={to}
-              activeOptions={{ exact: to === "/" }}
-              className="tab-link"
-              activeProps={{ "aria-current": "page", className: "tab-link-active" }}
-            >
-              <Icon className="size-5" aria-hidden />
-              <span>{t.nav[key]}</span>
-            </Link>
-          ),
-        )}
+        <div className="grid grid-cols-5">
+          {MOBILE_PRIMARY.map((key) => {
+            const { to, icon: Icon } = navOf(key);
+            return (
+              <Link
+                key={key}
+                to={to}
+                activeOptions={{ exact: to === "/" }}
+                className="tab-link"
+                activeProps={{ "aria-current": "page", className: "tab-link-active" }}
+              >
+                <Icon className="size-5" aria-hidden />
+                <span className="w-full truncate text-center">{t.nav[key]}</span>
+              </Link>
+            );
+          })}
+          <button
+            type="button"
+            onClick={() => setMoreOpen(true)}
+            aria-haspopup="dialog"
+            aria-expanded={moreOpen}
+            className={cn("tab-link", (moreOpen || moreActive) && "tab-link-active")}
+          >
+            <Ellipsis className="size-5" aria-hidden />
+            <span className="w-full truncate text-center">{t.nav.more}</span>
+          </button>
+        </div>
       </nav>
 
       {needRefresh && (
@@ -254,15 +314,44 @@ export function AppShell({ children }: { children: ReactNode }) {
         </div>
       )}
 
-      {unlockToast && (
-        <div
-          role="status"
-          className="animate-pop fixed inset-x-0 bottom-20 z-40 mx-auto flex w-fit max-w-[90vw] items-center gap-2 rounded-full border border-border bg-card px-4 py-2 shadow-elevated md:bottom-6"
+      <Sheet open={moreOpen} onOpenChange={setMoreOpen}>
+        <SheetContent
+          side="bottom"
+          className="rounded-t-2xl border-border bg-sidebar pb-[calc(1.25rem+env(safe-area-inset-bottom))] md:hidden"
         >
-          <Trophy className="size-4 shrink-0 text-primary" aria-hidden />
-          <span className="text-sm">{unlockToast}</span>
-        </div>
-      )}
+          <SheetHeader className="px-2 pb-3 text-start">
+            <SheetTitle className="text-sm font-semibold text-muted-foreground">
+              {t.nav.more}
+            </SheetTitle>
+          </SheetHeader>
+          <nav aria-label={t.nav.more} className="flex flex-col gap-0.5">
+            {MOBILE_MORE.map((key) => {
+              const { to, icon: Icon } = navOf(key);
+              return (
+                <Link
+                  key={key}
+                  to={to}
+                  onClick={() => setMoreOpen(false)}
+                  activeOptions={{ exact: to === "/" }}
+                  className="nav-link py-3"
+                  activeProps={{ "aria-current": "page", className: "nav-link-active" }}
+                >
+                  <Icon className="size-4" aria-hidden />
+                  {t.nav[key]}
+                </Link>
+              );
+            })}
+          </nav>
+        </SheetContent>
+      </Sheet>
+
+      {/* One toast host — identical pill and 5s lifetime from every route (TIL-F04). */}
+      <Toaster
+        position="bottom-center"
+        duration={5000}
+        mobileOffset={{ bottom: "calc(76px + env(safe-area-inset-bottom))" }}
+        offset={{ bottom: 24 }}
+      />
 
       {open && <CommandPalette onClose={() => setOpen(false)} />}
 

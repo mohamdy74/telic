@@ -17,6 +17,14 @@ const en = {
     rewards: "Rewards",
     insights: "Insights",
     settings: "Settings",
+    more: "More",
+  },
+  // Desktop sidebar section labels (audit TIL-F06) — short, scannable, verb-led.
+  navGroups: {
+    plan: "Plan",
+    do: "Do",
+    keep: "Keep",
+    grow: "Grow",
   },
   pages: {
     dashboard: { title: "Your day, at a glance", body: "Everything due today, in one calm view." },
@@ -516,6 +524,13 @@ const ar: Dict = {
     rewards: "المكافآت",
     insights: "الرؤى",
     settings: "الإعدادات",
+    more: "المزيد",
+  },
+  navGroups: {
+    plan: "خطّط",
+    do: "نفّذ",
+    keep: "دوّن",
+    grow: "تقدّم",
   },
   pages: {
     dashboard: { title: "يومك في لمحة", body: "كل ما يستحق اليوم، في لمحة واحدة هادئة." },

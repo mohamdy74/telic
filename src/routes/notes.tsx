@@ -2,6 +2,8 @@ import { createFileRoute } from "@tanstack/react-router";
 import { Eye, Link2, Pencil, Pin, PinOff, Plus, Search, StickyNote, Trash2 } from "lucide-react";
 import { useEffect, useRef, useState, type RefObject } from "react";
 import { usePrefs } from "@/components/app/preferences";
+import { OUTLINE_BTN, PRIMARY_BTN } from "@/components/ui/button";
+import { toast } from "sonner";
 import { formatDate, type Locale } from "@/lib/i18n";
 import { filterNotes, mdToHtml, sortNotes } from "@/lib/notes";
 import { NOTE_TEMPLATES, templateFor, type TemplateId } from "@/lib/templates";
@@ -26,12 +28,7 @@ export const Route = createFileRoute("/notes")({
   component: NotesPage,
 });
 
-type Toast = { msg: string; undo?: (() => void) | undefined };
 
-const PRIMARY_BTN =
-  "inline-flex items-center justify-center gap-2 rounded-md bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary/90 disabled:pointer-events-none disabled:opacity-50";
-const OUTLINE_BTN =
-  "inline-flex items-center justify-center gap-2 rounded-md border border-border bg-background px-4 py-2 text-sm font-medium text-foreground transition-colors hover:bg-accent/40 disabled:pointer-events-none disabled:opacity-50";
 const INPUT =
   "h-10 w-full rounded-md border border-border bg-background px-3 text-sm outline-none";
 
@@ -43,14 +40,8 @@ function NotesPage() {
   const [q, setQ] = useState("");
   const [showNew, setShowNew] = useState(false);
   const [expandedId, setExpandedId] = useState<string | null>(null);
-  const [toast, setToast] = useState<Toast | null>(null);
   const titleRef = useRef<HTMLInputElement>(null);
 
-  useEffect(() => {
-    if (!toast) return;
-    const id = window.setTimeout(() => setToast(null), 6000);
-    return () => window.clearTimeout(id);
-  }, [toast]);
 
   useEffect(() => {
     if (showNew) titleRef.current?.focus();
@@ -77,9 +68,8 @@ function NotesPage() {
   const removeNote = (n: Note) => {
     noteApi.remove(n.id);
     if (expandedId === n.id) setExpandedId(null);
-    setToast({
-      msg: t.notes.deleted,
-      undo: () => noteApi.update(n.id, { deletedAt: undefined }),
+    toast(t.notes.deleted, {
+      action: { label: t.notes.undo, onClick: () => noteApi.update(n.id, { deletedAt: undefined }) },
     });
   };
 
@@ -144,26 +134,6 @@ function NotesPage() {
         </ul>
       )}
 
-      {toast && (
-        <div
-          role="status"
-          className="animate-pop fixed inset-x-0 bottom-20 z-50 mx-auto flex w-fit max-w-[90vw] items-center gap-3 rounded-full border border-border bg-card px-4 py-2 shadow-elevated md:bottom-6"
-        >
-          <span className="text-sm">{toast.msg}</span>
-          {toast.undo && (
-            <button
-              type="button"
-              className="text-sm font-semibold text-primary"
-              onClick={() => {
-                toast.undo?.();
-                setToast(null);
-              }}
-            >
-              {t.notes.undo}
-            </button>
-          )}
-        </div>
-      )}
     </section>
   );
 }

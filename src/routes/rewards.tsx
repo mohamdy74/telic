@@ -13,6 +13,8 @@ import { THEMES, isThemeUnlocked, type ThemeUnlockState } from "@/lib/themes";
 import { DAILY_XP_CAP, THEME_UNLOCKS } from "@/lib/rewardsConfig";
 import { progressState, settings as settingsApi, shop as shopApi, todayLocal, useStore } from "@/lib/store";
 import type { AchievementUnlock, Purchase, ShopItem } from "@/lib/types";
+import { buttonVariants } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/rewards")({
   head: () => ({
@@ -270,12 +272,9 @@ function AchievementCard({
 
 /* ---------------- shop ---------------- */
 
-const SHOP_FIELD =
-  "w-full rounded-md border border-input bg-background px-3 py-2 text-sm " +
-  "outline-none focus-visible:ring-2 focus-visible:ring-ring";
-const SHOP_SAVE_BTN =
-  "rounded-md bg-primary px-3 py-1.5 text-sm font-semibold text-primary-foreground " +
-  "transition-colors hover:bg-primary/90";
+// Global :focus-visible outline is the single focus mechanism (TIL-F05).
+const SHOP_FIELD = "w-full rounded-md border border-input bg-background px-3 py-2 text-sm";
+const SHOP_SAVE_BTN = cn(buttonVariants({ size: "sm" }), "text-sm");
 const SHOP_QUIET_BTN =
   "rounded-md px-2 py-1 text-xs font-medium text-muted-foreground " +
   "transition-colors hover:bg-accent/40";

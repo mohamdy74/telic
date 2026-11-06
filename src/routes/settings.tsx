@@ -2,6 +2,8 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import { BellRing, Check, Database, Download, FileWarning, Keyboard, Monitor, Moon, Smartphone, Sprout, Sun, Upload } from "lucide-react";
 import { usePrefs, type Theme } from "@/components/app/preferences";
+import { Modal } from "@/components/app/Modal";
+import { DANGER_BTN, OUTLINE_BTN, PRIMARY_BTN } from "@/components/ui/button";
 import { BackupError, parseBackup, type ParsedBackup } from "@/lib/backup";
 import { buildZipExport, exportZipFileName } from "@/lib/exportZip";
 import { formatDate, formatNumber, type Locale } from "@/lib/i18n";
@@ -53,13 +55,6 @@ const DASHBOARD_CARDS: DashboardCard[] = [
   "achievements",
 ];
 const BACKUP_STALE_MS = 7 * 24 * 60 * 60 * 1000;
-
-const PRIMARY_BTN =
-  "inline-flex items-center justify-center gap-2 rounded-md bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary/90 disabled:pointer-events-none disabled:opacity-50";
-const OUTLINE_BTN =
-  "inline-flex items-center justify-center gap-2 rounded-md border border-border bg-background px-4 py-2 text-sm font-medium text-foreground transition-colors hover:bg-accent/40 disabled:pointer-events-none disabled:opacity-50";
-const DANGER_BTN =
-  "inline-flex items-center justify-center gap-2 rounded-md bg-destructive px-4 py-2 text-sm font-semibold text-destructive-foreground transition-colors hover:bg-destructive/90 disabled:pointer-events-none disabled:opacity-50";
 
 function SettingsPage() {
   const { t } = usePrefs();
@@ -660,71 +655,6 @@ function Switch({
         }
       />
     </button>
-  );
-}
-
-function Modal({
-  title,
-  onClose,
-  children,
-}: {
-  title: string;
-  onClose: () => void;
-  children: ReactNode;
-}) {
-  const panelRef = useRef<HTMLDivElement>(null);
-  useEffect(() => {
-    const prev = document.activeElement as HTMLElement | null;
-    panelRef.current?.focus();
-    return () => prev?.focus?.();
-  }, []);
-  useEffect(() => {
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") onClose();
-      else if (e.key === "Tab") {
-        const items = panelRef.current?.querySelectorAll<HTMLElement>(
-          "button, [href], input, select, textarea, [tabindex]:not([tabindex='-1'])",
-        );
-        const first = items?.[0];
-        const last = items?.[items?.length - 1];
-        if (!first || !last) {
-          e.preventDefault();
-          return;
-        }
-        if (e.shiftKey && document.activeElement === first) {
-          e.preventDefault();
-          last.focus();
-        } else if (!e.shiftKey && document.activeElement === last) {
-          e.preventDefault();
-          first.focus();
-        }
-      }
-    };
-    window.addEventListener("keydown", onKey);
-    document.body.style.overflow = "hidden";
-    return () => {
-      window.removeEventListener("keydown", onKey);
-      document.body.style.overflow = "";
-    };
-  }, [onClose]);
-
-  return (
-    <div
-      className="animate-fade fixed inset-0 z-50 flex items-center justify-center bg-overlay px-4"
-      role="dialog"
-      aria-modal="true"
-      aria-label={title}
-      onClick={onClose}
-    >
-      <div
-        ref={panelRef}
-        tabIndex={-1}
-        className="animate-pop w-full max-w-md rounded-lg border border-border bg-card p-5 shadow-elevated outline-none"
-        onClick={(e) => e.stopPropagation()}
-      >
-        {children}
-      </div>
-    </div>
   );
 }
 

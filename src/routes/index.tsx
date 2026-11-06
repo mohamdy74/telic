@@ -13,6 +13,8 @@ import {
 } from "lucide-react";
 import { useEffect, useState, type ReactNode } from "react";
 import { usePrefs } from "@/components/app/preferences";
+import { OUTLINE_BTN, PRIMARY_BTN } from "@/components/ui/button";
+import { toast } from "sonner";
 import { ACHIEVEMENT_ICONS } from "@/components/app/achievementIcons";
 import { formatDate, formatNumber } from "@/lib/i18n";
 import {
@@ -57,15 +59,7 @@ export const Route = createFileRoute("/")({
   component: DashboardPage,
 });
 
-const PRIMARY_BTN =
-  "inline-flex items-center justify-center gap-2 rounded-md bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground " +
-  "transition-colors hover:bg-primary/90";
-const OUTLINE_BTN =
-  "inline-flex items-center justify-center gap-2 rounded-md border border-border bg-background px-3 py-1.5 text-sm font-medium " +
-  "text-foreground transition-colors hover:bg-accent/40";
 const LINK_FOOTER = "text-xs font-medium text-primary transition-colors hover:text-primary/80";
-const FOCUS_RING = "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/60";
-
 const RING_R = 45; // pure geometry, workerd-safe at module level
 const RING_C = 2 * Math.PI * RING_R;
 const MAX_ROWS = 5;
@@ -86,13 +80,7 @@ function DashboardPage() {
   const cards = useStore((s) => s.settings.dashboardCards);
   const target = useStore((s) => s.settings.dailyFocusTargetMinutes);
   const dayStartHour = useStore((s) => s.settings.dayStartHour);
-  const [toast, setToast] = useState<string | null>(null);
 
-  useEffect(() => {
-    if (!toast) return;
-    const id = window.setTimeout(() => setToast(null), 4000);
-    return () => window.clearTimeout(id);
-  }, [toast]);
 
   if (!ready) return <DashboardSkeleton />;
 
@@ -149,7 +137,7 @@ function DashboardPage() {
 
   const completeTask = (id: string) => {
     tasksApi.complete(id);
-    setToast(t.tasks.toasts.completed);
+    toast(t.tasks.toasts.completed);
   };
 
   const toggleHabit = (h: HabitDue) => {
@@ -215,14 +203,6 @@ function DashboardPage() {
         </div>
       )}
 
-      {toast && (
-        <div
-          role="status"
-          className="animate-pop fixed inset-x-0 bottom-20 z-50 mx-auto flex w-fit max-w-[90vw] items-center rounded-full border border-border bg-card px-4 py-2 shadow-elevated md:bottom-6"
-        >
-          <span className="text-sm">{toast}</span>
-        </div>
-      )}
     </section>
   );
 }
@@ -328,7 +308,7 @@ function PrioritiesCard({
                 type="button"
                 onClick={() => onComplete(x.id)}
                 aria-label={t.tasks.markDone}
-                className={"shrink-0 rounded-full p-1 text-muted-foreground transition-colors hover:text-primary " + FOCUS_RING}
+                className={"shrink-0 rounded-full p-1 text-muted-foreground transition-colors hover:text-primary "}
               >
                 <CheckCircle2 className="size-5" aria-hidden />
               </button>
@@ -455,7 +435,7 @@ function HabitsCard({
                 onClick={() => onToggle(h)}
                 aria-pressed={h.done}
                 aria-label={h.habit.name}
-                className={"flex w-full items-center justify-between gap-2 rounded-md px-1 py-1 text-start transition-colors hover:bg-accent/40 " + FOCUS_RING}
+                className={"flex w-full items-center justify-between gap-2 rounded-md px-1 py-1 text-start transition-colors hover:bg-accent/40 "}
               >
                 <span
                   className={
