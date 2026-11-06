@@ -72,7 +72,8 @@ export interface FocusSession extends BaseRecord {
   localDay: LocalDay;
 }
 
-export interface XpLedgerEntry extends BaseRecord {
+export interface Xp
+LedgerEntry extends BaseRecord {
   sourceType: "task" | "habit" | "focus" | "challenge" | "achievement" | "shop";
   sourceId: string;
   localDay: LocalDay;
@@ -126,14 +127,27 @@ export interface Note extends BaseRecord {
 
 export type DashboardCard = "priorities" | "progress" | "deadlines" | "habits" | "focus" | "level" | "achievements";
 
+/**
+ * Quiet daily digest preferences. Off by default — silence is the default;
+ * only the user opts in. Additive optional field: no schemaVersion bump.
+ */
+export interface DigestPrefs {
+  enabled: boolean;
+  /** Local clock times ("HH:MM") for the morning and evening summaries. */
+  morningAt: string;
+  eveningAt: string;
+}
+
 export interface Settings {
   language: "en" | "ar";
   theme: "light" | "dark" | "system";
   accent: AccentId;
   dayStartHour: 0 | 4;
   weekStartsOn: number; // 0=Sun..6=Sat
-  dashboardCards: Record<DashboardCard, boolean>;
+  dash
+boardCards: Record<DashboardCard, boolean>;
   dailyFocusTargetMinutes: number;
+  digest?: DigestPrefs | undefined;
   updatedAt: ISODate;
 }
 
