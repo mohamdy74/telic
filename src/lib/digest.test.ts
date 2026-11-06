@@ -57,6 +57,8 @@ const mkSession = (over: {
   plannedMinutes: over.plannedMinutes,
   startedAt: stamp,
   endsAt: stamp,
+  createdAt: stamp,
+  updatedAt: stamp,
   completed: over.completed,
   distractions: [],
   localDay: TODAY,
