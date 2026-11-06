@@ -31,6 +31,7 @@ import { habits as habitsApi, tasks as tasksApi, todayLocal, useStore } from "@/
 import { currentTimeZone } from "@/lib/dates";
 import { digestFor } from "@/lib/digest";
 import type { Task } from "@/lib/types";
+import shareImage from "@/assets/tilth-share.jpg.asset.json";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -45,6 +46,12 @@ export const Route = createFileRoute("/")({
         property: "og:description",
         content: "Your daily dashboard: priorities, habits, focus and progress in one calm view.",
       },
+      { property: "og:type", content: "website" },
+      { property: "og:image", content: `https://tilth.lovable.app${shareImage.url}` },
+      { property: "og:image:width", content: "1200" },
+      { property: "og:image:height", content: "630" },
+      { name: "twitter:card", content: "summary_large_image" },
+      { name: "twitter:image", content: `https://tilth.lovable.app${shareImage.url}` },
     ],
   }),
   component: DashboardPage,
