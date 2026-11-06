@@ -482,11 +482,28 @@ use the editor.
   `navigator.serviceWorker`. It skips dev (`import.meta.env.DEV`),
   localhost/127.0.0.1, hosts containing `--`, and `*.lovable.dev`.
 - Manifest lives in the VitePWA options in `vite.config.ts`: standalone,
-  `start_url: "/"`, dark theme colors, `dir: "rtl"`,
-  `lang: "ar"`. Icons are SVG only
-  (`public/icons/icon.svg` + `maskable.svg`, declared as 192/512
-  any + maskable) because binary pushes corrupt; iOS ignores SVG manifest icons, so
-  iOS home-screen installs fall back to a screenshot — accepted limitation for now.
+  `start_url: "/"`, dark theme colors, `dir: "rtl"`, `lang: "ar"`.
+  Icons are REAL PNGs (the DOWNFORCE pattern): `icons/icon-192.png`
+  (any), `icons/icon-512.png` (any), `icons/icon-maskable-512.png`
+  (maskable) — NEVER SVG in the manifest: Android's WebAPK and the iOS
+  home screen ignore SVG icons, so an installed app showed a screenshot
+  instead of the Tilth logo. The apple-touch-icon link in `__root.tsx`
+  points at `icons/apple-touch-icon.png` (iOS ignores SVG there too).
+- The PNG bytes cannot be committed through the text-only push path, so
+  they live in `scripts/icons.base64.json` and
+  `scripts/decode-icons.mjs` materializes them into `public/icons/`
+  BEFORE vite build (package.json `build` chain) — identically in CI,
+  Lovable deploys and local builds. Outputs are gitignored;
+  `src/lib/pwa-icons.test.ts` pins the manifest entries, the base64
+  source (PNG signature + IHDR dims + byte length) and the build chain.
+- Manifest icons are NOT precached (`globIgnores: ["icons/*.png"]`):
+  the OS fetches icons in its own context at install-prompt time and
+  never consults the SW cache — precaching them is dead weight
+  (DOWNFORCE lesson).
+- Android's WebAPK caches home-screen icons: after an icon change the
+  update can take up to a day, or remove + re-add the app to see the new
+  icon immediately.
+- The digest notification carries `icons/icon-192.png` as its icon.
 - The /settings install button uses `beforeinstallprompt` and
   `isStandalone()`; browsers without the event show a hint instead.
 - CI probes `/`, `/settings`, `/sw.js`,

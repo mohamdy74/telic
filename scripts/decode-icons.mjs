@@ -35,4 +35,6 @@ for (const [relPath, entry] of Object.entries(manifest.icons)) {
   writeFileSync(join(root, "public", relPath), bytes);
 }
 
-console.log(`decode-icons: wrote ${Object.keys(manifest.icons).length} PNG icons into public/icons/`);
+console.log(
+  `decode-icons: wrote ${Object.keys(manifest.icons).length} PNG icons into public/icons/`,
+);
