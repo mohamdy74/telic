@@ -75,11 +75,37 @@ const BACKUP_STALE_MS = 7 * 24 * 60 * 60 * 1000;
 
 function SettingsPage() {
   const { t } = usePrefs();
+
+  // TIL-F11: one 888-line scroll becomes eight jump targets. Labels reuse the
+  // sections' own legend strings — no new copy to translate.
+  const nav: Array<[string, string]> = [
+    ["settings-language", t.settings.language],
+    ["settings-day", t.settings.yourDay],
+    ["settings-theme", t.settings.theme],
+    ["settings-cards", t.settings.dashboardCards],
+    ["settings-app", t.pwa.sectionTitle],
+    ["settings-notifications", t.notif.title],
+    ["settings-shortcuts", t.settings.shortcutsTitle],
+    ["settings-data", t.data.title],
+  ];
+
   return (
     <section>
       <PageHeader title={t.pages.settings.title} lede={t.pages.settings.body} />
 
-      <div className="mt-8 grid items-start gap-4 md:grid-cols-2">
+      <nav aria-label={t.pages.settings.title} className="-mx-1 mt-5 flex flex-wrap gap-1.5 px-1">
+        {nav.map(([id, label]) => (
+          <a
+            key={id}
+            href={"#" + id}
+            className="rounded-full border border-border bg-background px-3 py-1.5 text-sm text-muted-foreground transition-colors hover:bg-accent/40 hover:text-foreground"
+          >
+            {label}
+          </a>
+        ))}
+      </nav>
+
+      <div className="mt-6 grid items-start gap-4 md:grid-cols-2">
         <LanguageSection />
         <YourDaySection />
         <ThemeSection />
@@ -120,7 +146,7 @@ function LanguageSection() {
     if (ready) settingsApi.update({ language: l });
   };
   return (
-    <fieldset className="panel">
+    <fieldset id="settings-language" className="panel scroll-mt-6">
       <legend className="panel-title">{t.settings.language}</legend>
       <div className="segmented" role="radiogroup" aria-label={t.settings.language}>
         {(["en", "ar"] as const).map((l) => (
@@ -153,7 +179,7 @@ function ThemeSection() {
     { value: "system", label: t.settings.system, icon: <Monitor className="size-4" aria-hidden /> },
   ];
   return (
-    <fieldset className="panel">
+    <fieldset id="settings-theme" className="panel scroll-mt-6">
       <legend className="panel-title">{t.settings.theme}</legend>
       <div className="segmented" role="radiogroup" aria-label={t.settings.theme}>
         {options.map((o) => (
@@ -195,7 +221,7 @@ function YourDaySection() {
   };
 
   return (
-    <fieldset className="panel">
+    <fieldset id="settings-day" className="panel scroll-mt-6">
       <legend className="panel-title">{t.settings.yourDay}</legend>
 
       <div className="mt-2">
@@ -270,7 +296,7 @@ function DashboardCardsSection() {
   if (!ready) return <SkeletonPanel />;
 
   return (
-    <fieldset className="panel">
+    <fieldset id="settings-cards" className="panel scroll-mt-6">
       <legend className="panel-title">{t.settings.dashboardCards}</legend>
       <p className="text-xs text-muted-foreground">{t.settings.dashboardHint}</p>
       <ul className="mt-3 space-y-1">
@@ -322,7 +348,7 @@ function AppSection() {
   };
 
   return (
-    <fieldset className="panel">
+    <fieldset id="settings-app" className="panel scroll-mt-6">
       <legend className="panel-title">{t.pwa.sectionTitle}</legend>
       <p className="text-sm text-muted-foreground">{t.pwa.installBody}</p>
       {installed ? (
@@ -365,7 +391,7 @@ function NotificationsSection() {
   };
 
   return (
-    <fieldset className="panel">
+    <fieldset id="settings-notifications" className="panel scroll-mt-6">
       <legend className="panel-title">{t.notif.title}</legend>
       <p className="text-xs text-muted-foreground">{t.notif.hint}</p>
       <p className="mt-1 text-xs text-muted-foreground">{t.notif.whileOpen}</p>
@@ -407,7 +433,7 @@ function ShortcutsSection() {
     [t.settings.shortcuts.escape, "Esc"],
   ];
   return (
-    <fieldset className="panel">
+    <fieldset id="settings-shortcuts" className="panel scroll-mt-6">
       <legend className="panel-title">{t.settings.shortcutsTitle}</legend>
       <ul className="mt-3 space-y-1.5 text-sm">
         {rows.map(([label, keys]) => (
@@ -493,7 +519,7 @@ function DataSection() {
 
   return (
     <>
-      <fieldset className="panel">
+      <fieldset id="settings-data" className="panel scroll-mt-6">
         <legend className="panel-title">{t.data.title}</legend>
         <p className="text-sm text-muted-foreground">{t.data.localOnly}</p>
         <p className="mt-1 text-xs text-muted-foreground">{t.data.backupWhy}</p>
@@ -690,7 +716,7 @@ function StoreStatus() {
   if (!ready) {
     return (
       <fieldset className="panel" aria-busy="true">
-        <legend className="panel-title">{t.debug.title}</legend>
+        <legend className="panel-title">Store status</legend>
         <div className="mt-4 space-y-2" aria-hidden="true">
           <div className="h-4 w-2/3 animate-pulse rounded bg-accent/30" />
           <div className="h-4 w-1/2 animate-pulse rounded bg-accent/30" />
@@ -729,8 +755,24 @@ function StoreStatus() {
   ];
 
   return (
-    <fieldset className="panel">
-      <legend className="panel-title">{t.debug.title}</legend>
+    <details id="settings-store" className="panel group scroll-mt-6">
+      <summary className="panel-title -mx-1 cursor-pointer list-none px-1 py-1">
+        <span className="inline-flex items-center gap-2">
+          <svg
+            viewBox="0 0 16 16"
+            className="size-3.5 transition-transform group-open:rotate-90 rtl-flip"
+            aria-hidden
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          >
+            <path d="M6 3l6 5-6 5" />
+          </svg>
+          Store status
+        </span>
+      </summary>
       <dl className="mt-3 grid gap-x-8 text-sm sm:grid-cols-2">
         {rows.map(([label, value]) => (
           <Row key={label} label={label} value={value} />
@@ -781,7 +823,7 @@ function StoreStatus() {
           </button>
         </div>
       )}
-    </fieldset>
+    </details>
   );
 }
 
