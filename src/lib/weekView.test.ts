@@ -134,14 +134,14 @@ describe("buildWeek", () => {
   it("builds one cell per day with the day's tasks, habits and focus", () => {
     const cells = buildWeek(INPUT);
     expect(cells.map((c) => c.day)).toEqual(weekDays(TUE, 1));
-    const tue = cells[2]!;
+    const tue = cells[1]!;
     expect(tue.isToday).toBe(true);
     expect(tue.openTasks.map((x) => x.id)).toEqual(["t1", "t2"]);
     expect(tue.doneTasks.map((x) => x.id)).toEqual(["t3"]);
     expect(tue.habitsScheduled).toBe(2);
     expect(tue.habitsDone).toBe(1);
     expect(tue.focusMinutes).toBe(25);
-    const wed = cells[3]!;
+    const wed = cells[2]!;
     expect(wed.isToday).toBe(false);
     expect(wed.openTasks.map((x) => x.id)).toEqual(["t6"]);
     expect(wed.focusMinutes).toBe(50);
