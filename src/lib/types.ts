@@ -72,8 +72,7 @@ export interface FocusSession extends BaseRecord {
   localDay: LocalDay;
 }
 
-export interface Xp
-LedgerEntry extends BaseRecord {
+export interface XpLedgerEntry extends BaseRecord {
   sourceType: "task" | "habit" | "focus" | "challenge" | "achievement" | "shop";
   sourceId: string;
   localDay: LocalDay;
@@ -144,8 +143,7 @@ export interface Settings {
   accent: AccentId;
   dayStartHour: 0 | 4;
   weekStartsOn: number; // 0=Sun..6=Sat
-  dash
-boardCards: Record<DashboardCard, boolean>;
+  dashboardCards: Record<DashboardCard, boolean>;
   dailyFocusTargetMinutes: number;
   digest?: DigestPrefs | undefined;
   updatedAt: ISODate;

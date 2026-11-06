@@ -45,8 +45,7 @@ const en = {
     repeats: "Repeats",
     repeat: { none: "No repeat", daily: "Daily", weekly: "Weekly", monthly: "Monthly" },
     notes: "Notes",
-    notesPlaceholde
-r: "Add notes…",
+    notesPlaceholder: "Add notes…",
     tagsPlaceholder: "Tags, space separated — e.g. #work",
     titleLabel: "Title",
     subtasks: "Subtasks",
@@ -100,8 +99,7 @@ r: "Add notes…",
     best: "Best streak",
     consistency: "30-day consistency",
     history: "History",
-    
-historyHint: "Click a day in the last week to log it — done, then skipped, then clear.",
+    historyHint: "Click a day in the last week to log it — done, then skipped, then clear.",
     archived: "Archived",
     toasts: { deleted: "Habit deleted.", undo: "Undo" },
     empty: {
@@ -152,8 +150,7 @@ historyHint: "Click a day in the last week to log it — done, then skipped, the
     coins: "Coins",
     achievementsBody: "Your milestones will be celebrated here.",
     achievementsEmptyTitle: "No achievements yet",
-    achievementsEmptyBody: "Finish a task or log a habit —
- your first unlock lands here.",
+    achievementsEmptyBody: "Finish a task or log a habit — your first unlock lands here.",
     hiddenCards: "All cards are hidden — turn some back on in Settings.",
     welcome: {
       title: "Welcome to Tilth",
@@ -201,8 +198,7 @@ historyHint: "Click a day in the last week to log it — done, then skipped, the
     firstFocus: { name: "Deep breath", desc: "Finish your first focus session." },
     focusTenHours: { name: "Ten focused hours", desc: "Accumulate 10 hours of completed focus." },
     focusFiftyHours: { name: "Fifty focused hours", desc: "Accumulate 50 hours of completed focus." },
-    perfectDay: { name: 
-"A perfect day", desc: "Finish everything on your plate in one day." },
+    perfectDay: { name: "A perfect day", desc: "Finish everything on your plate in one day." },
     earlyBirdFive: { name: "Early bird", desc: "Complete 5 tasks before 9 in the morning." },
     comeback: { name: "The return", desc: "Come back after 7 inactive days." },
     levelFive: { name: "Level 5", desc: "Reach level 5." },
@@ -245,8 +241,7 @@ historyHint: "Click a day in the last week to log it — done, then skipped, the
     deletedToast: "Reward deleted.",
     undo: "Undo",
     buy: "Redeem",
-    boughtToast: "Redeemed: 
-{name}. Enjoy it.",
+    boughtToast: "Redeemed: {name}. Enjoy it.",
     needMoreCoins: "Not enough coins — {n} more needed.",
     alreadyToday: "Redeemed today — mark it used to redeem again.",
     nameRequired: "Give the reward a name.",
@@ -301,8 +296,7 @@ historyHint: "Click a day in the last week to log it — done, then skipped, the
     empty: {
       title: "Nothing to analyze yet",
       body: "Complete tasks, log habits or finish focus sessions — your patterns will appear here.",
-      seed: "Tip: seed sample data from the debug to
-ols in Settings to preview the charts.",
+      seed: "Tip: seed sample data from the debug tools in Settings to preview the charts.",
     },
     obs: {
       title: "What your data says",
@@ -407,8 +401,7 @@ ols in Settings to preview the charts.",
     systemHint: "Follows your device's appearance.",
     yourDay: "Your day",
     dayStart: "Day starts at",
-    dayStar
-tHint: "Late-night activity counts toward the previous day.",
+    dayStartHint: "Late-night activity counts toward the previous day.",
     weekStart: "Week starts on",
     focusTarget: "Daily focus target",
     minutes: "min",
@@ -462,8 +455,7 @@ tHint: "Late-night activity counts toward the previous day.",
     resetHint: "Erases everything on this device. A fresh start.",
     resetTitle: "Reset everything?",
     resetBody:
-      "All tasks, habits, history and progres
-s will be permanently deleted from this device. This cannot be undone.",
+      "All tasks, habits, history and progress will be permanently deleted from this device. This cannot be undone.",
     resetExportFirst: "Export a backup first",
     resetWordPrompt: 'Type "RESET" to confirm',
     resetWord: "RESET",
@@ -530,8 +522,7 @@ const ar: Dict = {
     calendar: { title: "التقويم", body: "أسبوعك في لمحة — مهام وعادات وتركيز، يومًا بيوم." },
     tasks: { title: "المهام", body: "دوّن أولًا ورتّب بعدها — اليوم أو القادمة أو اللوحة." },
     notes: { title: "الملاحظات", body: "أفكار وخُطط وروابط — كلها في مكان واحد هادئ." },
-    habits: { title: "العادات", body: "خطوات صغيرة وثابتة.
- الأيام الفائتة لن تمحو تقدّمك." },
+    habits: { title: "العادات", body: "خطوات صغيرة وثابتة. الأيام الفائتة لن تمحو تقدّمك." },
     focus: { title: "التركيز", body: "جلسة واحدة في كل مرة — تركيز ثم استراحة حقيقية." },
     rewards: { title: "تقدّمك يُكافأ", body: "مستويات وتحديات ومتجر تعرفه بنفسك ومظاهر تفتحها." },
     insights: { title: "الرؤى", body: "أنماطك بلغة واضحة — رسوم وملاحظات مبنية على بياناتك أنت." },
@@ -575,8 +566,7 @@ const ar: Dict = {
     seriesAll: "السلسلة كلها",
     empty: {
       today: { title: "لا مهام مستحقة اليوم", body: "استمتع بالهدوء — أو قدّم مهمة ليومها." },
-      upcoming: { title: "لا شيء مجدول بعد", body: "أعطِ مهمة تاريخًا
- وستظهر هنا." },
+      upcoming: { title: "لا شيء مجدول بعد", body: "أعطِ مهمة تاريخًا وستظهر هنا." },
       overdue: { title: "لا متأخرات", body: "كل شيء تحت السيطرة." },
       completed: { title: "لم تكتمل مهام بعد", body: "المهام المنجزة ستجتمع هنا." },
       inbox: { title: "الوارد فارغ", body: "المهام بلا تاريخ تنتقل إلى هنا." },
@@ -635,8 +625,7 @@ const ar: Dict = {
     cancelBody: "ستُحفظ كغير مكتملة — لكن دقائق التركيز التي أنجزتها تبقى محسوبة.",
     distract: "تشويش",
     linkedTask: "اربط مهمة",
-    n
-one: "بدون",
+    none: "بدون",
     sound: "صوت عند الانتهاء",
     notifications: "تيلث لا يرسل إشعارات بعد — أبقِ التبويب مفتوحًا لتسمع النغمة.",
     todaysFocus: "تركيز اليوم",
@@ -698,8 +687,7 @@ one: "بدون",
 
   ach: {
     firstTask: { name: "الخطوة الأولى", desc: "أكمل أول مهمة لك." },
-    tasksTen: { name: "انطلا
-قة", desc: "أكمل ١٠ مهام." },
+    tasksTen: { name: "انطلاقة", desc: "أكمل ١٠ مهام." },
     tasksFifty: { name: "خمسون مهمة", desc: "أكمل ٥٠ مهمة." },
     tasksTwoHundred: { name: "نادي المئتين", desc: "أكمل ٢٠٠ مهمة." },
     firstHabit: { name: "جذور راسخة", desc: "سجّل أول عادة منجزة." },
@@ -731,8 +719,7 @@ one: "بدون",
     "d-focus-45": { name: "ركّز ٤٥ دقيقة" },
     "w-tasks-15": { name: "أكمل ١٥ مهمة هذا الأسبوع" },
     "w-focus-6": { name: "أنهِ ٦ جلسات تركيز هذا الأسبوع" },
-    "w-habits-12": { name: "سجّل ١٢ ت
-أكيد عادة هذا الأسبوع" },
+    "w-habits-12": { name: "سجّل ١٢ تأكيد عادة هذا الأسبوع" },
     "w-xp-400": { name: "اجمع ٤٠٠ نقطة خبرة هذا الأسبوع" },
     "w-target-4": { name: "حقّق هدف التركيز في ٤ أيام" },
   },
@@ -798,8 +785,7 @@ one: "بدون",
       tasksSummary: "{total} مهمة مكتملة خلال هذه الفترة",
       habitTitle: "انتظام العادات عبر الوقت",
       habitUnit: "٪",
-      habitSum
-mary: "متوسط {avg}٪ في الأيام ذات العادات المجدولة",
+      habitSummary: "متوسط {avg}٪ في الأيام ذات العادات المجدولة",
       focusTitle: "دقائق التركيز يوميًا مقابل الهدف اليومي",
       focusUnit: "دقيقة",
       focusSummary: "{total} دقيقة تركيز خلال هذه الفترة · الهدف اليومي {target} دقيقة",
@@ -890,8 +876,7 @@ mary: "متوسط {avg}٪ في الأيام ذات العادات المجدول
     deleted: "حُذفت الملاحظة",
     undo: "تراجع",
     emptyTitle: "لا شيء هنا بعد",
-    emptyLine: "دوّن فكرة أو خطة أو رابط — تبقى على ج
-هازك.",
+    emptyLine: "دوّن فكرة أو خطة أو رابط — تبقى على جهازك.",
   },
 
   command: {
@@ -959,8 +944,7 @@ mary: "متوسط {avg}٪ في الأيام ذات العادات المجدول
     importFailed: "فشل الاستيراد. بياناتك لم تتغير.",
     importDone: "تم استيراد البيانات.",
     importTitle: "استبدال بياناتك؟",
-    importBody: "كل ما هو على هذا الجهاز سيُستبدل بمحتويات هذه النسخة:
-",
+    importBody: "كل ما هو على هذا الجهاز سيُستبدل بمحتويات هذه النسخة:",
     importFrom: "نسخة بتاريخ {date}",
     migratedNote: "نسخة أقدم — تمت ترقيتها للإصدار الحالي.",
     replaceBtn: "استبدال البيانات",
@@ -980,6 +964,61 @@ mary: "متوسط {avg}٪ في الأيام ذات العادات المجدول
       focusSessions: "جلسات التركيز",
       xpLedger: "سجل الخبرة",
       achievements: "الإنجازات",
-      shopItems: "عناصر المتجر
+      shopItems: "عناصر المتجر",
+      purchases: "عمليات الشراء",
+      notes: "الملاحظات",
+    },
+  },
+  debug: {
+    title: "حالة المخزن",
+    loading: "جارٍ تحميل المخزن…",
+    schema: "إصدار المخطط",
+    storage: "تخزين دائم",
+    granted: "مُمنوح",
+    notGranted: "غير مُمنوح",
+    unknown: "غير معروف",
+    collections: "المجموعات",
+    records: "السجلات",
+    softDeleted: "محذوف مؤقتًا",
+    pending: "كتابات معلقة",
+    lastSync: "آخر مزامنة",
+    lastMerge: "آخر دمج",
+    never: "أبدًا",
+    dayStart: "اليوم يبدأ الساعة",
+    weekStart: "الأسبوع يبدأ يوم",
+    focusTarget: "هدف التركيز اليومي",
+    minutes: "دقيقة",
+    seed: "إضافة بيانات تجريبية",
+    flush: "كتابة فورية",
+  },
+  daysStreak: {
+    zero: "لا أيام متتالية",
+    one: "يوم واحد متتالٍ",
+    two: "يومان متتاليان",
+    few: "{n} أيام متتالية",
+    many: "{n} يومًا متتاليًا",
+    other: "{n} يوم متتالٍ",
+  },
+  skip: "تخطَّ إلى المحتوى",
+  notFound: "الصفحة غير موجودة",
+  notFoundBody: "الصفحة التي تبحث عنها غير موجودة أو تم نقلها.",
+  goHome: "الرئيسية",
+};
 
-... [Content truncated]
+export const dictionaries: Record<Locale, Dict> = { en, ar };
+export type { Dict };
+
+/** Picks the correct plural form for a locale (Arabic has 6). */
+export function plural(locale: Locale, forms: PluralForms, n: number): string {
+  const rule = new Intl.PluralRules(locale).select(n);
+  const tpl = forms[rule] ?? forms.other;
+  return tpl.replace("{n}", formatNumber(locale, n));
+}
+
+export function formatNumber(locale: Locale, n: number) {
+  return new Intl.NumberFormat(locale === "ar" ? "ar-EG" : "en-US").format(n);
+}
+
+export function formatDate(locale: Locale, d: Date, opts: Intl.DateTimeFormatOptions = { dateStyle: "full" }) {
+  return new Intl.DateTimeFormat(locale === "ar" ? "ar-EG" : "en-US", opts).format(d);
+}
