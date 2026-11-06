@@ -124,7 +124,8 @@ export interface Note extends BaseRecord {
   pinned?: boolean | undefined;
 }
 
-export type DashboardCard = "priorities" | "progress" | "deadlines" | "habits" | "focus" | "level" | "achievements";
+export type DashboardCard =
+  "priorities" | "progress" | "deadlines" | "habits" | "focus" | "level" | "achievements";
 
 /**
  * Quiet daily digest preferences. Off by default — silence is the default;

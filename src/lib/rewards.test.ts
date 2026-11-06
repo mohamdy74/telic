@@ -118,12 +118,20 @@ describe("awardXp: sources", () => {
 
   it("habit done-log awards 10 XP", () => {
     const res = awardXp({ kind: "habit-done", habitId: "h1", localDay: DAY }, []);
-    expect(res.entry).toMatchObject({ sourceType: "habit", sourceId: "h1", localDay: DAY, xp: HABIT_XP });
+    expect(res.entry).toMatchObject({
+      sourceType: "habit",
+      sourceId: "h1",
+      localDay: DAY,
+      xp: HABIT_XP,
+    });
     expect(res.reason).toBeNull();
   });
 
   it("focus awards 1 XP per full planned minute", () => {
-    const res = awardXp({ kind: "focus-completed", session: makeSession({ plannedMinutes: 40 }) }, []);
+    const res = awardXp(
+      { kind: "focus-completed", session: makeSession({ plannedMinutes: 40 }) },
+      [],
+    );
     expect(res.entry?.xp).toBe(40);
   });
 });
@@ -261,7 +269,10 @@ describe("awardXp: idempotency and undo", () => {
 
 describe("awardXp: focus rules", () => {
   it("an early-stopped session gives 0 XP (focus-incomplete)", () => {
-    const res = awardXp({ kind: "focus-completed", session: makeSession({ completed: false }) }, []);
+    const res = awardXp(
+      { kind: "focus-completed", session: makeSession({ completed: false }) },
+      [],
+    );
     expect(res.entry).toBeNull();
     expect(res.reason).toBe("focus-incomplete");
   });
@@ -305,7 +316,9 @@ describe("revokeXp", () => {
   });
 
   it("task revoke matches any day (one live completion per task at a time)", () => {
-    const ledger = [makeLedgerEntry({ sourceType: "task", sourceId: "t1", localDay: OTHER_DAY, xp: 10 })];
+    const ledger = [
+      makeLedgerEntry({ sourceType: "task", sourceId: "t1", localDay: OTHER_DAY, xp: 10 }),
+    ];
     const doomed = revokeXp({ sourceType: "task", sourceId: "t1" }, ledger);
     expect(doomed).toHaveLength(1);
   });
@@ -341,15 +354,15 @@ describe("totalsFromLedger (derived XP, coins, level)", () => {
   });
 
   it("soft-deleted entries are ignored", () => {
-    const ledger = [
-      makeLedgerEntry({ xp: 20 }),
-      makeLedgerEntry({ xp: 300, deletedAt: STAMP }),
-    ];
+    const ledger = [makeLedgerEntry({ xp: 20 }), makeLedgerEntry({ xp: 300, deletedAt: STAMP })];
     expect(totalsFromLedger(ledger).xp).toBe(20);
   });
 
   it("level reflects the summed ledger XP", () => {
-    const ledger = [makeLedgerEntry({ xp: 100 }), makeLedgerEntry({ localDay: OTHER_DAY, xp: 283 })];
+    const ledger = [
+      makeLedgerEntry({ xp: 100 }),
+      makeLedgerEntry({ localDay: OTHER_DAY, xp: 283 }),
+    ];
     const totals = totalsFromLedger(ledger);
     expect(totals.level).toBe(3);
     expect(totals.xpIntoLevel).toBe(0);

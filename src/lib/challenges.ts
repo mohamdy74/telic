@@ -47,7 +47,8 @@ export interface ChallengeDef {
   progress: (s: ChallengeState) => { current: number; goal: number };
 }
 
-const live = <T extends { deletedAt?: string | undefined }>(l: T[]) => l.filter((r) => !r.deletedAt);
+const live = <T extends { deletedAt?: string | undefined }>(l: T[]) =>
+  l.filter((r) => !r.deletedAt);
 
 function liveLedger(s: ChallengeState) {
   return live(s.xpLedger);
@@ -199,9 +200,8 @@ export const WEEKLY_CHALLENGES: ChallengeDef[] = [
     progress: (s) => {
       const w = weekWindow(s);
       return {
-        current: completedWorkSessions(s).filter(
-          (x) => x.localDay >= w.from && x.localDay <= w.to,
-        ).length,
+        current: completedWorkSessions(s).filter((x) => x.localDay >= w.from && x.localDay <= w.to)
+          .length,
         goal: 6,
       };
     },

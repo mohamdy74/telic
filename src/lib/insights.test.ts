@@ -15,8 +15,7 @@ const TZ = "Africa/Cairo"; // UTC+2, no DST
 const TODAY = "2026-11-05"; // a Thursday
 
 const pad = (n: number) => String(n).padStart(2, "0");
-const iso = (day: string, h: number, m = 0) =>
-  day + "T" + pad(h) + ":" + pad(m) + ":00.000Z";
+const iso = (day: string, h: number, m = 0) => day + "T" + pad(h) + ":" + pad(m) + ":00.000Z";
 
 const DAYS14 = Array.from({ length: 14 }, (_, i) => addDays(TODAY, -(i + 1)));
 
@@ -56,7 +55,12 @@ const log = (habitId: string, day: string, status: "done" | "skipped"): HabitLog
   updatedAt: iso(day, 18),
 });
 
-const focus = (id: string, day: string, minutes: number, over: Partial<FocusSession> = {}): FocusSession => ({
+const focus = (
+  id: string,
+  day: string,
+  minutes: number,
+  over: Partial<FocusSession> = {},
+): FocusSession => ({
   id,
   mode: "pomodoro",
   plannedMinutes: minutes,
@@ -106,7 +110,12 @@ describe("insights series", () => {
       task({ status: "done", completedAt: iso("2026-11-04", 9), deletedAt: iso("2026-11-05", 1) }),
       task({ status: "done", completedAt: iso("2026-09-01", 8) }),
     ];
-    const pts = taskCompletionsByDay(tasks, { today: TODAY, days: 7, dayStartHour: 0, timeZone: TZ });
+    const pts = taskCompletionsByDay(tasks, {
+      today: TODAY,
+      days: 7,
+      dayStartHour: 0,
+      timeZone: TZ,
+    });
     expect(pts).toHaveLength(7);
     expect(pts[0]).toEqual({ day: "2026-10-30", value: 0 });
     expect(pts[5]).toEqual({ day: "2026-11-04", value: 2 });
@@ -115,7 +124,12 @@ describe("insights series", () => {
 
   it("respects dayStartHour: a 03:30 wall-clock completion belongs to the previous day", () => {
     const tasks = [task({ status: "done", completedAt: iso("2026-11-04", 1, 30) })];
-    const pts = taskCompletionsByDay(tasks, { today: TODAY, days: 7, dayStartHour: 4, timeZone: TZ });
+    const pts = taskCompletionsByDay(tasks, {
+      today: TODAY,
+      days: 7,
+      dayStartHour: 4,
+      timeZone: TZ,
+    });
     expect(pts[4]).toEqual({ day: "2026-11-03", value: 1 });
     expect(pts[5]?.value).toBe(0);
   });
@@ -132,9 +146,21 @@ describe("insights series", () => {
     const pts = habitConsistencyByDay([h1, h2, hArch], logs, { today: TODAY, days: 7 });
     expect(pts).toHaveLength(7);
     // Nov 3 (Tuesday): only h1 scheduled, done -> 100
-    expect(pts[4]).toMatchObject({ day: "2026-11-03", value: 100, scheduled: 1, done: 1, skipped: 0 });
+    expect(pts[4]).toMatchObject({
+      day: "2026-11-03",
+      value: 100,
+      scheduled: 1,
+      done: 1,
+      skipped: 0,
+    });
     // Nov 4: h1 skipped -> denominator 0 -> null
-    expect(pts[5]).toMatchObject({ day: "2026-11-04", value: null, scheduled: 1, done: 0, skipped: 1 });
+    expect(pts[5]).toMatchObject({
+      day: "2026-11-04",
+      value: null,
+      scheduled: 1,
+      done: 0,
+      skipped: 1,
+    });
     // Oct 31 (Saturday): h1 (no log) + h2 done -> 1/2
     expect(pts[1]).toMatchObject({ day: "2026-10-31", value: 50, scheduled: 2, done: 1 });
     // Nov 2: h1 scheduled, no log -> 0
@@ -173,9 +199,8 @@ describe("insights observations", () => {
 
   it("no claims below 14 active days even with enough events", () => {
     const logs = Array.from({ length: 12 }, (_, i) => log("h1", addDays(TODAY, -(i + 1)), "done"));
-    const tasks = Array.from(
-      { length: 10 },
-      (_, i) => task({ status: "done", completedAt: iso(addDays(TODAY, -(i + 1)), 8) }),
+    const tasks = Array.from({ length: 10 }, (_, i) =>
+      task({ status: "done", completedAt: iso(addDays(TODAY, -(i + 1)), 8) }),
     );
     const rep = insightsReport({ ...empty, tasks, habits: [habit("h1")], habitLogs: logs });
     expect(rep.activeDays).toBe(12);
@@ -185,9 +210,11 @@ describe("insights observations", () => {
   it("claims the morning-completion pattern with pct and basis", () => {
     const tasks = [
       ...Array.from({ length: 7 }, (_, i) =>
-        task({ status: "done", completedAt: iso(addDays(TODAY, -(i + 1)), 8) })),
+        task({ status: "done", completedAt: iso(addDays(TODAY, -(i + 1)), 8) }),
+      ),
       ...Array.from({ length: 2 }, (_, i) =>
-        task({ status: "done", completedAt: iso(addDays(TODAY, -(i + 1)), 13) })),
+        task({ status: "done", completedAt: iso(addDays(TODAY, -(i + 1)), 13) }),
+      ),
       task({ status: "done", completedAt: iso(addDays(TODAY, -1), 18) }),
     ];
     const rep = insightsReport({
@@ -207,13 +234,21 @@ describe("insights observations", () => {
   it("no time-of-day claim when the distribution is even", () => {
     const tasks = [
       ...Array.from({ length: 4 }, (_, i) =>
-        task({ status: "done", completedAt: iso(addDays(TODAY, -(i + 1)), 8) })),
+        task({ status: "done", completedAt: iso(addDays(TODAY, -(i + 1)), 8) }),
+      ),
       ...Array.from({ length: 4 }, (_, i) =>
-        task({ status: "done", completedAt: iso(addDays(TODAY, -(i + 1)), 13) })),
+        task({ status: "done", completedAt: iso(addDays(TODAY, -(i + 1)), 13) }),
+      ),
       ...Array.from({ length: 2 }, (_, i) =>
-        task({ status: "done", completedAt: iso(addDays(TODAY, -(i + 1)), 18) })),
+        task({ status: "done", completedAt: iso(addDays(TODAY, -(i + 1)), 18) }),
+      ),
     ];
-    const rep = insightsReport({ ...empty, tasks, habits: [habit("h1")], habitLogs: activeLogs(DAYS14) });
+    const rep = insightsReport({
+      ...empty,
+      tasks,
+      habits: [habit("h1")],
+      habitLogs: activeLogs(DAYS14),
+    });
     expect(rep.observations.find((o) => o.id === "taskTimeOfDay")).toBeUndefined();
   });
 
@@ -304,9 +339,11 @@ describe("insights observations", () => {
   it("observations keep a stable order when several qualify", () => {
     const tasks = [
       ...Array.from({ length: 7 }, (_, i) =>
-        task({ status: "done", completedAt: iso(addDays(TODAY, -(i + 1)), 8) })),
+        task({ status: "done", completedAt: iso(addDays(TODAY, -(i + 1)), 8) }),
+      ),
       ...Array.from({ length: 2 }, (_, i) =>
-        task({ status: "done", completedAt: iso(addDays(TODAY, -(i + 1)), 13) })),
+        task({ status: "done", completedAt: iso(addDays(TODAY, -(i + 1)), 13) }),
+      ),
       task({ status: "done", completedAt: iso(addDays(TODAY, -1), 18) }),
     ];
     const sessions = [
@@ -339,4 +376,3 @@ describe("insights observations", () => {
     ]);
   });
 });
-

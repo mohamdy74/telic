@@ -28,17 +28,29 @@ const en = {
   },
   pages: {
     dashboard: { title: "Your day, at a glance", body: "Everything due today, in one calm view." },
-    calendar: { title: "Calendar", body: "Your week at a glance — tasks, habits and focus, day by day." },
+    calendar: {
+      title: "Calendar",
+      body: "Your week at a glance — tasks, habits and focus, day by day.",
+    },
     tasks: { title: "Tasks", body: "Capture first, sort later — today, upcoming or the board." },
     notes: { title: "Notes", body: "Thoughts, plans and links — one calm place, always yours." },
-    habits: { title: "Habits", body: "Small, steady actions. Missed days won't erase your progress." },
+    habits: {
+      title: "Habits",
+      body: "Small, steady actions. Missed days won't erase your progress.",
+    },
     focus: { title: "Focus", body: "One session at a time — work, then a real break." },
-    rewards: { title: "Your progress, rewarded", body: "Levels, challenges, a shop you define and themes you unlock." },
-    insights: { title: "Insights", body: "Your patterns in plain language — charts and observations from your own data." },
+    rewards: {
+      title: "Your progress, rewarded",
+      body: "Levels, challenges, a shop you define and themes you unlock.",
+    },
+    insights: {
+      title: "Insights",
+      body: "Your patterns in plain language — charts and observations from your own data.",
+    },
     settings: { title: "Settings", body: "Language, appearance, your day and your data." },
   },
   tasks: {
-    quickAddPlaceholder: "Add a task — try \"buy milk !high #errands tomorrow\"",
+    quickAddPlaceholder: 'Add a task — try "buy milk !high #errands tomorrow"',
     add: "Add",
     search: "Search tasks…",
     display: "Display",
@@ -46,7 +58,13 @@ const en = {
     filterTag: "Tag",
     all: "All",
     clearFilters: "Clear filters",
-    view: { today: "Today", upcoming: "Upcoming", overdue: "Overdue", completed: "Completed", inbox: "Inbox" },
+    view: {
+      today: "Today",
+      upcoming: "Upcoming",
+      overdue: "Overdue",
+      completed: "Completed",
+      inbox: "Inbox",
+    },
     mode: { list: "List", board: "Board" },
     priority: { low: "Low", medium: "Medium", high: "High" },
     due: "Due",
@@ -68,14 +86,22 @@ const en = {
     moveUp: "Move up",
     moveDown: "Move down",
     column: { todo: "To do", doing: "Doing", done: "Done" },
-    toasts: { completed: "Task completed.", deleted: "Task deleted.", seriesDeleted: "Series deleted.", undo: "Undo" },
+    toasts: {
+      completed: "Task completed.",
+      deleted: "Task deleted.",
+      seriesDeleted: "Series deleted.",
+      undo: "Undo",
+    },
     seriesTitle: "Delete recurring task?",
     seriesBody: "This task repeats. Delete only this instance, or the whole series?",
     seriesInstance: "This instance",
     seriesAll: "The whole series",
     empty: {
       today: { title: "Nothing due today", body: "Enjoy the calm — or pull something forward." },
-      upcoming: { title: "Nothing scheduled ahead", body: "Give a task a date and it will show up here." },
+      upcoming: {
+        title: "Nothing scheduled ahead",
+        body: "Give a task a date and it will show up here.",
+      },
       overdue: { title: "Nothing overdue", body: "You're all caught up." },
       completed: { title: "Nothing completed yet", body: "Finished tasks will wait here." },
       inbox: { title: "Inbox zero", body: "Tasks without a date land here." },
@@ -111,7 +137,10 @@ const en = {
     archived: "Archived",
     toasts: { deleted: "Habit deleted.", undo: "Undo" },
     empty: {
-      today: { title: "Nothing due today", body: "Nothing is scheduled for today. Enjoy the calm." },
+      today: {
+        title: "Nothing due today",
+        body: "Nothing is scheduled for today. Enjoy the calm.",
+      },
       all: { title: "No habits yet", body: "Small, steady actions — plant your first habit." },
       action: "New habit",
     },
@@ -176,7 +205,7 @@ const en = {
     install: "Install app",
     installed: "Installed",
     installBody: "Add Tilth to your home screen and use it full-screen — it works offline.",
-    installUnsupported: "You can install Tilth from your browser menu — look for \"Install app\".",
+    installUnsupported: 'You can install Tilth from your browser menu — look for "Install app".',
   },
 
   achUnlocked: "Achievement unlocked: {name}",
@@ -205,7 +234,10 @@ const en = {
     streakHundred: { name: "Hundred days strong", desc: "Reach a 100-day habit streak." },
     firstFocus: { name: "Deep breath", desc: "Finish your first focus session." },
     focusTenHours: { name: "Ten focused hours", desc: "Accumulate 10 hours of completed focus." },
-    focusFiftyHours: { name: "Fifty focused hours", desc: "Accumulate 50 hours of completed focus." },
+    focusFiftyHours: {
+      name: "Fifty focused hours",
+      desc: "Accumulate 50 hours of completed focus.",
+    },
     perfectDay: { name: "A perfect day", desc: "Finish everything on your plate in one day." },
     earlyBirdFive: { name: "Early bird", desc: "Complete 5 tasks before 9 in the morning." },
     comeback: { name: "The return", desc: "Come back after 7 inactive days." },
@@ -214,7 +246,10 @@ const en = {
     firstPurchase: { name: "First pick", desc: "Buy your first item from the shop." },
     firstBackup: { name: "Safe and sound", desc: "Export your first backup." },
     consistentMonth: { name: "Steady hand", desc: "Keep 80% habit consistency over a month." },
-    zenThree: { name: "Unshaken", desc: "Finish 3 focus sessions in a row with zero distractions." },
+    zenThree: {
+      name: "Unshaken",
+      desc: "Finish 3 focus sessions in a row with zero distractions.",
+    },
     focusTargetWeek: { name: "Target week", desc: "Hit your daily focus target 7 days in a row." },
   },
 
@@ -256,7 +291,7 @@ const en = {
     priceInvalid: "Enter a price of at least 1 coin.",
     emptyTitle: "No rewards yet",
     emptyBody:
-      "Define your own — like \"1 hour of gaming\" or \"a coffee out\" — and redeem it with the coins you earn.",
+      'Define your own — like "1 hour of gaming" or "a coffee out" — and redeem it with the coins you earn.',
     history: "Purchase history",
     historyHint: "Refunds work until the end of the day, and only while unused.",
     historyEmpty: "No purchases yet.",
@@ -313,7 +348,8 @@ const en = {
       afternoon: "You get most of your tasks done between noon and 5 PM — {pct}% of them.",
       evening: "You get most of your tasks done in the evening — {pct}% of them.",
       focusDay: "Your strongest focus day is {weekday}.",
-      skippedHabit: "{habit} is the habit you skip most often — maybe a smaller step would fit better.",
+      skippedHabit:
+        "{habit} is the habit you skip most often — maybe a smaller step would fit better.",
       basisTasks: "based on {events} completed tasks over {activeDays} active days",
       basisFocus: "based on {events} focus sessions over {activeDays} active days",
       basisSkips: "based on {events} skipped days over {activeDays} active days",
@@ -552,7 +588,13 @@ const ar: Dict = {
     filterTag: "الوسم",
     all: "الكل",
     clearFilters: "مسح الفلاتر",
-    view: { today: "اليوم", upcoming: "القادمة", overdue: "المتأخرة", completed: "المكتملة", inbox: "الوارد" },
+    view: {
+      today: "اليوم",
+      upcoming: "القادمة",
+      overdue: "المتأخرة",
+      completed: "المكتملة",
+      inbox: "الوارد",
+    },
     mode: { list: "قائمة", board: "لوحة" },
     priority: { low: "منخفضة", medium: "متوسطة", high: "عالية" },
     due: "الاستحقاق",
@@ -574,7 +616,12 @@ const ar: Dict = {
     moveUp: "أعلى",
     moveDown: "أسفل",
     column: { todo: "للتنفيذ", doing: "جارٍ", done: "منجزة" },
-    toasts: { completed: "تم إنجاز المهمة.", deleted: "تم حذف المهمة.", seriesDeleted: "تم حذف السلسلة.", undo: "تراجع" },
+    toasts: {
+      completed: "تم إنجاز المهمة.",
+      deleted: "تم حذف المهمة.",
+      seriesDeleted: "تم حذف السلسلة.",
+      undo: "تراجع",
+    },
     seriesTitle: "حذف مهمة متكررة؟",
     seriesBody: "هذه المهمة متكررة. أتحذف هذه المرة فقط أم السلسلة كلها؟",
     seriesInstance: "هذه المرة فقط",
@@ -1034,6 +1081,10 @@ export function formatNumber(locale: Locale, n: number) {
   return new Intl.NumberFormat(locale === "ar" ? "ar-EG" : "en-US").format(n);
 }
 
-export function formatDate(locale: Locale, d: Date, opts: Intl.DateTimeFormatOptions = { dateStyle: "full" }) {
+export function formatDate(
+  locale: Locale,
+  d: Date,
+  opts: Intl.DateTimeFormatOptions = { dateStyle: "full" },
+) {
   return new Intl.DateTimeFormat(locale === "ar" ? "ar-EG" : "en-US", opts).format(d);
 }

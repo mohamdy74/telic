@@ -71,7 +71,6 @@ function HabitsPage() {
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const nameRef = useRef<HTMLInputElement>(null);
 
-
   useEffect(() => {
     if (showNew) nameRef.current?.focus();
   }, [showNew]);
@@ -230,7 +229,9 @@ function HabitsPage() {
               <ul className="mt-2 space-y-2">
                 {archived.map((h) => (
                   <li key={h.id} className="panel flex items-center gap-3 p-3">
-                    <span className="min-w-0 flex-1 truncate text-sm text-muted-foreground">{h.name}</span>
+                    <span className="min-w-0 flex-1 truncate text-sm text-muted-foreground">
+                      {h.name}
+                    </span>
                     <button
                       type="button"
                       onClick={() => habitApi.update(h.id, { archived: false })}
@@ -254,7 +255,6 @@ function HabitsPage() {
           )}
         </div>
       )}
-
     </section>
   );
 }
@@ -344,8 +344,15 @@ function NewHabitForm({
       />
       {type !== "daily" && (
         <div>
-          <WeekdayGrid days={days} onChange={setDays} weekStartsOn={weekStartsOn} label={t.habits.schedule} />
-          {days.length === 0 && <p className="mt-1 text-xs text-destructive">{t.habits.daysRequired}</p>}
+          <WeekdayGrid
+            days={days}
+            onChange={setDays}
+            weekStartsOn={weekStartsOn}
+            label={t.habits.schedule}
+          />
+          {days.length === 0 && (
+            <p className="mt-1 text-xs text-destructive">{t.habits.daysRequired}</p>
+          )}
         </div>
       )}
       <div className="flex items-center justify-end gap-2">
@@ -389,7 +396,12 @@ function HabitEditor({ habit, weekStartsOn }: { habit: Habit; weekStartsOn: numb
         label={t.habits.schedule}
       />
       {type !== "daily" && (
-        <WeekdayGrid days={days} onChange={setDays} weekStartsOn={weekStartsOn} label={t.habits.schedule} />
+        <WeekdayGrid
+          days={days}
+          onChange={setDays}
+          weekStartsOn={weekStartsOn}
+          label={t.habits.schedule}
+        />
       )}
       <div className="flex items-center justify-end gap-2">
         <button
@@ -447,10 +459,12 @@ function WeekdayGrid({
             type="button"
             aria-pressed={on}
             onClick={() => onChange(on ? days.filter((x) => x !== d) : [...days, d])}
-            className={"h-8 min-w-9 rounded-md border px-2 text-xs font-medium transition-colors " +
+            className={
+              "h-8 min-w-9 rounded-md border px-2 text-xs font-medium transition-colors " +
               (on
                 ? "border-primary bg-primary text-primary-foreground"
-                : "border-border bg-background text-muted-foreground hover:text-foreground")}
+                : "border-border bg-background text-muted-foreground hover:text-foreground")
+            }
           >
             {weekdayShort(locale, d)}
           </button>
@@ -487,7 +501,9 @@ function TodayRow({
     <li className="panel flex items-center gap-3 p-3">
       <CheckButton checked={done} onToggle={onToggleDone} label={t.habits.done} />
       <span className="min-w-0 flex-1">
-        <span className={"text-sm font-medium " + (done ? "text-muted-foreground line-through" : "")}>
+        <span
+          className={"text-sm font-medium " + (done ? "text-muted-foreground line-through" : "")}
+        >
           {habit.name}
         </span>
         {streak > 0 && (
@@ -501,10 +517,12 @@ function TodayRow({
         type="button"
         onClick={onSkip}
         aria-pressed={skipped}
-        className={"inline-flex items-center gap-1.5 rounded-md border px-3 py-1.5 text-sm font-medium transition-colors " +
+        className={
+          "inline-flex items-center gap-1.5 rounded-md border px-3 py-1.5 text-sm font-medium transition-colors " +
           (skipped
             ? "border-primary/70 bg-transparent text-primary"
-            : "border-border bg-background text-muted-foreground hover:text-foreground")}
+            : "border-border bg-background text-muted-foreground hover:text-foreground")
+        }
       >
         <SkipForward className="size-4 rtl-flip" aria-hidden />
         {t.habits.skip}
@@ -538,7 +556,12 @@ function AllHabitRow({
   return (
     <div className="panel overflow-hidden">
       <div className="flex items-center gap-3 p-3">
-        <button type="button" onClick={onExpand} aria-expanded={expanded} className="min-w-0 flex-1 text-start">
+        <button
+          type="button"
+          onClick={onExpand}
+          aria-expanded={expanded}
+          className="min-w-0 flex-1 text-start"
+        >
           <span className="text-sm font-medium">{habit.name}</span>
           <span className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted-foreground">
             <span>{scheduleSummary(locale, habit.schedule, weekStartsOn, t.habits.everyday)}</span>
@@ -564,7 +587,13 @@ function AllHabitRow({
           <HabitEditor habit={habit} weekStartsOn={weekStartsOn} />
           <div className="mt-4">
             <h3 className="text-sm font-semibold">{t.habits.history}</h3>
-            <Heatmap habit={habit} logs={logs} today={today} weekStartsOn={weekStartsOn} onLog={onCycle} />
+            <Heatmap
+              habit={habit}
+              logs={logs}
+              today={today}
+              weekStartsOn={weekStartsOn}
+              onLog={onCycle}
+            />
           </div>
           <div className="mt-4 flex flex-wrap items-center justify-end gap-2">
             <button
@@ -613,12 +642,12 @@ function Heatmap({
     kind === "done"
       ? t.habits.done
       : kind === "skipped"
-      ? t.habits.skipped
-      : kind === "missed"
-      ? t.habits.missed
-      : kind === "upcoming"
-      ? t.habits.upcoming
-      : t.habits.notScheduled;
+        ? t.habits.skipped
+        : kind === "missed"
+          ? t.habits.missed
+          : kind === "upcoming"
+            ? t.habits.upcoming
+            : t.habits.notScheduled;
 
   const weeks: LocalDay[][] = [];
   for (let w = 0; w < HEAT_WEEKS; w++) {
@@ -649,11 +678,17 @@ function Heatmap({
                   title={title}
                   aria-label={title}
                   onClick={() => onLog(habit.id, day)}
-                  className={"size-3 shrink-0 rounded-sm border transition-colors hover:ring-1 hover:ring-primary " +
-                    KIND_CLS[kind]}
+                  className={
+                    "size-3 shrink-0 rounded-sm border transition-colors hover:ring-1 hover:ring-primary " +
+                    KIND_CLS[kind]
+                  }
                 />
               ) : (
-                <span key={day} title={title} className={"size-3 shrink-0 rounded-sm border " + KIND_CLS[kind]} />
+                <span
+                  key={day}
+                  title={title}
+                  className={"size-3 shrink-0 rounded-sm border " + KIND_CLS[kind]}
+                />
               );
             })}
           </div>
@@ -674,7 +709,15 @@ function Heatmap({
 
 /* ---------------- shared bits ---------------- */
 
-function CheckButton({ checked, onToggle, label }: { checked: boolean; onToggle: () => void; label: string }) {
+function CheckButton({
+  checked,
+  onToggle,
+  label,
+}: {
+  checked: boolean;
+  onToggle: () => void;
+  label: string;
+}) {
   return (
     <button
       type="button"
@@ -682,10 +725,12 @@ function CheckButton({ checked, onToggle, label }: { checked: boolean; onToggle:
       aria-checked={checked}
       aria-label={label}
       onClick={onToggle}
-      className={"grid size-5 shrink-0 place-items-center rounded-full border transition-colors " +
+      className={
+        "grid size-5 shrink-0 place-items-center rounded-full border transition-colors " +
         (checked
           ? "border-primary bg-primary text-primary-foreground"
-          : "border-border text-transparent hover:border-primary")}
+          : "border-border text-transparent hover:border-primary")
+      }
     >
       <Check className="size-3" aria-hidden />
     </button>

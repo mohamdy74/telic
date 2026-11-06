@@ -61,7 +61,9 @@ export function buildWeek(input: WeekInput): WeekCell[] {
   }
   for (const slot of byDay.values()) {
     slot.open.sort(
-      (a, b) => PRIORITY_RANK[a.priority] - PRIORITY_RANK[b.priority] || a.createdAt.localeCompare(b.createdAt),
+      (a, b) =>
+        PRIORITY_RANK[a.priority] - PRIORITY_RANK[b.priority] ||
+        a.createdAt.localeCompare(b.createdAt),
     );
     slot.done.sort((a, b) => (b.completedAt ?? "").localeCompare(a.completedAt ?? ""));
   }
@@ -77,7 +79,12 @@ export function buildWeek(input: WeekInput): WeekCell[] {
     const scheduled = liveHabits.filter((h) => isScheduledOn(h.schedule, day));
     let focusMinutes = 0;
     for (const session of input.sessions) {
-      if (!session.deletedAt && session.completed && session.mode !== "break" && session.localDay === day) {
+      if (
+        !session.deletedAt &&
+        session.completed &&
+        session.mode !== "break" &&
+        session.localDay === day
+      ) {
         focusMinutes += session.plannedMinutes;
       }
     }

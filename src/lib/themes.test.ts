@@ -4,7 +4,10 @@ import { THEME_UNLOCKS } from "./rewardsConfig";
 import { DEFAULT_ACCENT, isThemeUnlocked, resolveAccent, THEMES } from "./themes";
 import { ACCENT_IDS } from "./types";
 
-const state = (level: number, unlockedAchievements: string[] = []) => ({ level, unlockedAchievements });
+const state = (level: number, unlockedAchievements: string[] = []) => ({
+  level,
+  unlockedAchievements,
+});
 
 describe("themes", () => {
   it("ships five accents, moss first, each with its own hue", () => {
@@ -101,7 +104,8 @@ const ok = (L: number, C: number, H: number): [number, number, number] => {
   ];
 };
 const lin = (x: number) => (x <= 0.04045 ? x / 12.92 : Math.pow((x + 0.055) / 1.055, 2.4));
-const lum = (c: [number, number, number]) => 0.2126 * lin(c[0]) + 0.7152 * lin(c[1]) + 0.0722 * lin(c[2]);
+const lum = (c: [number, number, number]) =>
+  0.2126 * lin(c[0]) + 0.7152 * lin(c[1]) + 0.0722 * lin(c[2]);
 const ratio = (a: number, b: number) => {
   const hi = Math.max(a, b);
   const lo = Math.min(a, b);

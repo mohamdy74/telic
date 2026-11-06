@@ -1,5 +1,18 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { CheckCircle2, Coins, Lock, Palette, Pencil, Plus, RotateCcw, ShoppingBag, Sparkles, Target, Trash2, Trophy } from "lucide-react";
+import {
+  CheckCircle2,
+  Coins,
+  Lock,
+  Palette,
+  Pencil,
+  Plus,
+  RotateCcw,
+  ShoppingBag,
+  Sparkles,
+  Target,
+  Trash2,
+  Trophy,
+} from "lucide-react";
 import { useEffect, useState } from "react";
 import { usePrefs } from "@/components/app/preferences";
 import { ACHIEVEMENT_ICONS } from "@/components/app/achievementIcons";
@@ -11,7 +24,13 @@ import { totalsFromLedger, xpAwardedOnDay } from "@/lib/rewards";
 import { purchaseHistory } from "@/lib/shop";
 import { THEMES, isThemeUnlocked, type ThemeUnlockState } from "@/lib/themes";
 import { DAILY_XP_CAP, THEME_UNLOCKS } from "@/lib/rewardsConfig";
-import { progressState, settings as settingsApi, shop as shopApi, todayLocal, useStore } from "@/lib/store";
+import {
+  progressState,
+  settings as settingsApi,
+  shop as shopApi,
+  todayLocal,
+  useStore,
+} from "@/lib/store";
 import type { AchievementUnlock, Purchase, ShopItem } from "@/lib/types";
 import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -20,9 +39,15 @@ export const Route = createFileRoute("/rewards")({
   head: () => ({
     meta: [
       { title: "Rewards — Tilth" },
-      { name: "description", content: "Earn XP, level up and unlock rewards for meaningful progress." },
+      {
+        name: "description",
+        content: "Earn XP, level up and unlock rewards for meaningful progress.",
+      },
       { property: "og:title", content: "Rewards — Tilth" },
-      { property: "og:description", content: "Earn XP, level up and unlock rewards for meaningful progress." },
+      {
+        property: "og:description",
+        content: "Earn XP, level up and unlock rewards for meaningful progress.",
+      },
     ],
   }),
   component: RewardsPage,
@@ -172,7 +197,10 @@ function ChallengeRow({ def, ps }: { def: ChallengeDef; ps: AchievementState }) 
         )}
       </div>
       <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-accent/40" aria-hidden>
-        <div className="h-full rounded-full bg-primary transition-all" style={{ width: pct + "%" }} />
+        <div
+          className="h-full rounded-full bg-primary transition-all"
+          style={{ width: pct + "%" }}
+        />
       </div>
       <p className="mt-1 text-xs text-muted-foreground tabular-nums">
         {formatNumber(locale, p.current) + " / " + formatNumber(locale, p.goal)}
@@ -206,12 +234,7 @@ function AchievementsGallery() {
       </div>
       <ul className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3">
         {ACHIEVEMENTS.map((a) => (
-          <AchievementCard
-            key={a.id}
-            def={a}
-            ps={ps}
-            unlock={byId.get(a.id) ?? null}
-          />
+          <AchievementCard key={a.id} def={a} ps={ps} unlock={byId.get(a.id) ?? null} />
         ))}
       </ul>
     </div>
@@ -233,7 +256,9 @@ function AchievementCard({
   const p = unlocked ? null : def.progress(ps);
   return (
     <li
-      className={"rounded-lg border p-3 " + (unlocked ? "border-primary/40 bg-accent/20" : "border-border")}
+      className={
+        "rounded-lg border p-3 " + (unlocked ? "border-primary/40 bg-accent/20" : "border-border")
+      }
     >
       <div className="flex items-start gap-3">
         <span
@@ -247,7 +272,9 @@ function AchievementCard({
         <div className="min-w-0 flex-1">
           <div className="flex items-center justify-between gap-2">
             <p className="min-w-0 truncate text-sm font-medium">{t.ach[def.id].name}</p>
-            {unlocked ? null : <Lock className="size-3.5 shrink-0 text-muted-foreground" aria-hidden />}
+            {unlocked ? null : (
+              <Lock className="size-3.5 shrink-0 text-muted-foreground" aria-hidden />
+            )}
           </div>
           <p className="mt-0.5 text-xs text-muted-foreground">{t.ach[def.id].desc}</p>
           {unlocked && unlock ? (
@@ -324,7 +351,9 @@ function ShopPanel() {
     if (res.ok) {
       setFlash({ msg: t.shop.boughtToast.replace("{name}", item.name) });
     } else if (res.reason === "insufficient-coins") {
-      setFlash({ msg: t.shop.needMoreCoins.replace("{n}", formatNumber(locale, item.price - coins)) });
+      setFlash({
+        msg: t.shop.needMoreCoins.replace("{n}", formatNumber(locale, item.price - coins)),
+      });
     } else if (res.reason === "pending-today") {
       setFlash({ msg: t.shop.alreadyToday });
     }
@@ -398,7 +427,7 @@ function ShopPanel() {
             </span>
             <input
               value={form.note}
-            onChange={(e) => setForm({ ...form, note: e.target.value })}
+              onChange={(e) => setForm({ ...form, note: e.target.value })}
               placeholder={t.shop.notePh}
               className={SHOP_FIELD}
             />
@@ -548,7 +577,9 @@ function HistoryRow({
   const refunded = purchase.deletedAt !== undefined;
   const used = purchase.usedAt !== undefined;
   const refundable = !refunded && !used && purchase.localDay === today;
-  const day = formatDate(locale, new Date(purchase.localDay + "T12:00:00Z"), { dateStyle: "medium" });
+  const day = formatDate(locale, new Date(purchase.localDay + "T12:00:00Z"), {
+    dateStyle: "medium",
+  });
   return (
     <li className="flex flex-wrap items-center gap-2 rounded-lg border border-border p-3">
       <div className="min-w-0 flex-1">

@@ -43,7 +43,9 @@ interface IconEntry {
 }
 
 function iconSource(): Record<string, IconEntry> {
-  const parsed = JSON.parse(readRepo("scripts/icons.base64.json")) as { icons: Record<string, IconEntry> };
+  const parsed = JSON.parse(readRepo("scripts/icons.base64.json")) as {
+    icons: Record<string, IconEntry>;
+  };
   return parsed.icons;
 }
 

@@ -50,7 +50,10 @@ export const NOTE_TEMPLATES: NoteTemplate[] = [
 ];
 
 /** The template copy for the asked locale, or null for unknown ids. */
-export function templateFor(id: string, locale: TemplateLocale): { title: string; body: string } | null {
+export function templateFor(
+  id: string,
+  locale: TemplateLocale,
+): { title: string; body: string } | null {
   const tpl = NOTE_TEMPLATES.find((t) => t.id === id);
   if (!tpl) return null;
   return { title: tpl.title[locale], body: tpl.body[locale] };

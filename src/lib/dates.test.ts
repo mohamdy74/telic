@@ -1,5 +1,14 @@
 import { describe, expect, it } from "vitest";
-import { addDays, addMonths, defaultWeekStartsOn, endOfMonth, endOfWeek, startOfMonth, startOfWeek, toLocalDay } from "./dates";
+import {
+  addDays,
+  addMonths,
+  defaultWeekStartsOn,
+  endOfMonth,
+  endOfWeek,
+  startOfMonth,
+  startOfWeek,
+  toLocalDay,
+} from "./dates";
 
 describe("toLocalDay", () => {
   it("dayStartHour=4 puts 02:30 on the previous day", () => {

@@ -16,7 +16,9 @@ const PRIORITY_RANK: Record<Task["priority"], number> = { high: 0, medium: 1, lo
  */
 export function todaysPriorities(tasks: Task[], today: LocalDay): Task[] {
   return tasks
-    .filter((x) => !x.deletedAt && x.status !== "done" && x.dueDate !== undefined && x.dueDate <= today)
+    .filter(
+      (x) => !x.deletedAt && x.status !== "done" && x.dueDate !== undefined && x.dueDate <= today,
+    )
     .sort((a, b) => {
       const p = PRIORITY_RANK[a.priority] - PRIORITY_RANK[b.priority];
       if (p !== 0) return p;
@@ -30,7 +32,14 @@ export function todaysPriorities(tasks: Task[], today: LocalDay): Task[] {
 export function upcomingDeadlines(tasks: Task[], today: LocalDay, days = 7): Task[] {
   const limit = addDays(today, days);
   return tasks
-    .filter((x) => !x.deletedAt && x.status !== "done" && x.dueDate !== undefined && x.dueDate > today && x.dueDate <= limit)
+    .filter(
+      (x) =>
+        !x.deletedAt &&
+        x.status !== "done" &&
+        x.dueDate !== undefined &&
+        x.dueDate > today &&
+        x.dueDate <= limit,
+    )
     .sort((a, b) => {
       const byDate = (a.dueDate ?? "").localeCompare(b.dueDate ?? "");
       if (byDate !== 0) return byDate;
@@ -48,7 +57,9 @@ export interface HabitDue {
 /** Non-archived habits scheduled today, with their done-today flag. */
 export function habitsDueToday(habits: Habit[], logs: HabitLog[], today: LocalDay): HabitDue[] {
   const doneIds = new Set(
-    logs.filter((l) => !l.deletedAt && l.localDay === today && l.status === "done").map((l) => l.habitId),
+    logs
+      .filter((l) => !l.deletedAt && l.localDay === today && l.status === "done")
+      .map((l) => l.habitId),
   );
   return habits
     .filter((h) => !h.deletedAt && !h.archived && isScheduledOn(h.schedule, today))
@@ -69,7 +80,12 @@ export interface DailyProgress {
  * are scoped to today's plate, so the ratio always stays within 0..1 and a
  * task finished early (already done before its due day) still counts.
  */
-export function dailyProgress(tasks: Task[], habits: Habit[], logs: HabitLog[], today: LocalDay): DailyProgress {
+export function dailyProgress(
+  tasks: Task[],
+  habits: Habit[],
+  logs: HabitLog[],
+  today: LocalDay,
+): DailyProgress {
   const dueHabits = habitsDueToday(habits, logs, today);
   const tasksDue = tasks.filter((x) => !x.deletedAt && x.dueDate === today);
   const doneTasks = tasksDue.filter((x) => x.status === "done").length;

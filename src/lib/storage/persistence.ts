@@ -31,7 +31,8 @@ export function mergeRecords<T extends Rec>(disk: T[], local: T[]): T[] {
 }
 
 export function mergeValue(disk: unknown, local: unknown): unknown {
-  if (Array.isArray(disk) && Array.isArray(local)) return mergeRecords(disk as Rec[], local as Rec[]);
+  if (Array.isArray(disk) && Array.isArray(local))
+    return mergeRecords(disk as Rec[], local as Rec[]);
   const du = (disk as { updatedAt?: string } | undefined)?.updatedAt ?? "";
   const lu = (local as { updatedAt?: string } | undefined)?.updatedAt ?? "";
   return lu >= du ? local : disk;
@@ -75,7 +76,10 @@ export async function writeKey(
 }
 
 /** Overwrite every key unconditionally (used for first boot, migrations and import). */
-export async function writeAll(snapshot: Partial<Record<StorageKey, unknown>>, prevRevs: Partial<Record<StorageKey, number>>) {
+export async function writeAll(
+  snapshot: Partial<Record<StorageKey, unknown>>,
+  prevRevs: Partial<Record<StorageKey, number>>,
+) {
   const revs: Partial<Record<StorageKey, number>> = {};
   const entries = (Object.keys(snapshot) as StorageKey[]).map((k) => {
     revs[k] = (prevRevs[k] ?? 0) + 1;

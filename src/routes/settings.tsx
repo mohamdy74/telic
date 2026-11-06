@@ -1,6 +1,19 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useRef, useState, type ReactNode } from "react";
-import { BellRing, Check, Database, Download, FileWarning, Keyboard, Monitor, Moon, Smartphone, Sprout, Sun, Upload } from "lucide-react";
+import {
+  BellRing,
+  Check,
+  Database,
+  Download,
+  FileWarning,
+  Keyboard,
+  Monitor,
+  Moon,
+  Smartphone,
+  Sprout,
+  Sun,
+  Upload,
+} from "lucide-react";
 import { usePrefs, type Theme } from "@/components/app/preferences";
 import { Modal } from "@/components/app/Modal";
 import { DANGER_BTN, OUTLINE_BTN, PRIMARY_BTN } from "@/components/ui/button";
@@ -26,7 +39,10 @@ export const Route = createFileRoute("/settings")({
       { title: "Settings — Tilth" },
       { name: "description", content: "Language, appearance, your day and your data in Tilth." },
       { property: "og:title", content: "Settings — Tilth" },
-      { property: "og:description", content: "Language, appearance, your day and your data in Tilth." },
+      {
+        property: "og:description",
+        content: "Language, appearance, your day and your data in Tilth.",
+      },
     ],
   }),
   component: SettingsPage,
@@ -372,7 +388,11 @@ function NotificationsSection() {
         ) : perm === "denied" ? (
           <p className="text-xs text-destructive">{t.notif.denied}</p>
         ) : perm === "unsupported" ? null : (
-          <button type="button" onClick={() => void askPermission()} className={OUTLINE_BTN + " px-3 py-1.5"}>
+          <button
+            type="button"
+            onClick={() => void askPermission()}
+            className={OUTLINE_BTN + " px-3 py-1.5"}
+          >
             <BellRing className="size-4" aria-hidden /> {t.notif.allow}
           </button>
         )}
@@ -791,7 +811,9 @@ function CollectionCount({
     <tr className="border-t border-border">
       <td className="py-1.5">{collection}</td>
       <td className="py-1.5 text-end tabular-nums">{formatNumber(locale, live)}</td>
-      <td className="py-1.5 text-end tabular-nums">{soft > 0 ? formatNumber(locale, soft) : "—"}</td>
+      <td className="py-1.5 text-end tabular-nums">
+        {soft > 0 ? formatNumber(locale, soft) : "—"}
+      </td>
     </tr>
   );
 }

@@ -18,12 +18,7 @@ import { NAV, type NavKey } from "./nav";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import { Toaster } from "@/components/ui/sonner";
-import {
-  Sheet,
-  SheetContent,
-  SheetHeader,
-  SheetTitle,
-} from "@/components/ui/sheet";
+import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { usePrefs } from "./preferences";
 import { useStore } from "@/lib/store";
 import { totalsFromLedger } from "@/lib/rewards";
@@ -158,7 +153,10 @@ export function AppShell({ children }: { children: ReactNode }) {
         const parts = [t.dig.tasksDue.replace("{n}", String(d.tasksDue))];
         if (d.overdue > 0) parts.push(t.dig.overdue.replace("{n}", String(d.overdue)));
         parts.push(t.dig.habitsDue.replace("{n}", String(d.habitsDue)));
-        body = d.tasksDue === 0 && d.overdue === 0 && d.habitsDue === 0 ? t.dig.quietDay : parts.join(" · ");
+        body =
+          d.tasksDue === 0 && d.overdue === 0 && d.habitsDue === 0
+            ? t.dig.quietDay
+            : parts.join(" · ");
       } else {
         if (minutes < slotAt(digest.eveningAt)) return;
         const e = eveningDigest(state);
@@ -170,10 +168,15 @@ export function AppShell({ children }: { children: ReactNode }) {
         ];
         if (e.stillOpen > 0) parts.push(t.dig.stillOpen.replace("{n}", String(e.stillOpen)));
         if (e.tomorrowOpen > 0) parts.push(t.dig.tomorrow.replace("{n}", String(e.tomorrowOpen)));
-        body = e.completedToday === 0 && e.stillOpen === 0 && e.tomorrowOpen === 0 ? t.dig.quietDay : parts.join(" · ");
+        body =
+          e.completedToday === 0 && e.stillOpen === 0 && e.tomorrowOpen === 0
+            ? t.dig.quietDay
+            : parts.join(" · ");
       }
       try {
-        const seen: Record<string, string> = JSON.parse(window.localStorage.getItem("tilth.digest") || "{}");
+        const seen: Record<string, string> = JSON.parse(
+          window.localStorage.getItem("tilth.digest") || "{}",
+        );
         if (seen[slot] === today) return;
         new Notification(title, { body, tag: "tilth-digest-" + slot, icon: "/icons/icon-192.png" });
         seen[slot] = today;
@@ -287,7 +290,10 @@ export function AppShell({ children }: { children: ReactNode }) {
       </nav>
 
       {needRefresh && (
-        <div className="fixed inset-x-0 bottom-16 z-40 flex justify-center px-4 md:bottom-6" role="status">
+        <div
+          className="fixed inset-x-0 bottom-16 z-40 flex justify-center px-4 md:bottom-6"
+          role="status"
+        >
           <div className="flex items-center gap-3 rounded-full border border-border bg-card px-4 py-2 shadow-elevated">
             <span className="text-sm">{t.pwa.updateAvailable}</span>
             <span className="flex items-center gap-2">
@@ -354,7 +360,6 @@ export function AppShell({ children }: { children: ReactNode }) {
       />
 
       {open && <CommandPalette onClose={() => setOpen(false)} />}
-
     </div>
   );
 }
@@ -471,7 +476,10 @@ function CommandPalette({ onClose }: { onClose: () => void }) {
   };
 
   return (
-    <div className="fixed inset-0 z-50 grid place-items-start justify-center bg-overlay px-4 pt-[15vh] animate-fade" onMouseDown={onClose}>
+    <div
+      className="fixed inset-0 z-50 grid place-items-start justify-center bg-overlay px-4 pt-[15vh] animate-fade"
+      onMouseDown={onClose}
+    >
       <div
         role="dialog"
         aria-modal="true"
@@ -480,9 +488,13 @@ function CommandPalette({ onClose }: { onClose: () => void }) {
         onMouseDown={(e) => e.stopPropagation()}
         onKeyDown={(e) => {
           if (e.key === "Escape") onClose();
-          else if (e.key === "ArrowDown") { e.preventDefault(); setIdx((i) => Math.min(i + 1, items.length - 1)); }
-          else if (e.key === "ArrowUp") { e.preventDefault(); setIdx((i) => Math.max(i - 1, 0)); }
-          else if (e.key === "Enter") go(idx);
+          else if (e.key === "ArrowDown") {
+            e.preventDefault();
+            setIdx((i) => Math.min(i + 1, items.length - 1));
+          } else if (e.key === "ArrowUp") {
+            e.preventDefault();
+            setIdx((i) => Math.max(i - 1, 0));
+          } else if (e.key === "Enter") go(idx);
           else if (e.key === "Tab") e.preventDefault();
         }}
       >
@@ -498,7 +510,11 @@ function CommandPalette({ onClose }: { onClose: () => void }) {
           />
         </div>
         <ul role="listbox" className="max-h-80 overflow-y-auto p-2">
-          {items.length === 0 && <li className="px-3 py-6 text-center text-sm text-muted-foreground">{t.command.empty}</li>}
+          {items.length === 0 && (
+            <li className="px-3 py-6 text-center text-sm text-muted-foreground">
+              {t.command.empty}
+            </li>
+          )}
           {items.map((n, i) => (
             <li
               key={n.key}

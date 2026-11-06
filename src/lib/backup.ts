@@ -1,5 +1,10 @@
 import { runMigrations, type AnySnapshot } from "./migrations";
-import { COLLECTION_KEYS, CURRENT_SCHEMA_VERSION, type CollectionKey, type Snapshot } from "./types";
+import {
+  COLLECTION_KEYS,
+  CURRENT_SCHEMA_VERSION,
+  type CollectionKey,
+  type Snapshot,
+} from "./types";
 
 /** Export envelope written to disk. `data` is a full store snapshot. */
 export interface BackupFile {
@@ -33,14 +38,25 @@ const isObj = (v: unknown): v is Record<string, unknown> =>
   typeof v === "object" && v !== null && !Array.isArray(v);
 
 /** Builds the export envelope. Pure. */
-export function buildBackup(snap: Snapshot, exportedAt: string = new Date().toISOString()): BackupFile {
+export function buildBackup(
+  snap: Snapshot,
+  exportedAt: string = new Date().toISOString(),
+): BackupFile {
   return { schemaVersion: CURRENT_SCHEMA_VERSION, exportedAt, data: snap };
 }
 
 /** tilth-export-YYYY-MM-DD.json — LOCAL date, so the name matches the user's day. */
 export function backupFileName(d: Date = new Date()): string {
   const pad = (n: number) => String(n).padStart(2, "0");
-  return "tilth-export-" + d.getFullYear() + "-" + pad(d.getMonth() + 1) + "-" + pad(d.getDate()) + ".json";
+  return (
+    "tilth-export-" +
+    d.getFullYear() +
+    "-" +
+    pad(d.getMonth() + 1) +
+    "-" +
+    pad(d.getDate()) +
+    ".json"
+  );
 }
 
 /**
@@ -59,11 +75,13 @@ export function parseBackup(text: string): ParsedBackup {
   if (!isObj(root)) throw new BackupError("invalid-shape");
 
   const v = root["schemaVersion"];
-  if (typeof v !== "number" || !Number.isInteger(v) || v < 0) throw new BackupError("invalid-shape");
+  if (typeof v !== "number" || !Number.isInteger(v) || v < 0)
+    throw new BackupError("invalid-shape");
   const data = root["data"];
   if (!isObj(data)) throw new BackupError("invalid-shape");
   const exportedAt = root["exportedAt"];
-  if (exportedAt !== undefined && typeof exportedAt !== "string") throw new BackupError("invalid-shape");
+  if (exportedAt !== undefined && typeof exportedAt !== "string")
+    throw new BackupError("invalid-shape");
   if (v > CURRENT_SCHEMA_VERSION) throw new BackupError("newer-schema");
 
   // The file-level schemaVersion wins; meta may be missing (v0) or stale.

@@ -22,8 +22,7 @@ import type { ISODate, LocalDay, Purchase, ShopItem, XpLedgerEntry } from "./typ
 export type BuyDenyReason = "not-found" | "invalid-price" | "insufficient-coins" | "pending-today";
 
 export type BuyOutcome =
-  | { ok: true; purchase: Purchase; entry: NewXpEntry }
-  | { ok: false; reason: BuyDenyReason };
+  { ok: true; purchase: Purchase; entry: NewXpEntry } | { ok: false; reason: BuyDenyReason };
 
 export interface BuyInput {
   items: ShopItem[];
@@ -92,7 +91,12 @@ export function refundPurchase(input: RefundInput): RefundOutcome {
   if (p.usedAt !== undefined) return { ok: false, reason: "used" };
   if (p.localDay !== input.today) return { ok: false, reason: "not-today" };
   const revoked = revokeXp({ sourceType: "shop", sourceId: input.purchaseId }, input.ledger);
-  return { ok: true, purchase: { ...p, deletedAt: input.now, updatedAt: input.now }, revoked, now: input.now };
+  return {
+    ok: true,
+    purchase: { ...p, deletedAt: input.now, updatedAt: input.now },
+    revoked,
+    now: input.now,
+  };
 }
 
 /** Sets or clears usedAt; null when the purchase is missing or refunded. */
@@ -114,4 +118,3 @@ export function purchaseHistory(purchases: Purchase[]): Purchase[] {
     return a.id < b.id ? 1 : -1;
   });
 }
-

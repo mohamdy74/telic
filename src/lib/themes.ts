@@ -46,4 +46,3 @@ export function resolveAccent(saved: string, state: ThemeUnlockState): AccentId 
 export function isAccentId(v: string): v is AccentId {
   return (ACCENT_IDS as readonly string[]).includes(v);
 }
-

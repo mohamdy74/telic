@@ -6,7 +6,10 @@ const r = (id: string, updatedAt: string, title = id) => ({ id, updatedAt, title
 
 describe("persistence", () => {
   it("merge keeps newest version of each record and records from both sides", () => {
-    const out = mergeRecords([r("a", "2026-01-02", "disk"), r("b", "2026-01-01")], [r("a", "2026-01-01", "old"), r("c", "2026-01-01")]);
+    const out = mergeRecords(
+      [r("a", "2026-01-02", "disk"), r("b", "2026-01-01")],
+      [r("a", "2026-01-01", "old"), r("c", "2026-01-01")],
+    );
     expect(out.find((x) => x.id === "a")?.title).toBe("disk");
     expect(out.map((x) => x.id).sort()).toEqual(["a", "b", "c"]);
   });

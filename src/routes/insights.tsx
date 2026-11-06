@@ -31,9 +31,15 @@ export const Route = createFileRoute("/insights")({
   head: () => ({
     meta: [
       { title: "Insights — Tilth" },
-      { name: "description", content: "Clear weekly and monthly trends across tasks, habits and focus." },
+      {
+        name: "description",
+        content: "Clear weekly and monthly trends across tasks, habits and focus.",
+      },
       { property: "og:title", content: "Insights — Tilth" },
-      { property: "og:description", content: "Clear weekly and monthly trends across tasks, habits and focus." },
+      {
+        property: "og:description",
+        content: "Clear weekly and monthly trends across tasks, habits and focus.",
+      },
     ],
   }),
   component: InsightsPage,
@@ -93,9 +99,7 @@ function InsightsPage() {
   const totalOf = (s: DayPoint[]) => s.reduce((sum, p) => sum + (p.value ?? 0), 0);
   const taskTotal = totalOf(taskSeries);
   const focusTotal = totalOf(focusSeries);
-  const habitValues = habitSeries
-    .filter((p) => p.value !== null)
-    .map((p) => p.value as number);
+  const habitValues = habitSeries.filter((p) => p.value !== null).map((p) => p.value as number);
   const habitAvg = habitValues.length
     ? Math.round(habitValues.reduce((a, b) => a + b, 0) / habitValues.length)
     : 0;
@@ -171,7 +175,10 @@ function InsightsPage() {
               emptyMsg={t.ins.charts.emptyRange}
             >
               <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={dataOf(taskSeries)} margin={{ top: 8, right: 8, left: 0, bottom: 0 }}>
+                <BarChart
+                  data={dataOf(taskSeries)}
+                  margin={{ top: 8, right: 8, left: 0, bottom: 0 }}
+                >
                   <CartesianGrid {...gridProps} />
                   <XAxis
                     dataKey="tick"
@@ -209,7 +216,10 @@ function InsightsPage() {
               emptyMsg={t.ins.charts.emptyRange}
             >
               <ResponsiveContainer width="100%" height="100%">
-                <LineChart data={dataOf(habitSeries)} margin={{ top: 8, right: 8, left: 0, bottom: 0 }}>
+                <LineChart
+                  data={dataOf(habitSeries)}
+                  margin={{ top: 8, right: 8, left: 0, bottom: 0 }}
+                >
                   <CartesianGrid {...gridProps} />
                   <XAxis
                     dataKey="tick"
@@ -256,7 +266,10 @@ function InsightsPage() {
               wide
             >
               <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={dataOf(focusSeries)} margin={{ top: 8, right: 8, left: 0, bottom: 0 }}>
+                <BarChart
+                  data={dataOf(focusSeries)}
+                  margin={{ top: 8, right: 8, left: 0, bottom: 0 }}
+                >
                   <CartesianGrid {...gridProps} />
                   <XAxis
                     dataKey="tick"

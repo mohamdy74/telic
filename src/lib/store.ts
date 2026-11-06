@@ -5,7 +5,13 @@ import { nextOccurrence } from "./recurrence";
 import { shiftEndsAfterResume } from "./focusTime";
 import { evaluateAchievements, type AchievementState } from "./achievements";
 import { computeChallengeGrants } from "./challenges";
-import { buyShopItem, markPurchaseUsed, refundPurchase, type BuyOutcome, type RefundOutcome } from "./shop";
+import {
+  buyShopItem,
+  markPurchaseUsed,
+  refundPurchase,
+  type BuyOutcome,
+  type RefundOutcome,
+} from "./shop";
 import { awardXp, revokeXp, totalsFromLedger, type AwardEvent } from "./rewards";
 import { readAll, readKey, writeAll, writeKey, mergeValue } from "./storage/persistence";
 import {
@@ -38,7 +44,15 @@ export function defaultSettings(language: "en" | "ar" = "en"): Settings {
     accent: "moss",
     dayStartHour: 0,
     weekStartsOn: defaultWeekStartsOn(language),
-    dashboardCards: { priorities: true, progress: true, deadlines: true, habits: true, focus: true, level: true, achievements: true },
+    dashboardCards: {
+      priorities: true,
+      progress: true,
+      deadlines: true,
+      habits: true,
+      focus: true,
+      level: true,
+      achievements: true,
+    },
     dailyFocusTargetMinutes: 100,
     updatedAt: nowIso(),
   };
@@ -101,7 +115,10 @@ function schedule(key: StorageKey) {
   const s = useStore.getState();
   if (!s.pending.includes(key)) useStore.setState({ pending: [...s.pending, key] });
   clearTimeout(timers.get(key));
-  timers.set(key, setTimeout(() => void flushKey(key), DEBOUNCE_MS));
+  timers.set(
+    key,
+    setTimeout(() => void flushKey(key), DEBOUNCE_MS),
+  );
 }
 
 async function flushKey(key: StorageKey) {
@@ -124,7 +141,12 @@ async function flushKey(key: StorageKey) {
 }
 
 export async function flushAll() {
-  await Promise.all([...timers.keys()].map((k) => { clearTimeout(timers.get(k)); return flushKey(k); }));
+  await Promise.all(
+    [...timers.keys()].map((k) => {
+      clearTimeout(timers.get(k));
+      return flushKey(k);
+    }),
+  );
 }
 
 /* ---------------- boot (call after hydration only) ---------------- */
@@ -149,7 +171,8 @@ export async function bootStore() {
       const fresh = emptySnapshot();
       const migrated = Object.keys(raw).length ? runMigrations(raw).data : {};
       snap = { ...fresh, ...(migrated as Partial<Snapshot>), meta: fresh.meta };
-      if (!raw["settings"]) snap.settings = defaultSettings(navigator.language?.startsWith("ar") ? "ar" : "en");
+      if (!raw["settings"])
+        snap.settings = defaultSettings(navigator.language?.startsWith("ar") ? "ar" : "en");
       Object.assign(revs, await writeAll(snap, revs));
     } else if ((raw.meta as Snapshot["meta"]).schemaVersion < CURRENT_SCHEMA_VERSION) {
       const { data } = runMigrations(raw);
@@ -184,7 +207,9 @@ export async function bootStore() {
   // ask for durable storage once
   try {
     const p = navigator.storage?.persisted ? await navigator.storage.persisted() : false;
-    useStore.setState({ persisted: p || (navigator.storage?.persist ? await navigator.storage.persist() : false) });
+    useStore.setState({
+      persisted: p || (navigator.storage?.persist ? await navigator.storage.persist() : false),
+    });
   } catch {
     useStore.setState({ persisted: false });
   }
@@ -198,7 +223,11 @@ async function pullKey(key: StorageKey) {
   const dirty = s.pending.includes(key);
   // keep our unsaved edits: merge them on top; the pending write will reconcile on disk
   const data = dirty ? mergeValue(env.data, s[key]) : env.data;
-  useStore.setState({ [key]: data, revs: { ...s.revs, [key]: env.rev }, lastSyncAt: nowIso() } as Partial<StoreState>);
+  useStore.setState({
+    [key]: data,
+    revs: { ...s.revs, [key]: env.rev },
+    lastSyncAt: nowIso(),
+  } as Partial<StoreState>);
 }
 
 /* ---------------- generic helpers ---------------- */
@@ -212,7 +241,8 @@ export function todayLocal(): string {
   return toLocalDay(new Date(), useStore.getState().settings.dayStartHour, currentTimeZone());
 }
 
-const live = <T extends { deletedAt?: string | undefined }>(l: T[]) => l.filter((r) => !r.deletedAt);
+const live = <T extends { deletedAt?: string | undefined }>(l: T[]) =>
+  l.filter((r) => !r.deletedAt);
 
 /* ---------------- selectors ---------------- */
 
@@ -244,8 +274,11 @@ type RewardEvent =
 function applyRewardEvent(event: RewardEvent) {
   const state = useStore.getState();
   let award: AwardEvent | null = null;
-  let revoke: { sourceType: "task" | "habit" | "focus"; sourceId: string; localDay?: string | undefined } | null =
-    null;
+  let revoke: {
+    sourceType: "task" | "habit" | "focus";
+    sourceId: string;
+    localDay?: string | undefined;
+  } | null = null;
 
   if (event.kind === "task-completed") {
     award = { kind: "task-completed", task: event.task, localDay: event.localDay };
@@ -274,7 +307,9 @@ function applyRewardEvent(event: RewardEvent) {
     if (doomed.length > 0) {
       const t = nowIso();
       const ids = new Set(doomed.map((e) => e.id));
-      setCollection("xpLedger", (l) => l.map((e) => (ids.has(e.id) ? { ...e, deletedAt: t, updatedAt: t } : e)));
+      setCollection("xpLedger", (l) =>
+        l.map((e) => (ids.has(e.id) ? { ...e, deletedAt: t, updatedAt: t } : e)),
+      );
     }
   }
 
@@ -327,20 +362,31 @@ function applyBonusChecks() {
 
 /* ---------------- actions ---------------- */
 
-
 type NewTask = Pick<Task, "title"> & Partial<Omit<Task, "id" | "createdAt" | "updatedAt">>;
 
 export const tasks = {
   add(input: NewTask): Task {
     const t = nowIso();
     const order = Math.max(0, ...useStore.getState().tasks.map((x) => x.kanbanOrder)) + 1;
-    const task: Task = { priority: "medium", tags: [], subtasks: [], status: "todo", kanbanOrder: order, ...input, id: uid(), createdAt: t, updatedAt: t };
+    const task: Task = {
+      priority: "medium",
+      tags: [],
+      subtasks: [],
+      status: "todo",
+      kanbanOrder: order,
+      ...input,
+      id: uid(),
+      createdAt: t,
+      updatedAt: t,
+    };
     if (task.recurrence && task.seriesId === undefined) task.seriesId = uid();
     setCollection("tasks", (l) => [...l, task]);
     return task;
   },
   update(id: string, patch: Partial<Omit<Task, "id" | "createdAt">>) {
-    setCollection("tasks", (l) => l.map((x) => (x.id === id ? { ...x, ...patch, updatedAt: nowIso() } : x)));
+    setCollection("tasks", (l) =>
+      l.map((x) => (x.id === id ? { ...x, ...patch, updatedAt: nowIso() } : x)),
+    );
   },
   /** Completes a task; if recurring, creates only the NEXT instance (same seriesId). */
   complete(id: string): Task | undefined {
@@ -351,12 +397,21 @@ export const tasks = {
     applyRewardEvent({
       kind: "task-completed",
       task: { ...task, status: "done", completedAt: t },
-      localDay: toLocalDay(new Date(t), useStore.getState().settings.dayStartHour, currentTimeZone()),
+      localDay: toLocalDay(
+        new Date(t),
+        useStore.getState().settings.dayStartHour,
+        currentTimeZone(),
+      ),
     });
     if (task.recurrence) {
       const base = task.dueDate ?? todayLocal();
       const { id: _i, createdAt: _c, updatedAt: _u, completedAt: _d, ...rest } = task;
-      return tasks.add({ ...rest, status: "todo", dueDate: nextOccurrence(task.recurrence, base), subtasks: task.subtasks.map((s) => ({ ...s, id: uid(), done: false })) });
+      return tasks.add({
+        ...rest,
+        status: "todo",
+        dueDate: nextOccurrence(task.recurrence, base),
+        subtasks: task.subtasks.map((s) => ({ ...s, id: uid(), done: false })),
+      });
     }
     return undefined;
   },
@@ -374,7 +429,9 @@ export const tasks = {
   reorder(orderedIds: string[]) {
     const rank = new Map(orderedIds.map((id, i) => [id, i] as const));
     const t = nowIso();
-    setCollection("tasks", (l) => l.map((x) => (rank.has(x.id) ? { ...x, kanbanOrder: rank.get(x.id)!, updatedAt: t } : x)));
+    setCollection("tasks", (l) =>
+      l.map((x) => (rank.has(x.id) ? { ...x, kanbanOrder: rank.get(x.id)!, updatedAt: t } : x)),
+    );
   },
 };
 
@@ -386,7 +443,9 @@ export const habits = {
     return h;
   },
   update(id: string, patch: Partial<Omit<Habit, "id" | "createdAt">>) {
-    setCollection("habits", (l) => l.map((x) => (x.id === id ? { ...x, ...patch, updatedAt: nowIso() } : x)));
+    setCollection("habits", (l) =>
+      l.map((x) => (x.id === id ? { ...x, ...patch, updatedAt: nowIso() } : x)),
+    );
   },
   remove(id: string) {
     habits.update(id, { deletedAt: nowIso() });
@@ -395,7 +454,9 @@ export const habits = {
   log(habitId: string, status: HabitLog["status"], localDay = todayLocal()) {
     const t = nowIso();
     setCollection("habitLogs", (l) => {
-      const existing = l.find((x) => x.habitId === habitId && x.localDay === localDay && !x.deletedAt);
+      const existing = l.find(
+        (x) => x.habitId === habitId && x.localDay === localDay && !x.deletedAt,
+      );
       if (existing) return l.map((x) => (x === existing ? { ...x, status, updatedAt: t } : x));
       return [...l, { id: uid(), habitId, localDay, status, createdAt: t, updatedAt: t }];
     });
@@ -403,14 +464,25 @@ export const habits = {
   },
   unlog(habitId: string, localDay = todayLocal()) {
     const t = nowIso();
-    setCollection("habitLogs", (l) => l.map((x) => x.habitId === habitId && x.localDay === localDay && !x.deletedAt ? { ...x, deletedAt: t, updatedAt: t } : x));
+    setCollection("habitLogs", (l) =>
+      l.map((x) =>
+        x.habitId === habitId && x.localDay === localDay && !x.deletedAt
+          ? { ...x, deletedAt: t, updatedAt: t }
+          : x,
+      ),
+    );
     applyRewardEvent({ kind: "habit-unlogged", habitId, localDay });
   },
 };
 
 /** Notes are plain records — no reward events; they sit outside the XP economy. */
 export const notes = {
-  add(input: { title: string; body?: string | undefined; linkedTaskId?: string | undefined; pinned?: boolean | undefined }): Note {
+  add(input: {
+    title: string;
+    body?: string | undefined;
+    linkedTaskId?: string | undefined;
+    pinned?: boolean | undefined;
+  }): Note {
     const t = nowIso();
     const n: Note = {
       id: uid(),
@@ -425,7 +497,9 @@ export const notes = {
     return n;
   },
   update(id: string, patch: Partial<Omit<Note, "id" | "createdAt">>) {
-    setCollection("notes", (l) => l.map((x) => (x.id === id ? { ...x, ...patch, updatedAt: nowIso() } : x)));
+    setCollection("notes", (l) =>
+      l.map((x) => (x.id === id ? { ...x, ...patch, updatedAt: nowIso() } : x)),
+    );
   },
   remove(id: string) {
     notes.update(id, { deletedAt: nowIso() });
@@ -437,31 +511,52 @@ export const focus = {
     const now = new Date();
     const t = now.toISOString();
     const s: FocusSession = {
-      id: uid(), mode, plannedMinutes, startedAt: t, endsAt: new Date(now.getTime() + plannedMinutes * 60_000).toISOString(),
-      completed: false, distractions: [], linkedTaskId, localDay: todayLocal(), createdAt: t, updatedAt: t,
+      id: uid(),
+      mode,
+      plannedMinutes,
+      startedAt: t,
+      endsAt: new Date(now.getTime() + plannedMinutes * 60_000).toISOString(),
+      completed: false,
+      distractions: [],
+      linkedTaskId,
+      localDay: todayLocal(),
+      createdAt: t,
+      updatedAt: t,
     };
     setCollection("focusSessions", (l) => [...l, s]);
     return s;
   },
   distraction(id: string) {
     const t = nowIso();
-    setCollection("focusSessions", (l) => l.map((x) => (x.id === id ? { ...x, distractions: [...x.distractions, { at: t }], updatedAt: t } : x)));
+    setCollection("focusSessions", (l) =>
+      l.map((x) =>
+        x.id === id ? { ...x, distractions: [...x.distractions, { at: t }], updatedAt: t } : x,
+      ),
+    );
   },
   /** Freezes the countdown; endsAt is shifted on resume (pure helper). */
   pause(id: string) {
     const t = nowIso();
-    setCollection("focusSessions", (l) => l.map((x) => (x.id === id && x.endedAt === undefined ? { ...x, pausedAt: t, updatedAt: t } : x)));
+    setCollection("focusSessions", (l) =>
+      l.map((x) =>
+        x.id === id && x.endedAt === undefined ? { ...x, pausedAt: t, updatedAt: t } : x,
+      ),
+    );
   },
   resume(id: string) {
     const s = useStore.getState().focusSessions.find((x) => x.id === id);
     if (!s || s.endedAt !== undefined || s.pausedAt === undefined) return;
     const endsAt = shiftEndsAfterResume(s.endsAt, s.pausedAt, Date.now());
-    setCollection("focusSessions", (l) => l.map((x) => (x.id === id ? { ...x, endsAt, pausedAt: undefined, updatedAt: nowIso() } : x)));
+    setCollection("focusSessions", (l) =>
+      l.map((x) => (x.id === id ? { ...x, endsAt, pausedAt: undefined, updatedAt: nowIso() } : x)),
+    );
   },
   end(id: string, completed: boolean) {
     const existing = useStore.getState().focusSessions.find((x) => x.id === id);
     const t = nowIso();
-    setCollection("focusSessions", (l) => l.map((x) => (x.id === id ? { ...x, endedAt: t, completed, updatedAt: t } : x)));
+    setCollection("focusSessions", (l) =>
+      l.map((x) => (x.id === id ? { ...x, endedAt: t, completed, updatedAt: t } : x)),
+    );
     if (existing && existing.endedAt === undefined) {
       applyRewardEvent({ kind: "focus-ended", session: { ...existing, endedAt: t, completed } });
     }
@@ -469,9 +564,19 @@ export const focus = {
 };
 
 export const xp = {
-  add(entry: Omit<XpLedgerEntry, "id" | "createdAt" | "updatedAt" | "localDay"> & { localDay?: string }) {
+  add(
+    entry: Omit<XpLedgerEntry, "id" | "createdAt" | "updatedAt" | "localDay"> & {
+      localDay?: string;
+    },
+  ) {
     const t = nowIso();
-    const e: XpLedgerEntry = { localDay: todayLocal(), ...entry, id: uid(), createdAt: t, updatedAt: t };
+    const e: XpLedgerEntry = {
+      localDay: todayLocal(),
+      ...entry,
+      id: uid(),
+      createdAt: t,
+      updatedAt: t,
+    };
     setCollection("xpLedger", (l) => [...l, e]);
     return e;
   },
@@ -552,7 +657,9 @@ export const shop = {
 
 export const settings = {
   update(patch: Partial<Omit<Settings, "updatedAt">>) {
-    useStore.setState({ settings: { ...useStore.getState().settings, ...patch, updatedAt: nowIso() } });
+    useStore.setState({
+      settings: { ...useStore.getState().settings, ...patch, updatedAt: nowIso() },
+    });
     schedule("settings");
   },
 };
@@ -585,7 +692,10 @@ export async function importSnapshot(input: unknown) {
 }
 
 export async function resetAll() {
-  await replaceAll({ ...emptySnapshot(), settings: { ...useStore.getState().settings, updatedAt: nowIso() } });
+  await replaceAll({
+    ...emptySnapshot(),
+    settings: { ...useStore.getState().settings, updatedAt: nowIso() },
+  });
 }
 
 async function replaceAll(snap: Snapshot) {
@@ -603,11 +713,31 @@ async function replaceAll(snap: Snapshot) {
 
 export function seedSampleData() {
   const today = todayLocal();
-  const plus = (n: number) => { const d = new Date(today + "T12:00:00Z"); d.setUTCDate(d.getUTCDate() + n); return d.toISOString().slice(0, 10); };
+  const plus = (n: number) => {
+    const d = new Date(today + "T12:00:00Z");
+    d.setUTCDate(d.getUTCDate() + n);
+    return d.toISOString().slice(0, 10);
+  };
   tasks.add({ title: "Plan the week", priority: "high", dueDate: today, tags: ["planning"] });
-  tasks.add({ title: "Reply to emails", priority: "medium", dueDate: today, recurrence: { freq: "daily", interval: 1 } });
-  tasks.add({ title: "Read 20 pages", priority: "low", dueDate: plus(1), tags: ["reading"], subtasks: [{ id: uid(), title: "Chapter 3", done: false }] });
-  tasks.add({ title: "Pay rent", priority: "high", dueDate: plus(-1), recurrence: { freq: "monthly", interval: 1 } });
+  tasks.add({
+    title: "Reply to emails",
+    priority: "medium",
+    dueDate: today,
+    recurrence: { freq: "daily", interval: 1 },
+  });
+  tasks.add({
+    title: "Read 20 pages",
+    priority: "low",
+    dueDate: plus(1),
+    tags: ["reading"],
+    subtasks: [{ id: uid(), title: "Chapter 3", done: false }],
+  });
+  tasks.add({
+    title: "Pay rent",
+    priority: "high",
+    dueDate: plus(-1),
+    recurrence: { freq: "monthly", interval: 1 },
+  });
   const h1 = habits.add("Drink water", { type: "daily", days: [0, 1, 2, 3, 4, 5, 6] });
   const h2 = habits.add("Exercise", { type: "custom", days: [0, 2, 4] });
   habits.log(h1.id, "done", plus(-1));

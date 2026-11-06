@@ -66,7 +66,8 @@ export function workCompletedToday(sessions: FocusSession[], today: LocalDay): n
 export function workMinutesToday(sessions: FocusSession[], today: LocalDay): number {
   let n = 0;
   for (const s of sessions) {
-    if (!s.deletedAt && s.completed && s.localDay === today && s.mode !== "break") n += s.plannedMinutes;
+    if (!s.deletedAt && s.completed && s.localDay === today && s.mode !== "break")
+      n += s.plannedMinutes;
   }
   return n;
 }

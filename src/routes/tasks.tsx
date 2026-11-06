@@ -30,9 +30,15 @@ export const Route = createFileRoute("/tasks")({
   head: () => ({
     meta: [
       { title: "Tasks — Tilth" },
-      { name: "description", content: "Capture, prioritize and finish tasks with Today, Upcoming and Kanban views." },
+      {
+        name: "description",
+        content: "Capture, prioritize and finish tasks with Today, Upcoming and Kanban views.",
+      },
       { property: "og:title", content: "Tasks — Tilth" },
-      { property: "og:description", content: "Capture, prioritize and finish tasks with Today, Upcoming and Kanban views." },
+      {
+        property: "og:description",
+        content: "Capture, prioritize and finish tasks with Today, Upcoming and Kanban views.",
+      },
     ],
   }),
   component: TasksPage,
@@ -45,7 +51,11 @@ const VIEWS: ViewKey[] = ["today", "upcoming", "overdue", "completed", "inbox"];
 const PRIORITIES: Priority[] = ["low", "medium", "high"];
 const STS: TaskStatus[] = ["todo", "doing", "done"];
 const WEEKDAYS = [0, 1, 2, 3, 4, 5, 6] as const;
-const PRIO_CLS: Record<Priority, string> = { high: "bg-destructive", medium: "bg-primary", low: "bg-muted-foreground" };
+const PRIO_CLS: Record<Priority, string> = {
+  high: "bg-destructive",
+  medium: "bg-primary",
+  low: "bg-muted-foreground",
+};
 
 function TasksPage() {
   const { t, locale } = usePrefs();
@@ -73,7 +83,6 @@ function TasksPage() {
     }
   }, []);
 
-
   if (!ready) return <TasksSkeleton />;
 
   const today = todayLocal();
@@ -92,7 +101,13 @@ function TasksPage() {
   );
 
   // Views bucket purely from the stored localDay vs today — never recomputed.
-  const byView: Record<ViewKey, Task[]> = { today: [], upcoming: [], overdue: [], completed: [], inbox: [] };
+  const byView: Record<ViewKey, Task[]> = {
+    today: [],
+    upcoming: [],
+    overdue: [],
+    completed: [],
+    inbox: [],
+  };
   for (const x of filtered) {
     if (x.status === "done") byView.completed.push(x);
     else if (!x.dueDate) byView.inbox.push(x);
@@ -101,7 +116,8 @@ function TasksPage() {
     else byView.upcoming.push(x);
   }
   const byOrder = (a: Task, b: Task) => a.kanbanOrder - b.kanbanOrder;
-  const byDue = (a: Task, b: Task) => (a.dueDate ?? "").localeCompare(b.dueDate ?? "") || byOrder(a, b);
+  const byDue = (a: Task, b: Task) =>
+    (a.dueDate ?? "").localeCompare(b.dueDate ?? "") || byOrder(a, b);
   byView.today.sort(byOrder);
   byView.inbox.sort(byOrder);
   byView.upcoming.sort(byDue);
@@ -170,7 +186,9 @@ function TasksPage() {
   return (
     <section>
       <p className="mb-2 text-sm font-medium text-primary">{t.nav.tasks}</p>
-      <h1 className="font-display text-3xl font-semibold tracking-tight md:text-4xl">{t.pages.tasks.title}</h1>
+      <h1 className="font-display text-3xl font-semibold tracking-tight md:text-4xl">
+        {t.pages.tasks.title}
+      </h1>
       <p className="mt-2 text-muted-foreground">{t.pages.tasks.body}</p>
 
       <form
@@ -195,7 +213,11 @@ function TasksPage() {
       </form>
 
       <div className="mt-4 flex flex-wrap items-center justify-between gap-3">
-        <div className="segmented m-0 max-w-full overflow-x-auto" role="radiogroup" aria-label={t.nav.tasks}>
+        <div
+          className="segmented m-0 max-w-full overflow-x-auto"
+          role="radiogroup"
+          aria-label={t.nav.tasks}
+        >
           {VIEWS.map((v) => (
             <button
               key={v}
@@ -209,16 +231,30 @@ function TasksPage() {
               className="segment whitespace-nowrap"
             >
               {t.tasks.view[v]}
-              <span className="ms-1 text-xs font-normal text-muted-foreground">{formatNumber(locale, byView[v].length)}</span>
+              <span className="ms-1 text-xs font-normal text-muted-foreground">
+                {formatNumber(locale, byView[v].length)}
+              </span>
             </button>
           ))}
         </div>
         <div className="segmented m-0" role="radiogroup" aria-label={t.tasks.display}>
-          <button type="button" role="radio" aria-checked={mode === "list"} onClick={() => setMode("list")} className="segment">
+          <button
+            type="button"
+            role="radio"
+            aria-checked={mode === "list"}
+            onClick={() => setMode("list")}
+            className="segment"
+          >
             <List className="size-4" aria-hidden />
             {t.tasks.mode.list}
           </button>
-          <button type="button" role="radio" aria-checked={mode === "board"} onClick={() => setMode("board")} className="segment">
+          <button
+            type="button"
+            role="radio"
+            aria-checked={mode === "board"}
+            onClick={() => setMode("board")}
+            className="segment"
+          >
             <KanbanSquare className="size-4" aria-hidden />
             {t.tasks.mode.board}
           </button>
@@ -238,7 +274,9 @@ function TasksPage() {
         </div>
         <select
           value={priorityFilter}
-          onChange={(e) => setPriorityFilter(e.target.value === "all" ? "all" : (e.target.value as Priority))}
+          onChange={(e) =>
+            setPriorityFilter(e.target.value === "all" ? "all" : (e.target.value as Priority))
+          }
           aria-label={t.tasks.filterPriority}
           className="h-8 rounded-md border border-border bg-card px-2 text-sm text-foreground"
         >
@@ -323,7 +361,6 @@ function TasksPage() {
           </div>
         </Modal>
       )}
-
     </section>
   );
 }
@@ -386,9 +423,22 @@ function TaskRow({
   return (
     <li className="panel overflow-hidden">
       <div className="flex items-start gap-3 p-3">
-        <CheckButton checked={done} onToggle={onToggle} label={done ? t.tasks.reopen : t.tasks.markDone} />
-        <button type="button" onClick={onExpand} aria-expanded={expanded} className="min-w-0 flex-1 text-start">
-          <span className={"text-sm font-medium " + (done ? "text-muted-foreground line-through" : "")}>{task.title}</span>
+        <CheckButton
+          checked={done}
+          onToggle={onToggle}
+          label={done ? t.tasks.reopen : t.tasks.markDone}
+        />
+        <button
+          type="button"
+          onClick={onExpand}
+          aria-expanded={expanded}
+          className="min-w-0 flex-1 text-start"
+        >
+          <span
+            className={"text-sm font-medium " + (done ? "text-muted-foreground line-through" : "")}
+          >
+            {task.title}
+          </span>
           <span className="mt-1 flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
             {task.priority !== "medium" && (
               <span className="inline-flex items-center gap-1">
@@ -516,7 +566,9 @@ function BoardSection({
         >
           <header className="flex items-center justify-between px-1 py-1.5">
             <span className="text-sm font-semibold">{t.tasks.column[st]}</span>
-            <span className="text-xs text-muted-foreground tabular-nums">{formatNumber(locale, cols[st].length)}</span>
+            <span className="text-xs text-muted-foreground tabular-nums">
+              {formatNumber(locale, cols[st].length)}
+            </span>
           </header>
           <ul className="space-y-2">
             {cols[st].map((task) => (
@@ -597,11 +649,26 @@ function BoardCard({
       className={"panel p-2.5 " + (dragging ? "opacity-40" : "")}
     >
       <div className="flex items-start gap-2">
-        <CheckButton checked={done} onToggle={onToggle} label={done ? t.tasks.reopen : t.tasks.markDone} />
-        <button type="button" onClick={onExpand} aria-expanded={expanded} className="min-w-0 flex-1 text-start">
-          <span className={"text-sm font-medium " + (done ? "text-muted-foreground line-through" : "")}>{task.title}</span>
+        <CheckButton
+          checked={done}
+          onToggle={onToggle}
+          label={done ? t.tasks.reopen : t.tasks.markDone}
+        />
+        <button
+          type="button"
+          onClick={onExpand}
+          aria-expanded={expanded}
+          className="min-w-0 flex-1 text-start"
+        >
+          <span
+            className={"text-sm font-medium " + (done ? "text-muted-foreground line-through" : "")}
+          >
+            {task.title}
+          </span>
           <span className="mt-1 flex flex-wrap items-center gap-1.5 text-xs text-muted-foreground">
-            {task.priority !== "medium" && <span className={"size-2 rounded-full " + PRIO_CLS[task.priority]} aria-hidden />}
+            {task.priority !== "medium" && (
+              <span className={"size-2 rounded-full " + PRIO_CLS[task.priority]} aria-hidden />
+            )}
             {task.dueDate && (
               <span className={"inline-flex items-center gap-1 " + dueChipCls(task, today)}>
                 <Calendar className="size-3" aria-hidden />
@@ -661,15 +728,27 @@ function BoardCard({
 
 /* ---------------- editor (all fields) ---------------- */
 
-function TaskEditor({ task, today, onCollapse }: { task: Task; today: string; onCollapse: () => void }) {
+function TaskEditor({
+  task,
+  today,
+  onCollapse,
+}: {
+  task: Task;
+  today: string;
+  onCollapse: () => void;
+}) {
   const { t, locale } = usePrefs();
   const [title, setTitle] = useState(task.title);
   const [notes, setNotes] = useState(task.notes ?? "");
   const [due, setDue] = useState(task.dueDate ?? "");
   const [prio, setPrio] = useState<Priority>(task.priority);
   const [tagsText, setTagsText] = useState(task.tags.join(" "));
-  const [freq, setFreq] = useState<"none" | RecurrenceRule["freq"]>(task.recurrence ? task.recurrence.freq : "none");
-  const [days, setDays] = useState<number[]>(task.recurrence?.byWeekday ?? [weekdayOf(due !== "" ? due : today)]);
+  const [freq, setFreq] = useState<"none" | RecurrenceRule["freq"]>(
+    task.recurrence ? task.recurrence.freq : "none",
+  );
+  const [days, setDays] = useState<number[]>(
+    task.recurrence?.byWeekday ?? [weekdayOf(due !== "" ? due : today)],
+  );
   const [subDraft, setSubDraft] = useState("");
 
   const save = () => {
@@ -677,7 +756,11 @@ function TaskEditor({ task, today, onCollapse }: { task: Task; today: string; on
     if (freq === "daily") rule = { freq: "daily", interval: 1 };
     else if (freq === "monthly") rule = { freq: "monthly", interval: 1 };
     else if (freq === "weekly")
-      rule = { freq: "weekly", interval: 1, byWeekday: days.length > 0 ? [...days].sort((a, b) => a - b) : undefined };
+      rule = {
+        freq: "weekly",
+        interval: 1,
+        byWeekday: days.length > 0 ? [...days].sort((a, b) => a - b) : undefined,
+      };
     const tags = tagsText
       .split(/[\s,]+/)
       .map((x) => x.replace(/^#/, "").toLowerCase())
@@ -696,12 +779,17 @@ function TaskEditor({ task, today, onCollapse }: { task: Task; today: string; on
   const subAdd = (text: string) => {
     const v = text.trim();
     if (v === "") return;
-    taskApi.update(task.id, { subtasks: [...task.subtasks, { id: crypto.randomUUID(), title: v, done: false }] });
+    taskApi.update(task.id, {
+      subtasks: [...task.subtasks, { id: crypto.randomUUID(), title: v, done: false }],
+    });
     setSubDraft("");
   };
   const subToggle = (id: string) =>
-    taskApi.update(task.id, { subtasks: task.subtasks.map((s) => (s.id === id ? { ...s, done: !s.done } : s)) });
-  const subRemove = (id: string) => taskApi.update(task.id, { subtasks: task.subtasks.filter((s) => s.id !== id) });
+    taskApi.update(task.id, {
+      subtasks: task.subtasks.map((s) => (s.id === id ? { ...s, done: !s.done } : s)),
+    });
+  const subRemove = (id: string) =>
+    taskApi.update(task.id, { subtasks: task.subtasks.filter((s) => s.id !== id) });
   const subMove = (id: string, dir: -1 | 1) => {
     const list = [...task.subtasks];
     const i = list.findIndex((s) => s.id === id);
@@ -735,7 +823,9 @@ function TaskEditor({ task, today, onCollapse }: { task: Task; today: string; on
             />
           </label>
           <div className="flex items-center gap-2">
-            <span className="text-xs font-medium text-muted-foreground">{t.tasks.filterPriority}</span>
+            <span className="text-xs font-medium text-muted-foreground">
+              {t.tasks.filterPriority}
+            </span>
             <Segmented
               label={t.tasks.filterPriority}
               value={prio}
@@ -764,7 +854,9 @@ function TaskEditor({ task, today, onCollapse }: { task: Task; today: string; on
                   key={d}
                   type="button"
                   aria-pressed={days.includes(d)}
-                  onClick={() => setDays(days.includes(d) ? days.filter((x) => x !== d) : [...days, d])}
+                  onClick={() =>
+                    setDays(days.includes(d) ? days.filter((x) => x !== d) : [...days, d])
+                  }
                   className={
                     "rounded-md border px-2 py-1 text-xs transition-colors " +
                     (days.includes(d)
@@ -801,9 +893,16 @@ function TaskEditor({ task, today, onCollapse }: { task: Task; today: string; on
           <span className="text-xs font-medium text-muted-foreground">{t.tasks.subtasks}</span>
           <ul className="mt-2 space-y-1">
             {task.subtasks.map((s, i) => (
-              <li key={s.id} className="flex items-center gap-2 rounded-md px-1 py-1 hover:bg-accent/20">
+              <li
+                key={s.id}
+                className="flex items-center gap-2 rounded-md px-1 py-1 hover:bg-accent/20"
+              >
                 <CheckButton checked={s.done} onToggle={() => subToggle(s.id)} label={s.title} />
-                <span className={"min-w-0 flex-1 text-sm " + (s.done ? "text-muted-foreground line-through" : "")}>
+                <span
+                  className={
+                    "min-w-0 flex-1 text-sm " + (s.done ? "text-muted-foreground line-through" : "")
+                  }
+                >
                   {s.title}
                 </span>
                 <button
@@ -874,7 +973,15 @@ function TaskEditor({ task, today, onCollapse }: { task: Task; today: string; on
 
 /* ---------------- small pieces ---------------- */
 
-function CheckButton({ checked, onToggle, label }: { checked: boolean; onToggle: () => void; label: string }) {
+function CheckButton({
+  checked,
+  onToggle,
+  label,
+}: {
+  checked: boolean;
+  onToggle: () => void;
+  label: string;
+}) {
   return (
     <button
       type="button"
@@ -884,7 +991,9 @@ function CheckButton({ checked, onToggle, label }: { checked: boolean; onToggle:
       onClick={onToggle}
       className={
         "mt-0.5 grid size-5 shrink-0 place-items-center rounded-full border transition-colors " +
-        (checked ? "border-primary bg-primary text-primary-foreground" : "border-border text-transparent hover:border-primary")
+        (checked
+          ? "border-primary bg-primary text-primary-foreground"
+          : "border-border text-transparent hover:border-primary")
       }
     >
       <Check className="size-3" aria-hidden />
@@ -944,7 +1053,11 @@ function seriesIds(task: Task, live: Task[]): string[] {
 }
 
 function sameRule(a: RecurrenceRule, b: RecurrenceRule): boolean {
-  return a.freq === b.freq && a.interval === b.interval && (a.byWeekday ?? []).join(",") === (b.byWeekday ?? []).join(",");
+  return (
+    a.freq === b.freq &&
+    a.interval === b.interval &&
+    (a.byWeekday ?? []).join(",") === (b.byWeekday ?? []).join(",")
+  );
 }
 
 function weekdayShort(locale: Locale, d: number): string {

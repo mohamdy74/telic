@@ -110,9 +110,7 @@ function CalendarPage() {
         </button>
       </div>
 
-      {!weekHasAnything && (
-        <p className="mt-6 text-sm text-muted-foreground">{t.cal.empty}</p>
-      )}
+      {!weekHasAnything && <p className="mt-6 text-sm text-muted-foreground">{t.cal.empty}</p>}
 
       <div className="mt-4 grid grid-cols-4 gap-1.5 sm:grid-cols-7">
         {cells.map((c) => {
@@ -136,7 +134,11 @@ function CalendarPage() {
               <span className="text-[10px] font-medium text-muted-foreground">
                 {weekdayShort(locale, weekdayOf(c.day))}
               </span>
-              <span className={"text-sm font-semibold tabular-nums " + (c.isToday ? "text-primary" : "")}>
+              <span
+                className={
+                  "text-sm font-semibold tabular-nums " + (c.isToday ? "text-primary" : "")
+                }
+              >
                 {dayNumber(locale, c.day)}
               </span>
               <span className="flex flex-col items-center gap-0.5 text-[10px] leading-tight text-muted-foreground">
@@ -209,7 +211,9 @@ function DayDetail({ cell, locale }: { cell: WeekCell; locale: Locale }) {
                 {cell.doneTasks.map((x) => (
                   <li key={x.id} className="flex items-center gap-2">
                     <span className="size-2 shrink-0 rounded-full bg-primary/50" aria-hidden />
-                    <span className="min-w-0 truncate text-muted-foreground line-through">{x.title}</span>
+                    <span className="min-w-0 truncate text-muted-foreground line-through">
+                      {x.title}
+                    </span>
                   </li>
                 ))}
               </ul>

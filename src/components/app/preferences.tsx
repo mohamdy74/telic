@@ -30,7 +30,8 @@ export function PreferencesProvider({ children }: { children: ReactNode }) {
       if (saved.theme === "light" || saved.theme === "dark" || saved.theme === "system") {
         setThemeState(saved.theme);
       }
-      if (typeof saved.accent === "string" && isAccentId(saved.accent)) setAccentState(saved.accent);
+      if (typeof saved.accent === "string" && isAccentId(saved.accent))
+        setAccentState(saved.accent);
     } catch {
       /* ignore */
     }
@@ -81,4 +82,3 @@ export function usePrefs() {
   if (!c) throw new Error("usePrefs outside provider");
   return c;
 }
-

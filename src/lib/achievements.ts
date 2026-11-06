@@ -77,7 +77,8 @@ export interface Achievement {
   progress: (s: AchievementState) => { current: number; target: number } | null;
 }
 
-const live = <T extends { deletedAt?: string | undefined }>(l: T[]) => l.filter((r) => !r.deletedAt);
+const live = <T extends { deletedAt?: string | undefined }>(l: T[]) =>
+  l.filter((r) => !r.deletedAt);
 
 function liveLedgerEntries(s: AchievementState): XpLedgerEntry[] {
   return live(s.xpLedger);
@@ -151,7 +152,9 @@ function focusMinutes(s: AchievementState): number {
  */
 function perfectDayProgress(s: AchievementState): { current: number; target: number } {
   const validatedToday = new Set(
-    validatedTaskEntries(s).filter((e) => e.localDay === s.today).map((e) => e.sourceId),
+    validatedTaskEntries(s)
+      .filter((e) => e.localDay === s.today)
+      .map((e) => e.sourceId),
   );
   const dueTasks = live(s.tasks).filter((x) => x.dueDate === s.today);
   const doneTasks = dueTasks.filter((x) => x.status === "done" && validatedToday.has(x.id)).length;
@@ -180,7 +183,11 @@ function bestConsistency(s: AchievementState): number | null {
   let best: number | null = null;
   for (const h of live(s.habits)) {
     if (h.archived) continue;
-    const c = consistency30(h, live(s.habitLogs).filter((l) => l.habitId === h.id), s.today);
+    const c = consistency30(
+      h,
+      live(s.habitLogs).filter((l) => l.habitId === h.id),
+      s.today,
+    );
     if (c !== null && (best === null || c > best)) best = c;
   }
   return best;
@@ -393,10 +400,7 @@ export function evaluateAchievements(
 }
 
 /** Most recent live unlocks, newest first (ties broken by achievementId). */
-export function latestUnlocks(
-  unlocks: AchievementUnlock[],
-  limit: number,
-): AchievementUnlock[] {
+export function latestUnlocks(unlocks: AchievementUnlock[], limit: number): AchievementUnlock[] {
   return live(unlocks)
     .sort((a, b) =>
       a.unlockedAt === b.unlockedAt

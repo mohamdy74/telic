@@ -126,7 +126,8 @@ describe("challenges", () => {
     for (let i = 0; i < 7; i++) for (const c of dailyChallenges(addDays(DAY, -i))) daily.add(c.id);
     expect(daily.size).toBeGreaterThanOrEqual(4);
     const weekly = new Set<string>();
-    for (let i = 0; i < 3; i++) for (const c of weeklyChallenges(addDays(WEEK_START, -7 * i))) weekly.add(c.id);
+    for (let i = 0; i < 3; i++)
+      for (const c of weeklyChallenges(addDays(WEEK_START, -7 * i))) weekly.add(c.id);
     expect(weekly.size).toBeGreaterThanOrEqual(3);
   });
 
@@ -143,48 +144,108 @@ describe("challenges", () => {
   });
 
   it("d-tasks-3 counts distinct live task entries today", () => {
-    expect(prog("d-tasks-3", state({ xpLedger: [te("a"), te("b"), te("c")] }))).toEqual({ current: 3, goal: 3 });
-    expect(prog("d-tasks-3", state({ xpLedger: [te("a"), te("b", "2026-11-04")] }))).toEqual({ current: 1, goal: 3 });
-    expect(prog("d-tasks-3", state({ xpLedger: [te("a"), te("b"), entry("task", "c", DAY, 10, { deletedAt: STAMP })] }))).toEqual({ current: 2, goal: 3 });
+    expect(prog("d-tasks-3", state({ xpLedger: [te("a"), te("b"), te("c")] }))).toEqual({
+      current: 3,
+      goal: 3,
+    });
+    expect(prog("d-tasks-3", state({ xpLedger: [te("a"), te("b", "2026-11-04")] }))).toEqual({
+      current: 1,
+      goal: 3,
+    });
+    expect(
+      prog(
+        "d-tasks-3",
+        state({ xpLedger: [te("a"), te("b"), entry("task", "c", DAY, 10, { deletedAt: STAMP })] }),
+      ),
+    ).toEqual({ current: 2, goal: 3 });
   });
 
   it("d-focus-2 counts completed work sessions today only", () => {
-    expect(prog("d-focus-2", state({ focusSessions: [makeSession("f1"), makeSession("f2")] }))).toEqual({ current: 2, goal: 2 });
-    expect(prog("d-focus-2", state({ focusSessions: [
-      makeSession("f1"),
-      makeSession("fb", { mode: "break" }),
-      makeSession("fi", { completed: false, endedAt: undefined }),
-      makeSession("fy", { localDay: "2026-11-04" }),
-    ] }))).toEqual({ current: 1, goal: 2 });
+    expect(
+      prog("d-focus-2", state({ focusSessions: [makeSession("f1"), makeSession("f2")] })),
+    ).toEqual({ current: 2, goal: 2 });
+    expect(
+      prog(
+        "d-focus-2",
+        state({
+          focusSessions: [
+            makeSession("f1"),
+            makeSession("fb", { mode: "break" }),
+            makeSession("fi", { completed: false, endedAt: undefined }),
+            makeSession("fy", { localDay: "2026-11-04" }),
+          ],
+        }),
+      ),
+    ).toEqual({ current: 1, goal: 2 });
   });
 
   it("d-habits-all completes when every habit due today is done", () => {
     const h1 = makeHabit("h1");
     const h2 = makeHabit("h2");
-    const both = state({ habits: [h1, h2], habitLogs: [
-      makeLog({ habitId: "h1", localDay: DAY }),
-      makeLog({ habitId: "h2", localDay: DAY }),
-    ] });
+    const both = state({
+      habits: [h1, h2],
+      habitLogs: [
+        makeLog({ habitId: "h1", localDay: DAY }),
+        makeLog({ habitId: "h2", localDay: DAY }),
+      ],
+    });
     expect(prog("d-habits-all", both)).toEqual({ current: 2, goal: 2 });
-    expect(prog("d-habits-all", state({ habits: [h1, h2], habitLogs: [makeLog({ habitId: "h1", localDay: DAY })] }))).toEqual({ current: 1, goal: 2 });
+    expect(
+      prog(
+        "d-habits-all",
+        state({ habits: [h1, h2], habitLogs: [makeLog({ habitId: "h1", localDay: DAY })] }),
+      ),
+    ).toEqual({ current: 1, goal: 2 });
     expect(prog("d-habits-all", state())).toEqual({ current: 0, goal: 0 });
     const sundayOnly = makeHabit("h7", { schedule: { type: "custom", days: [0] } });
     expect(prog("d-habits-all", state({ habits: [sundayOnly] }))).toEqual({ current: 0, goal: 0 });
   });
 
   it("d-xp-100 sums XP awarded today, ignoring revoked entries", () => {
-    expect(prog("d-xp-100", state({ xpLedger: [te("a", DAY, 60), he("h1", DAY)] }))).toEqual({ current: 70, goal: 100 });
-    expect(prog("d-xp-100", state({ xpLedger: [entry("task", "a", DAY, 60, { deletedAt: STAMP }), he("h1", DAY)] }))).toEqual({ current: 10, goal: 100 });
+    expect(prog("d-xp-100", state({ xpLedger: [te("a", DAY, 60), he("h1", DAY)] }))).toEqual({
+      current: 70,
+      goal: 100,
+    });
+    expect(
+      prog(
+        "d-xp-100",
+        state({ xpLedger: [entry("task", "a", DAY, 60, { deletedAt: STAMP }), he("h1", DAY)] }),
+      ),
+    ).toEqual({ current: 10, goal: 100 });
   });
 
   it("d-focus-45 sums planned minutes of completed sessions today", () => {
-    expect(prog("d-focus-45", state({ focusSessions: [makeSession("f1", { plannedMinutes: 25 }), makeSession("f2", { plannedMinutes: 20 })] }))).toEqual({ current: 45, goal: 45 });
-    expect(prog("d-focus-45", state({ focusSessions: [makeSession("f1", { plannedMinutes: 25 }), makeSession("f2", { plannedMinutes: 30, completed: false, endedAt: undefined })] }))).toEqual({ current: 25, goal: 45 });
+    expect(
+      prog(
+        "d-focus-45",
+        state({
+          focusSessions: [
+            makeSession("f1", { plannedMinutes: 25 }),
+            makeSession("f2", { plannedMinutes: 20 }),
+          ],
+        }),
+      ),
+    ).toEqual({ current: 45, goal: 45 });
+    expect(
+      prog(
+        "d-focus-45",
+        state({
+          focusSessions: [
+            makeSession("f1", { plannedMinutes: 25 }),
+            makeSession("f2", { plannedMinutes: 30, completed: false, endedAt: undefined }),
+          ],
+        }),
+      ),
+    ).toEqual({ current: 25, goal: 45 });
   });
 
   it("weekly challenges read the week window, both ends inclusive", () => {
-    expect(prog("w-tasks-15", state({ xpLedger: [te("a", "2026-11-02"), te("b", "2026-11-08")] }))).toEqual({ current: 2, goal: 15 });
-    expect(prog("w-tasks-15", state({ xpLedger: [te("a", "2026-11-01"), te("b", "2026-11-09")] }))).toEqual({ current: 0, goal: 15 });
+    expect(
+      prog("w-tasks-15", state({ xpLedger: [te("a", "2026-11-02"), te("b", "2026-11-08")] })),
+    ).toEqual({ current: 2, goal: 15 });
+    expect(
+      prog("w-tasks-15", state({ xpLedger: [te("a", "2026-11-01"), te("b", "2026-11-09")] })),
+    ).toEqual({ current: 0, goal: 15 });
   });
 
   it("w-target-4 counts days meeting the focus target", () => {
@@ -192,28 +253,30 @@ describe("challenges", () => {
       makeSession("f" + i, { localDay: d, plannedMinutes: 100 }),
     );
     expect(prog("w-target-4", state({ focusSessions: sessions }))).toEqual({ current: 4, goal: 4 });
-    expect(prog("w-target-4", state({ focusSessions: sessions.slice(0, 3) }))).toEqual({ current: 3, goal: 4 });
+    expect(prog("w-target-4", state({ focusSessions: sessions.slice(0, 3) }))).toEqual({
+      current: 3,
+      goal: 4,
+    });
   });
 
   it("w-habits-12 counts done habit logs in the week window", () => {
     const habits = [makeHabit("h1"), makeHabit("h2"), makeHabit("h3")];
     const logs: HabitLog[] = [];
     for (let d = 0; d < 4; d++) {
-      for (const h of habits) logs.push(makeLog({ habitId: h.id, localDay: addDays(WEEK_START, d) }));
+      for (const h of habits)
+        logs.push(makeLog({ habitId: h.id, localDay: addDays(WEEK_START, d) }));
     }
-    expect(prog("w-habits-12", state({ habits, habitLogs: logs }))).toEqual({ current: 12, goal: 12 });
+    expect(prog("w-habits-12", state({ habits, habitLogs: logs }))).toEqual({
+      current: 12,
+      goal: 12,
+    });
   });
 
   it("grants one coins-only bonus per completed daily challenge, once per period", () => {
     const tasks = Array.from({ length: 5 }, (_, i) => makeTask("t" + i));
     const sessions = [makeSession("f1"), makeSession("f2")];
     const h = makeHabit("h1");
-    const ledger: XpLedgerEntry[] = [
-      ...tasks.map((t) => te(t.id)),
-      fe("f1"),
-      fe("f2"),
-      he("h1"),
-    ];
+    const ledger: XpLedgerEntry[] = [...tasks.map((t) => te(t.id)), fe("f1"), fe("f2"), he("h1")];
     const s = state({
       tasks,
       habits: [h],
@@ -231,7 +294,9 @@ describe("challenges", () => {
       expect(g.xp).toBe(0);
       expect(g.coins).toBe(DAILY_CHALLENGE_COINS);
     }
-    const claimed = dailyChallenges(DAY).map((d) => entry("challenge", d.id, DAY, 0, { coins: DAILY_CHALLENGE_COINS }));
+    const claimed = dailyChallenges(DAY).map((d) =>
+      entry("challenge", d.id, DAY, 0, { coins: DAILY_CHALLENGE_COINS }),
+    );
     expect(computeChallengeGrants({ ...s, xpLedger: [...ledger, ...claimed] })).toHaveLength(0);
     expect(computeChallengeGrants(state())).toHaveLength(0);
   });
@@ -244,7 +309,12 @@ describe("challenges", () => {
     [2, 2, 1, 1].forEach((count, d) => {
       const day = WEEK_DAYS[d]!;
       for (let k = 0; k < count; k++) {
-        sessions.push(makeSession("fs" + d + "-" + k, { localDay: day, plannedMinutes: count === 1 ? 100 : 50 }));
+        sessions.push(
+          makeSession("fs" + d + "-" + k, {
+            localDay: day,
+            plannedMinutes: count === 1 ? 100 : 50,
+          }),
+        );
       }
     });
     const habits = [makeHabit("h1"), makeHabit("h2"), makeHabit("h3")];
@@ -277,6 +347,10 @@ describe("challenges", () => {
     const s = state({ today: day, xpLedger: [entry("task", "t1", day, 300)] });
     expect(prog("d-xp-100", s)).toEqual({ current: 300, goal: 100 });
     const grants = computeChallengeGrants(s);
-    expect(grants.some((g) => g.sourceId === "d-xp-100" && g.xp === 0 && g.coins === DAILY_CHALLENGE_COINS)).toBe(true);
+    expect(
+      grants.some(
+        (g) => g.sourceId === "d-xp-100" && g.xp === 0 && g.coins === DAILY_CHALLENGE_COINS,
+      ),
+    ).toBe(true);
   });
 });

@@ -65,7 +65,6 @@ function FocusPage() {
   const soundRef = useRef(soundOn);
   soundRef.current = soundOn;
 
-
   // localStorage is a tiny UI pref (see AGENTS.md); read after mount to avoid hydration drift.
   useEffect(() => {
     try {
@@ -115,7 +114,11 @@ function FocusPage() {
     const short = mode === "pomodoro" ? 5 : customBreak;
     const minutes =
       breakReady ??
-      nextBreakMinutes(workCompletedToday(useStore.getState().focusSessions, todayLocal()), short, 15);
+      nextBreakMinutes(
+        workCompletedToday(useStore.getState().focusSessions, todayLocal()),
+        short,
+        15,
+      );
     focusApi.start("break", minutes);
     setBreakReady(null);
   };
@@ -154,7 +157,8 @@ function FocusPage() {
     const onKey = (e: KeyboardEvent) => {
       if (confirming) return;
       const el = e.target as HTMLElement | null;
-      if (el && (el.tagName === "INPUT" || el.tagName === "TEXTAREA" || el.tagName === "SELECT")) return;
+      if (el && (el.tagName === "INPUT" || el.tagName === "TEXTAREA" || el.tagName === "SELECT"))
+        return;
       if (e.code === "Space") {
         e.preventDefault();
         if (active) togglePause();
@@ -178,18 +182,27 @@ function FocusPage() {
   return (
     <section>
       <p className="mb-2 text-sm font-medium text-primary">{t.nav.focus}</p>
-      <h1 className="font-display text-3xl font-semibold tracking-tight md:text-4xl">{t.pages.focus.title}</h1>
+      <h1 className="font-display text-3xl font-semibold tracking-tight md:text-4xl">
+        {t.pages.focus.title}
+      </h1>
       <p className="mt-2 text-muted-foreground">{t.pages.focus.body}</p>
 
       <div className="mt-6">
         <div className="mb-1 flex items-center justify-between text-xs text-muted-foreground">
           <span>{t.focus.todaysFocus}</span>
           <span className="tabular-nums">
-            {formatNumber(locale, doneMinutes) + " / " + formatNumber(locale, target) + " " + t.focus.minutes}
+            {formatNumber(locale, doneMinutes) +
+              " / " +
+              formatNumber(locale, target) +
+              " " +
+              t.focus.minutes}
           </span>
         </div>
         <div className="h-2 overflow-hidden rounded-full bg-accent/40">
-          <div className="h-full rounded-full bg-primary transition-all" style={{ width: pct + "%" }} />
+          <div
+            className="h-full rounded-full bg-primary transition-all"
+            style={{ width: pct + "%" }}
+          />
         </div>
       </div>
 
@@ -232,7 +245,9 @@ function FocusPage() {
           ) : (
             <div className="flex flex-wrap gap-4">
               <label className="block text-sm">
-                <span className="mb-1 block text-xs text-muted-foreground">{t.focus.workMinutes}</span>
+                <span className="mb-1 block text-xs text-muted-foreground">
+                  {t.focus.workMinutes}
+                </span>
                 <input
                   type="number"
                   min={1}
@@ -243,7 +258,9 @@ function FocusPage() {
                 />
               </label>
               <label className="block text-sm">
-                <span className="mb-1 block text-xs text-muted-foreground">{t.focus.breakMinutes}</span>
+                <span className="mb-1 block text-xs text-muted-foreground">
+                  {t.focus.breakMinutes}
+                </span>
                 <input
                   type="number"
                   min={1}
@@ -301,13 +318,16 @@ function FocusPage() {
             <button type="button" onClick={() => setConfirming(false)} className={OUTLINE_BTN}>
               {t.focus.keep}
             </button>
-            <button type="button" onClick={confirmCancel} className={OUTLINE_BTN + " text-destructive"}>
+            <button
+              type="button"
+              onClick={confirmCancel}
+              className={OUTLINE_BTN + " text-destructive"}
+            >
               {t.focus.cancel}
             </button>
           </div>
         </Modal>
       )}
-
     </section>
   );
 }
@@ -337,14 +357,21 @@ function ActivePanel({
     <div className="panel mt-6 p-6 text-center">
       <p className="text-sm font-medium text-primary">
         {active.mode === "break" ? t.focus.break : t.focus.mode[active.mode]}
-        {taskTitle !== undefined && <span className="text-muted-foreground">{" — " + taskTitle}</span>}
+        {taskTitle !== undefined && (
+          <span className="text-muted-foreground">{" — " + taskTitle}</span>
+        )}
       </p>
-      <p className="mt-4 font-display text-6xl font-semibold tabular-nums md:text-7xl">{clock(remaining)}</p>
+      <p className="mt-4 font-display text-6xl font-semibold tabular-nums md:text-7xl">
+        {clock(remaining)}
+      </p>
       <p className="mt-1 text-xs text-muted-foreground">
         {formatNumber(locale, active.plannedMinutes) + " " + t.focus.minutes}
       </p>
       <div className="mx-auto mt-4 h-1.5 max-w-sm overflow-hidden rounded-full bg-accent/40">
-        <div className="h-full rounded-full bg-primary transition-all" style={{ width: elapsedPct + "%" }} />
+        <div
+          className="h-full rounded-full bg-primary transition-all"
+          style={{ width: elapsedPct + "%" }}
+        />
       </div>
       {paused && <p className="mt-3 text-sm text-muted-foreground">{t.focus.pause}</p>}
       <div className="mt-6 flex flex-wrap items-center justify-center gap-2">
@@ -360,16 +387,26 @@ function ActivePanel({
           <Zap className="size-4" aria-hidden />
           {t.focus.distract}
           {active.distractions.length > 0 && (
-            <span className="tabular-nums">{"(" + formatNumber(locale, active.distractions.length) + ")"}</span>
+            <span className="tabular-nums">
+              {"(" + formatNumber(locale, active.distractions.length) + ")"}
+            </span>
           )}
         </button>
-        <button type="button" onClick={onCancelRequest} className={OUTLINE_BTN + " text-destructive"}>
+        <button
+          type="button"
+          onClick={onCancelRequest}
+          className={OUTLINE_BTN + " text-destructive"}
+        >
           {t.focus.cancel}
         </button>
       </div>
       <p className="mt-4 flex items-center justify-center gap-2 text-xs text-muted-foreground">
-        <kbd className="rounded border border-border bg-accent/40 px-1.5 py-0.5 font-sans text-[10px]">Space</kbd>
-        <kbd className="rounded border border-border bg-accent/40 px-1.5 py-0.5 font-sans text-[10px]">Esc</kbd>
+        <kbd className="rounded border border-border bg-accent/40 px-1.5 py-0.5 font-sans text-[10px]">
+          Space
+        </kbd>
+        <kbd className="rounded border border-border bg-accent/40 px-1.5 py-0.5 font-sans text-[10px]">
+          Esc
+        </kbd>
       </p>
     </div>
   );
@@ -403,7 +440,10 @@ function HistorySection({
                 const actual = actualMinutes(s);
                 const linked = taskTitles.get(s.linkedTaskId ?? "");
                 return (
-                  <li key={s.id} className="panel flex flex-wrap items-center gap-x-3 gap-y-1 px-3 py-2 text-sm">
+                  <li
+                    key={s.id}
+                    className="panel flex flex-wrap items-center gap-x-3 gap-y-1 px-3 py-2 text-sm"
+                  >
                     {s.completed ? (
                       <CheckCircle2 className="size-4 shrink-0 text-primary" aria-hidden />
                     ) : (
@@ -412,7 +452,9 @@ function HistorySection({
                     <span className="font-medium">
                       {s.mode === "break" ? t.focus.break : t.focus.mode[s.mode]}
                     </span>
-                    {linked !== undefined && <span className="truncate text-xs text-muted-foreground">{linked}</span>}
+                    {linked !== undefined && (
+                      <span className="truncate text-xs text-muted-foreground">{linked}</span>
+                    )}
                     <span className="text-xs text-muted-foreground tabular-nums">
                       {formatDate(locale, new Date(s.startedAt), { timeStyle: "short" })}
                     </span>
@@ -431,7 +473,9 @@ function HistorySection({
                         {formatNumber(locale, s.distractions.length)}
                       </span>
                     )}
-                    {!s.completed && <span className="text-xs text-destructive">{t.focus.incomplete}</span>}
+                    {!s.completed && (
+                      <span className="text-xs text-destructive">{t.focus.incomplete}</span>
+                    )}
                   </li>
                 );
               })}

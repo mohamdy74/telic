@@ -65,8 +65,21 @@ const snapshot = (): Snapshot =>
       },
     ],
     notes: [
-      { id: "n1", title: "Plan", body: "step 1", createdAt: stamp, updatedAt: "2026-01-01T12:00:00.000Z" },
-      { id: "n2", title: "خطة", body: "", pinned: true, createdAt: stamp, updatedAt: "2026-01-02T12:00:00.000Z" },
+      {
+        id: "n1",
+        title: "Plan",
+        body: "step 1",
+        createdAt: stamp,
+        updatedAt: "2026-01-01T12:00:00.000Z",
+      },
+      {
+        id: "n2",
+        title: "خطة",
+        body: "",
+        pinned: true,
+        createdAt: stamp,
+        updatedAt: "2026-01-02T12:00:00.000Z",
+      },
     ],
     habits: [],
     habitLogs: [],

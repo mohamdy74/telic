@@ -32,7 +32,13 @@ describe("shop", () => {
     });
     expect(res.ok).toBe(true);
     if (res.ok) {
-      expect(res.entry).toEqual({ sourceType: "shop", sourceId: "p1", localDay: DAY, xp: 0, coins: -15 });
+      expect(res.entry).toEqual({
+        sourceType: "shop",
+        sourceId: "p1",
+        localDay: DAY,
+        xp: 0,
+        coins: -15,
+      });
       expect(res.purchase).toMatchObject({
         id: "p1",
         itemId: "a",
@@ -223,7 +229,13 @@ describe("shop", () => {
       coins: -15,
     } as XpLedgerEntry;
     const ledger = [xpEntry("x", 30), entry]; // 15 - 15 = 0 coins
-    const res = refundPurchase({ purchases: [purchase("p1")], ledger, purchaseId: "p1", today: DAY, now: LATER });
+    const res = refundPurchase({
+      purchases: [purchase("p1")],
+      ledger,
+      purchaseId: "p1",
+      today: DAY,
+      now: LATER,
+    });
     expect(res.ok).toBe(true);
     if (res.ok) {
       expect(res.purchase.deletedAt).toBe(LATER);
@@ -234,7 +246,14 @@ describe("shop", () => {
   });
 
   it("refund denies after the day changed, once used, already refunded, or missing", () => {
-    const entry = { ...rec("p1"), sourceType: "shop", sourceId: "p1", localDay: DAY, xp: 0, coins: -15 } as XpLedgerEntry;
+    const entry = {
+      ...rec("p1"),
+      sourceType: "shop",
+      sourceId: "p1",
+      localDay: DAY,
+      xp: 0,
+      coins: -15,
+    } as XpLedgerEntry;
     const ledger = [xpEntry("x", 30), entry];
     const cases: Array<[Purchase, string, RefundDenyLike]> = [
       [purchase("p1"), NEXT_DAY, "not-today"],
@@ -246,7 +265,13 @@ describe("shop", () => {
       expect(res.ok).toBe(false);
       if (!res.ok) expect(res.reason).toBe(reason);
     }
-    const missing = refundPurchase({ purchases: [purchase("p1")], ledger, purchaseId: "zz", today: DAY, now: LATER });
+    const missing = refundPurchase({
+      purchases: [purchase("p1")],
+      ledger,
+      purchaseId: "zz",
+      today: DAY,
+      now: LATER,
+    });
     expect(missing.ok).toBe(false);
     if (!missing.ok) expect(missing.reason).toBe("not-found");
   });
@@ -261,9 +286,19 @@ describe("shop", () => {
 
   it("purchase history keeps refunded rows and sorts newest first", () => {
     const rows = [
-      purchase("p1", { createdAt: "2026-11-05T10:00:00.000Z", updatedAt: "2026-11-05T10:00:00.000Z" }),
-      purchase("p2", { createdAt: "2026-11-05T14:00:00.000Z", updatedAt: "2026-11-05T14:00:00.000Z" }),
-      purchase("p3", { createdAt: "2026-11-05T12:00:00.000Z", updatedAt: "2026-11-05T12:00:00.000Z", deletedAt: LATER }),
+      purchase("p1", {
+        createdAt: "2026-11-05T10:00:00.000Z",
+        updatedAt: "2026-11-05T10:00:00.000Z",
+      }),
+      purchase("p2", {
+        createdAt: "2026-11-05T14:00:00.000Z",
+        updatedAt: "2026-11-05T14:00:00.000Z",
+      }),
+      purchase("p3", {
+        createdAt: "2026-11-05T12:00:00.000Z",
+        updatedAt: "2026-11-05T12:00:00.000Z",
+        deletedAt: LATER,
+      }),
     ];
     const h = purchaseHistory(rows);
     expect(h.map((p) => p.id)).toEqual(["p2", "p3", "p1"]);

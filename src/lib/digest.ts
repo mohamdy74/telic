@@ -48,9 +48,7 @@ function openTasks(tasks: Task[]): Task[] {
 }
 
 function habitsDueToday(s: DigestState): Habit[] {
-  return s.habits.filter(
-    (h) => !h.deletedAt && !h.archived && isScheduledOn(h.schedule, s.today),
-  );
+  return s.habits.filter((h) => !h.deletedAt && !h.archived && isScheduledOn(h.schedule, s.today));
 }
 
 /** Morning digest: open tasks due today, overdue, habits due, top task. */
@@ -85,11 +83,18 @@ export function eveningDigest(s: DigestState): EveningDigest {
       toLocalDay(new Date(t.completedAt), s.dayStartHour, s.timeZone) === s.today,
   );
   const doneHabitIds = new Set(
-    s.logs.filter((l) => !l.deletedAt && l.status === "done" && l.localDay === s.today).map((l) => l.habitId),
+    s.logs
+      .filter((l) => !l.deletedAt && l.status === "done" && l.localDay === s.today)
+      .map((l) => l.habitId),
   );
   let focusMinutes = 0;
   for (const session of s.sessions) {
-    if (!session.deletedAt && session.completed && session.mode !== "break" && session.localDay === s.today) {
+    if (
+      !session.deletedAt &&
+      session.completed &&
+      session.mode !== "break" &&
+      session.localDay === s.today
+    ) {
       focusMinutes += session.plannedMinutes;
     }
   }

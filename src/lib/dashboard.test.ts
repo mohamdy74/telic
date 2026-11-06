@@ -94,7 +94,11 @@ describe("upcomingDeadlines", () => {
       task({ id: "done", dueDate: "2026-03-11", status: "done" }),
       task({ id: "gone", dueDate: "2026-03-11", deletedAt: "2026-03-08T10:00:00.000Z" }),
     ];
-    expect(upcomingDeadlines(list, TODAY).map((x) => x.id)).toEqual(["earlierHigh", "earlierLow", "laterLow"]);
+    expect(upcomingDeadlines(list, TODAY).map((x) => x.id)).toEqual([
+      "earlierHigh",
+      "earlierLow",
+      "laterLow",
+    ]);
   });
 });
 
@@ -111,11 +115,7 @@ describe("habitsDueToday", () => {
   });
 
   it("flags done from today's log; skipped or deleted logs do not count", () => {
-    const list = [
-      habit({ id: "a" }),
-      habit({ id: "b" }),
-      habit({ id: "c" }),
-    ];
+    const list = [habit({ id: "a" }), habit({ id: "b" }), habit({ id: "c" })];
     const logs = [
       log({ id: "la", habitId: "a", status: "done" }),
       log({ id: "lb", habitId: "b", status: "skipped" }),
@@ -136,10 +136,7 @@ describe("dailyProgress", () => {
       task({ id: "t-done", status: "done" }),
       task({ id: "t-later", dueDate: "2026-03-12" }),
     ];
-    const habits = [
-      habit({ id: "h-done" }),
-      habit({ id: "h-open" }),
-    ];
+    const habits = [habit({ id: "h-done" }), habit({ id: "h-open" })];
     const logs = [log({ id: "l1", habitId: "h-done", status: "done" })];
     const p = dailyProgress(tasks, habits, logs, TODAY);
     expect(p.done).toBe(2);

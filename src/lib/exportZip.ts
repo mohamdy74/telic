@@ -10,7 +10,13 @@ export const TASKS_ENTRY = "tasks.csv";
 export function exportZipFileName(d: Date = new Date()): string {
   const pad = (n: number) => String(n).padStart(2, "0");
   return (
-    "tilth-export-" + d.getFullYear() + "-" + pad(d.getMonth() + 1) + "-" + pad(d.getDate()) + ".zip"
+    "tilth-export-" +
+    d.getFullYear() +
+    "-" +
+    pad(d.getMonth() + 1) +
+    "-" +
+    pad(d.getDate()) +
+    ".zip"
   );
 }
 

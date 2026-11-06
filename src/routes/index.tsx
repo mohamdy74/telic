@@ -81,7 +81,6 @@ function DashboardPage() {
   const target = useStore((s) => s.settings.dailyFocusTargetMinutes);
   const dayStartHour = useStore((s) => s.settings.dayStartHour);
 
-
   if (!ready) return <DashboardSkeleton />;
 
   const today = todayLocal();
@@ -95,8 +94,7 @@ function DashboardPage() {
   const deadlines = upcomingDeadlines(liveTasks, today);
   const dueHabits = habitsDueToday(liveHabits, liveLogs, today);
   const focusMinutes = workMinutesToday(liveSessions, today);
-  const firstRun =
-    liveTasks.length === 0 && liveHabits.length === 0 && liveSessions.length === 0;
+  const firstRun = liveTasks.length === 0 && liveHabits.length === 0 && liveSessions.length === 0;
   const anyCard = Object.values(cards).some((v) => v);
 
   // Quiet morning/evening summary — the "my day" line under the title.
@@ -193,16 +191,23 @@ function DashboardPage() {
             />
           )}
           {cards.habits && (
-            <HabitsCard items={dueHabits} onToggle={toggleHabit} footer={footerLink("/habits", t.dash.viewAll)} />
+            <HabitsCard
+              items={dueHabits}
+              onToggle={toggleHabit}
+              footer={footerLink("/habits", t.dash.viewAll)}
+            />
           )}
           {cards.focus && (
-            <FocusCard minutes={focusMinutes} target={target} footer={footerLink("/focus", t.dash.startFocus)} />
+            <FocusCard
+              minutes={focusMinutes}
+              target={target}
+              footer={footerLink("/focus", t.dash.startFocus)}
+            />
           )}
           {cards.level && <LevelCard />}
           {cards.achievements && <AchievementsCard />}
         </div>
       )}
-
     </section>
   );
 }
@@ -299,7 +304,10 @@ function PrioritiesCard({
         <ul className="space-y-1.5">
           {items.map((x) => (
             <li key={x.id} className="flex items-center gap-2">
-              <span className={"size-2 shrink-0 rounded-full " + PRIORITY_DOT[x.priority]} aria-hidden />
+              <span
+                className={"size-2 shrink-0 rounded-full " + PRIORITY_DOT[x.priority]}
+                aria-hidden
+              />
               <span className="min-w-0 flex-1 truncate text-sm">{x.title}</span>
               {(x.dueDate ?? today) < today && (
                 <span className="shrink-0 text-xs text-destructive">{t.tasks.view.overdue}</span>
@@ -308,13 +316,18 @@ function PrioritiesCard({
                 type="button"
                 onClick={() => onComplete(x.id)}
                 aria-label={t.tasks.markDone}
-                className={"shrink-0 rounded-full p-1 text-muted-foreground transition-colors hover:text-primary "}
+                className={
+                  "shrink-0 rounded-full p-1 text-muted-foreground transition-colors hover:text-primary "
+                }
               >
                 <CheckCircle2 className="size-5" aria-hidden />
               </button>
             </li>
           ))}
-          <MoreRow n={moreCount} label={t.dash.andMore.replace("{n}", formatNumber(locale, moreCount))} />
+          <MoreRow
+            n={moreCount}
+            label={t.dash.andMore.replace("{n}", formatNumber(locale, moreCount))}
+          />
         </ul>
       )}
     </Card>
@@ -325,10 +338,7 @@ function ProgressCard({ progress }: { progress: DailyProgress }) {
   const { t, locale } = usePrefs();
   const ratio = progress.ratio;
   return (
-    <Card
-      title={t.settings.cards.progress}
-      icon={<Target className="size-4" aria-hidden />}
-    >
+    <Card title={t.settings.cards.progress} icon={<Target className="size-4" aria-hidden />}>
       <div className="flex h-full flex-col items-center justify-center gap-3 py-2 text-center">
         {ratio === null ? (
           <>
@@ -339,8 +349,20 @@ function ProgressCard({ progress }: { progress: DailyProgress }) {
           </>
         ) : (
           <>
-            <svg viewBox="0 0 100 100" className="size-28" role="img" aria-label={t.settings.cards.progress}>
-              <circle cx="50" cy="50" r={RING_R} fill="none" strokeWidth="8" className="stroke-accent/40" />
+            <svg
+              viewBox="0 0 100 100"
+              className="size-28"
+              role="img"
+              aria-label={t.settings.cards.progress}
+            >
+              <circle
+                cx="50"
+                cy="50"
+                r={RING_R}
+                fill="none"
+                strokeWidth="8"
+                className="stroke-accent/40"
+              />
               <circle
                 cx="50"
                 cy="50"
@@ -401,7 +423,10 @@ function DeadlinesCard({
               </span>
             </li>
           ))}
-          <MoreRow n={moreCount} label={t.dash.andMore.replace("{n}", formatNumber(locale, moreCount))} />
+          <MoreRow
+            n={moreCount}
+            label={t.dash.andMore.replace("{n}", formatNumber(locale, moreCount))}
+          />
         </ul>
       )}
     </Card>
@@ -435,7 +460,9 @@ function HabitsCard({
                 onClick={() => onToggle(h)}
                 aria-pressed={h.done}
                 aria-label={h.habit.name}
-                className={"flex w-full items-center justify-between gap-2 rounded-md px-1 py-1 text-start transition-colors hover:bg-accent/40 "}
+                className={
+                  "flex w-full items-center justify-between gap-2 rounded-md px-1 py-1 text-start transition-colors hover:bg-accent/40 "
+                }
               >
                 <span
                   className={
@@ -459,7 +486,15 @@ function HabitsCard({
   );
 }
 
-function FocusCard({ minutes, target, footer }: { minutes: number; target: number; footer?: ReactNode }) {
+function FocusCard({
+  minutes,
+  target,
+  footer,
+}: {
+  minutes: number;
+  target: number;
+  footer?: ReactNode;
+}) {
   const { t, locale } = usePrefs();
   const pct = target <= 0 ? 0 : Math.min(100, Math.round((minutes / target) * 100));
   return (
@@ -476,7 +511,10 @@ function FocusCard({ minutes, target, footer }: { minutes: number; target: numbe
           </span>
         </p>
         <div className="h-2 overflow-hidden rounded-full bg-accent/40">
-          <div className="h-full rounded-full bg-primary transition-all" style={{ width: pct + "%" }} />
+          <div
+            className="h-full rounded-full bg-primary transition-all"
+            style={{ width: pct + "%" }}
+          />
         </div>
       </div>
     </Card>
@@ -503,7 +541,10 @@ function LevelCard() {
           {formatNumber(locale, totals.level)}
         </p>
         <div className="h-2 overflow-hidden rounded-full bg-accent/40">
-          <div className="h-full rounded-full bg-primary transition-all" style={{ width: pct + "%" }} />
+          <div
+            className="h-full rounded-full bg-primary transition-all"
+            style={{ width: pct + "%" }}
+          />
         </div>
         <p className="text-xs text-muted-foreground tabular-nums">
           {formatNumber(locale, totals.xpIntoLevel) +
@@ -513,7 +554,10 @@ function LevelCard() {
             t.dash.xpUnit}
         </p>
         <div className="h-1.5 overflow-hidden rounded-full bg-accent/40" aria-hidden>
-          <div className="h-full rounded-full bg-primary/70 transition-all" style={{ width: todayPct + "%" }} />
+          <div
+            className="h-full rounded-full bg-primary/70 transition-all"
+            style={{ width: todayPct + "%" }}
+          />
         </div>
         <p className="text-xs text-muted-foreground tabular-nums">
           {formatNumber(locale, todayXp) +
@@ -523,7 +567,6 @@ function LevelCard() {
             t.rew.todayXp}
         </p>
         <p className="flex items-center gap-1.5 text-xs text-muted-foreground tabular-nums">
-
           <Coins className="size-3.5 text-primary" aria-hidden />
           {formatNumber(locale, totals.coins) + " " + t.dash.coins}
         </p>

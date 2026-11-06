@@ -4,7 +4,9 @@ import { crc32, zipFiles } from "./zip";
 const enc = new TextEncoder();
 
 /** Minimal reader for STORE-method zips: EOCD count, then local headers. No unzip library. */
-function readZip(zip: Uint8Array): { name: string; data: Uint8Array; flags: number; method: number }[] {
+function readZip(
+  zip: Uint8Array,
+): { name: string; data: Uint8Array; flags: number; method: number }[] {
   const view = new DataView(zip.buffer, zip.byteOffset, zip.byteLength);
   const u16 = (o: number) => view.getUint16(o, true);
   const u32 = (o: number) => view.getUint32(o, true);

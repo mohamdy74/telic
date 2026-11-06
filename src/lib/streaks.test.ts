@@ -11,7 +11,14 @@ function habit(schedule: HabitSchedule): Habit {
 }
 
 function log(day: string, status: "done" | "skipped"): HabitLog {
-  return { id: day + "-" + status, habitId: "h1", localDay: day, status, createdAt: ISO, updatedAt: ISO };
+  return {
+    id: day + "-" + status,
+    habitId: "h1",
+    localDay: day,
+    status,
+    createdAt: ISO,
+    updatedAt: ISO,
+  };
 }
 
 const daily: HabitSchedule = { type: "daily", days: [0, 1, 2, 3, 4, 5, 6] };
@@ -151,7 +158,10 @@ describe("habitStreaks", () => {
 
 describe("consistency30", () => {
   it("done over scheduled minus skipped (30 days)", () => {
-    const logs = [...many("2026-01-01", "2026-01-20", "done"), ...many("2026-01-21", "2026-01-23", "skipped")];
+    const logs = [
+      ...many("2026-01-01", "2026-01-20", "done"),
+      ...many("2026-01-21", "2026-01-23", "skipped"),
+    ];
     // 20 done, 3 skipped (excluded from the denominator), 7 missed.
     expect(consistency30(habit(daily), logs, "2026-01-30")).toBeCloseTo(20 / 27);
   });

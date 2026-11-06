@@ -28,9 +28,7 @@ export const Route = createFileRoute("/notes")({
   component: NotesPage,
 });
 
-
-const INPUT =
-  "h-10 w-full rounded-md border border-border bg-background px-3 text-sm outline-none";
+const INPUT = "h-10 w-full rounded-md border border-border bg-background px-3 text-sm outline-none";
 
 function NotesPage() {
   const { t, locale } = usePrefs();
@@ -41,7 +39,6 @@ function NotesPage() {
   const [showNew, setShowNew] = useState(false);
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const titleRef = useRef<HTMLInputElement>(null);
-
 
   useEffect(() => {
     if (showNew) titleRef.current?.focus();
@@ -69,7 +66,10 @@ function NotesPage() {
     noteApi.remove(n.id);
     if (expandedId === n.id) setExpandedId(null);
     toast(t.notes.deleted, {
-      action: { label: t.notes.undo, onClick: () => noteApi.update(n.id, { deletedAt: undefined }) },
+      action: {
+        label: t.notes.undo,
+        onClick: () => noteApi.update(n.id, { deletedAt: undefined }),
+      },
     });
   };
 
@@ -133,7 +133,6 @@ function NotesPage() {
           ))}
         </ul>
       )}
-
     </section>
   );
 }
@@ -178,7 +177,11 @@ function NoteRow({
             (pinned ? "text-primary" : "text-muted-foreground")
           }
         >
-          {pinned ? <PinOff className="size-4" aria-hidden /> : <Pin className="size-4" aria-hidden />}
+          {pinned ? (
+            <PinOff className="size-4" aria-hidden />
+          ) : (
+            <Pin className="size-4" aria-hidden />
+          )}
         </button>
         <button
           type="button"
@@ -189,7 +192,9 @@ function NoteRow({
           <span className="block truncate font-medium">
             {note.title || t.notes.untitled}
             {pinned && (
-              <span className="ms-2 align-middle text-xs font-normal text-primary">{t.notes.pinned}</span>
+              <span className="ms-2 align-middle text-xs font-normal text-primary">
+                {t.notes.pinned}
+              </span>
             )}
           </span>
           {preview && (
@@ -336,7 +341,11 @@ function NoteEditor({
         />
       )}
       <div className="flex items-center justify-end gap-2">
-        <button type="button" onClick={onDelete} className="text-sm text-muted-foreground hover:text-destructive">
+        <button
+          type="button"
+          onClick={onDelete}
+          className="text-sm text-muted-foreground hover:text-destructive"
+        >
           {t.notes.delete}
         </button>
         <button type="button" onClick={onDone} className={OUTLINE_BTN}>

@@ -7,7 +7,14 @@ import {
   type AchievementId,
   type AchievementState,
 } from "./achievements";
-import type { AchievementUnlock, FocusSession, Habit, HabitLog, Task, XpLedgerEntry } from "./types";
+import type {
+  AchievementUnlock,
+  FocusSession,
+  Habit,
+  HabitLog,
+  Task,
+  XpLedgerEntry,
+} from "./types";
 
 const DAY = "2026-11-05"; // Thursday
 const STAMP = "2026-11-05T10:00:00.000Z";
@@ -108,7 +115,12 @@ describe("achievements", () => {
     const t = makeTask("t1", { status: "done", completedAt: STAMP });
     expect(unlocked("firstTask", state({ tasks: [t] }))).toBe(false);
     expect(unlocked("firstTask", state({ tasks: [t], xpLedger: [te("t1")] }))).toBe(true);
-    expect(unlocked("firstTask", state({ tasks: [t], xpLedger: [entry("task", "t1", DAY, 10, { deletedAt: STAMP })] }))).toBe(false);
+    expect(
+      unlocked(
+        "firstTask",
+        state({ tasks: [t], xpLedger: [entry("task", "t1", DAY, 10, { deletedAt: STAMP })] }),
+      ),
+    ).toBe(false);
   });
 
   it("task-count achievements count distinct validated tasks", () => {
@@ -116,26 +128,45 @@ describe("achievements", () => {
     expect(unlocked("tasksTen", state({ xpLedger: ten }))).toBe(true);
     expect(unlocked("tasksTen", state({ xpLedger: ten.slice(0, 9) }))).toBe(false);
     // a revoked (soft-deleted) entry no longer validates
-    expect(unlocked("tasksTen", state({ xpLedger: [...ten.slice(0, 9), entry("task", "tx", DAY, 10, { deletedAt: STAMP })] }))).toBe(false);
+    expect(
+      unlocked(
+        "tasksTen",
+        state({
+          xpLedger: [...ten.slice(0, 9), entry("task", "tx", DAY, 10, { deletedAt: STAMP })],
+        }),
+      ),
+    ).toBe(false);
     // the same task completed on two days is still one task
-    expect(unlocked("tasksTen", state({ xpLedger: [...ten.slice(0, 9), te("t0", "2026-11-04")] }))).toBe(false);
-    expect(unlocked("tasksTwoHundred", state({ xpLedger: Array.from({ length: 200 }, (_, i) => te("u" + i)) }))).toBe(true);
+    expect(
+      unlocked("tasksTen", state({ xpLedger: [...ten.slice(0, 9), te("t0", "2026-11-04")] })),
+    ).toBe(false);
+    expect(
+      unlocked(
+        "tasksTwoHundred",
+        state({ xpLedger: Array.from({ length: 200 }, (_, i) => te("u" + i)) }),
+      ),
+    ).toBe(true);
   });
 
   it("tasksFifty progress is measurable", () => {
-    expect(prog("tasksFifty", state({ xpLedger: Array.from({ length: 7 }, (_, i) => te("t" + i)) }))).toEqual({ current: 7, target: 50 });
+    expect(
+      prog("tasksFifty", state({ xpLedger: Array.from({ length: 7 }, (_, i) => te("t" + i)) })),
+    ).toEqual({ current: 7, target: 50 });
   });
 
   it("firstHabit needs a validated habit entry; a bare done log is not enough", () => {
     const h = makeHabit("h1");
     const log = makeLog({ habitId: "h1", localDay: DAY });
     expect(unlocked("firstHabit", state({ habits: [h], habitLogs: [log] }))).toBe(false);
-    expect(unlocked("firstHabit", state({ habits: [h], habitLogs: [log], xpLedger: [he("h1")] }))).toBe(true);
+    expect(
+      unlocked("firstHabit", state({ habits: [h], habitLogs: [log], xpLedger: [he("h1")] })),
+    ).toBe(true);
   });
 
   it("streak achievements read the habit streak best", () => {
     const h = makeHabit("h1");
-    const logs = (n: number) => Array.from({ length: n }, (_, i) => makeLog({ habitId: "h1", localDay: addDays(DAY, -i) }));
+    const logs = (n: number) =>
+      Array.from({ length: n }, (_, i) => makeLog({ habitId: "h1", localDay: addDays(DAY, -i) }));
     expect(unlocked("streakSeven", state({ habits: [h], habitLogs: logs(7) }))).toBe(true);
     expect(unlocked("streakThirty", state({ habits: [h], habitLogs: logs(7) }))).toBe(false);
     expect(unlocked("streakSeven", state({ habits: [h], habitLogs: logs(6) }))).toBe(false);
@@ -145,15 +176,30 @@ describe("achievements", () => {
 
   it("firstFocus needs a completed work session", () => {
     expect(unlocked("firstFocus", state({ focusSessions: [makeSession("f1")] }))).toBe(true);
-    expect(unlocked("firstFocus", state({ focusSessions: [makeSession("f1", { mode: "break" })] }))).toBe(false);
-    expect(unlocked("firstFocus", state({ focusSessions: [makeSession("f1", { completed: false, endedAt: undefined })] }))).toBe(false);
-    expect(unlocked("firstFocus", state({ focusSessions: [makeSession("f1", { deletedAt: STAMP })] }))).toBe(false);
+    expect(
+      unlocked("firstFocus", state({ focusSessions: [makeSession("f1", { mode: "break" })] })),
+    ).toBe(false);
+    expect(
+      unlocked(
+        "firstFocus",
+        state({ focusSessions: [makeSession("f1", { completed: false, endedAt: undefined })] }),
+      ),
+    ).toBe(false);
+    expect(
+      unlocked("firstFocus", state({ focusSessions: [makeSession("f1", { deletedAt: STAMP })] })),
+    ).toBe(false);
   });
 
   it("focus-hour achievements count completed work minutes", () => {
-    const hours = (n: number) => Array.from({ length: n }, (_, i) => makeSession("f" + i, { plannedMinutes: 60 }));
+    const hours = (n: number) =>
+      Array.from({ length: n }, (_, i) => makeSession("f" + i, { plannedMinutes: 60 }));
     expect(unlocked("focusTenHours", state({ focusSessions: hours(10) }))).toBe(true);
-    expect(unlocked("focusTenHours", state({ focusSessions: [...hours(9), makeSession("fx", { plannedMinutes: 50 })] }))).toBe(false);
+    expect(
+      unlocked(
+        "focusTenHours",
+        state({ focusSessions: [...hours(9), makeSession("fx", { plannedMinutes: 50 })] }),
+      ),
+    ).toBe(false);
     expect(unlocked("focusFiftyHours", state({ focusSessions: hours(50) }))).toBe(true);
   });
 
@@ -186,7 +232,11 @@ describe("achievements", () => {
   it("perfectDay ignores instant completions and skipped habits", () => {
     const t = makeTask("t1", { status: "done", completedAt: STAMP, dueDate: DAY }); // instant, no entry
     const h = makeHabit("h1");
-    const s = state({ tasks: [t], habits: [h], habitLogs: [makeLog({ habitId: "h1", localDay: DAY, status: "skipped" })] });
+    const s = state({
+      tasks: [t],
+      habits: [h],
+      habitLogs: [makeLog({ habitId: "h1", localDay: DAY, status: "skipped" })],
+    });
     expect(unlocked("perfectDay", s)).toBe(false);
     expect(prog("perfectDay", s)).toEqual({ current: 0, target: 2 });
   });
@@ -201,11 +251,25 @@ describe("achievements", () => {
   it("earlyBirdFive counts validated tasks completed before 09:00, sharp 09:00 excluded", () => {
     const earlyTask = (id: string, at: string) => makeTask(id, { status: "done", completedAt: at });
     const ledgerOf = (ids: string[]) => ids.map((id) => te(id));
-    const five = ["05:00", "06:00", "07:00", "08:00", "08:59"].map((hm, i) => earlyTask("t" + i, "2026-11-05T" + hm + ":00.000Z"));
-    expect(unlocked("earlyBirdFive", state({ tasks: five, xpLedger: ledgerOf(five.map((x) => x.id)) }))).toBe(true);
+    const five = ["05:00", "06:00", "07:00", "08:00", "08:59"].map((hm, i) =>
+      earlyTask("t" + i, "2026-11-05T" + hm + ":00.000Z"),
+    );
+    expect(
+      unlocked("earlyBirdFive", state({ tasks: five, xpLedger: ledgerOf(five.map((x) => x.id)) })),
+    ).toBe(true);
     const withNine = [...five.slice(0, 4), earlyTask("t9", "2026-11-05T09:00:00.000Z")];
-    expect(unlocked("earlyBirdFive", state({ tasks: withNine, xpLedger: ledgerOf(withNine.map((x) => x.id)) }))).toBe(false);
-    expect(prog("earlyBirdFive", state({ tasks: [earlyTask("t0", "2026-11-05T08:59:00.000Z")], xpLedger: [te("t0")] }))).toEqual({ current: 1, target: 5 });
+    expect(
+      unlocked(
+        "earlyBirdFive",
+        state({ tasks: withNine, xpLedger: ledgerOf(withNine.map((x) => x.id)) }),
+      ),
+    ).toBe(false);
+    expect(
+      prog(
+        "earlyBirdFive",
+        state({ tasks: [earlyTask("t0", "2026-11-05T08:59:00.000Z")], xpLedger: [te("t0")] }),
+      ),
+    ).toEqual({ current: 1, target: 5 });
   });
 
   it("comeback unlocks after 7 inactive days", () => {
@@ -225,18 +289,25 @@ describe("achievements", () => {
   });
 
   it("firstPurchase needs a shop entry with negative coins (dormant until the shop ships)", () => {
-    expect(unlocked("firstPurchase", state({ xpLedger: [entry("shop", "s1", DAY, 0, { coins: -5 })] }))).toBe(true);
-    expect(unlocked("firstPurchase", state({ xpLedger: [entry("shop", "s1", DAY, 0, { coins: 5 })] }))).toBe(false);
+    expect(
+      unlocked("firstPurchase", state({ xpLedger: [entry("shop", "s1", DAY, 0, { coins: -5 })] })),
+    ).toBe(true);
+    expect(
+      unlocked("firstPurchase", state({ xpLedger: [entry("shop", "s1", DAY, 0, { coins: 5 })] })),
+    ).toBe(false);
   });
 
   it("firstBackup unlocks on the export stamp", () => {
     expect(unlocked("firstBackup", state())).toBe(false);
-    expect(unlocked("firstBackup", state({ lastExportedAt: "2026-11-01T10:00:00.000Z" }))).toBe(true);
+    expect(unlocked("firstBackup", state({ lastExportedAt: "2026-11-01T10:00:00.000Z" }))).toBe(
+      true,
+    );
   });
 
   it("consistentMonth unlocks at 80% done over the last 30 days", () => {
     const h = makeHabit("h1");
-    const logs = (n: number) => Array.from({ length: n }, (_, i) => makeLog({ habitId: "h1", localDay: addDays(DAY, -i) }));
+    const logs = (n: number) =>
+      Array.from({ length: n }, (_, i) => makeLog({ habitId: "h1", localDay: addDays(DAY, -i) }));
     expect(unlocked("consistentMonth", state({ habits: [h], habitLogs: logs(24) }))).toBe(true);
     expect(unlocked("consistentMonth", state({ habits: [h], habitLogs: logs(23) }))).toBe(false);
   });
@@ -250,28 +321,57 @@ describe("achievements", () => {
         endedAt: at(hm),
         distractions: Array.from({ length: distractions }, () => ({ at: at(hm) })),
       });
-    expect(unlocked("zenThree", state({ focusSessions: [sess("a", "08:00", 0), sess("b", "07:00", 0), sess("c", "06:00", 0)] }))).toBe(true);
-    expect(unlocked("zenThree", state({ focusSessions: [sess("a", "08:00", 0), sess("b", "07:00", 1), sess("c", "06:00", 0)] }))).toBe(false);
+    expect(
+      unlocked(
+        "zenThree",
+        state({
+          focusSessions: [sess("a", "08:00", 0), sess("b", "07:00", 0), sess("c", "06:00", 0)],
+        }),
+      ),
+    ).toBe(true);
+    expect(
+      unlocked(
+        "zenThree",
+        state({
+          focusSessions: [sess("a", "08:00", 0), sess("b", "07:00", 1), sess("c", "06:00", 0)],
+        }),
+      ),
+    ).toBe(false);
   });
 
   it("focusTargetWeek unlocks after 7 consecutive days at target", () => {
-    const day100 = (day: string, id: string) => makeSession(id, { localDay: day, plannedMinutes: 100 });
+    const day100 = (day: string, id: string) =>
+      makeSession(id, { localDay: day, plannedMinutes: 100 });
     const week = Array.from({ length: 7 }, (_, i) => day100(addDays(DAY, -i), "f" + i));
     expect(unlocked("focusTargetWeek", state({ focusSessions: week }))).toBe(true);
     expect(unlocked("focusTargetWeek", state({ focusSessions: week.slice(0, 6) }))).toBe(false);
-    const withGap = [...week.slice(0, 3), ...Array.from({ length: 3 }, (_, i) => day100(addDays(DAY, -(i + 4)), "g" + i))];
+    const withGap = [
+      ...week.slice(0, 3),
+      ...Array.from({ length: 3 }, (_, i) => day100(addDays(DAY, -(i + 4)), "g" + i)),
+    ];
     expect(unlocked("focusTargetWeek", state({ focusSessions: withGap }))).toBe(false);
   });
 
   it("evaluateAchievements returns only new ids in definition order", () => {
     const s = state({ xpLedger: [te("t1")], lastExportedAt: "2026-11-01T10:00:00.000Z" });
     expect(evaluateAchievements(s, [])).toEqual(["firstTask", "firstBackup"]);
-    const prior: AchievementUnlock = { id: "u1", achievementId: "firstTask", unlockedAt: STAMP, localDay: DAY, createdAt: STAMP, updatedAt: STAMP };
+    const prior: AchievementUnlock = {
+      id: "u1",
+      achievementId: "firstTask",
+      unlockedAt: STAMP,
+      localDay: DAY,
+      createdAt: STAMP,
+      updatedAt: STAMP,
+    };
     expect(evaluateAchievements(s, [prior])).toEqual(["firstBackup"]);
   });
 
   it("latestUnlocks sorts newest first and ignores soft-deleted", () => {
-    const mk = (id: string, at: string, over: Partial<AchievementUnlock> = {}): AchievementUnlock => ({
+    const mk = (
+      id: string,
+      at: string,
+      over: Partial<AchievementUnlock> = {},
+    ): AchievementUnlock => ({
       id,
       achievementId: id,
       unlockedAt: at,
@@ -285,12 +385,17 @@ describe("achievements", () => {
       mk("firstBackup", "2026-11-05T10:00:00.000Z"),
       mk("firstHabit", "2026-11-05T09:00:00.000Z", { deletedAt: STAMP }),
     ];
-    expect(latestUnlocks(list, 3).map((u) => u.achievementId)).toEqual(["firstBackup", "firstTask"]);
+    expect(latestUnlocks(list, 3).map((u) => u.achievementId)).toEqual([
+      "firstBackup",
+      "firstTask",
+    ]);
     expect(latestUnlocks(list, 1).map((u) => u.achievementId)).toEqual(["firstBackup"]);
   });
 
   it("progress is measurable where it makes sense and null otherwise", () => {
     expect(prog("comeback", state())).toBe(null);
-    expect(prog("tasksTen", state({ xpLedger: Array.from({ length: 7 }, (_, i) => te("t" + i)) }))).toEqual({ current: 7, target: 10 });
+    expect(
+      prog("tasksTen", state({ xpLedger: Array.from({ length: 7 }, (_, i) => te("t" + i)) })),
+    ).toEqual({ current: 7, target: 10 });
   });
 });

@@ -46,7 +46,8 @@ const isHeading = (s: string) => /^#{1,3}\s+\S/.test(s);
 const isQuote = (s: string) => /^\s*>\s?\S/.test(s);
 const isUlItem = (s: string) => /^\s*[-*]\s+\S/.test(s);
 const isOlItem = (s: string) => /^\s*\d+\.\s+\S/.test(s);
-const isSpecial = (s: string) => isRule(s) || isHeading(s) || isQuote(s) || isUlItem(s) || isOlItem(s);
+const isSpecial = (s: string) =>
+  isRule(s) || isHeading(s) || isQuote(s) || isUlItem(s) || isOlItem(s);
 
 /**
  * Escaped Markdown subset -> HTML, one block element per paragraph.

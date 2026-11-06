@@ -27,7 +27,11 @@ export const migrations: Migration[] = [
       purchases: Array.isArray(d["purchases"]) ? d["purchases"] : [],
     };
     const s = d["settings"];
-    if (typeof s === "object" && s !== null && (s as Record<string, unknown>)["accent"] === "forest") {
+    if (
+      typeof s === "object" &&
+      s !== null &&
+      (s as Record<string, unknown>)["accent"] === "forest"
+    ) {
       out["settings"] = { ...s, accent: "moss" };
     }
     return out;
@@ -42,7 +46,8 @@ export function runMigrations(
   target = CURRENT_SCHEMA_VERSION,
 ): { data: AnySnapshot; from: number; to: number } {
   const from = data.meta?.schemaVersion ?? 0;
-  if (from > target) throw new Error(`Data is from a newer version (v${from}); please update the app.`);
+  if (from > target)
+    throw new Error(`Data is from a newer version (v${from}); please update the app.`);
   let cur = data;
   for (let v = from; v < target; v++) {
     const m = list[v];

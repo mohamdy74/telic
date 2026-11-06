@@ -15,15 +15,21 @@ describe("nextOccurrence", () => {
   });
 
   it("weekly on Mon/Thu from Thursday goes to next Monday", () => {
-    expect(nextOccurrence({ freq: "weekly", interval: 1, byWeekday: [1, 4] }, "2026-11-05")).toBe("2026-11-09");
+    expect(nextOccurrence({ freq: "weekly", interval: 1, byWeekday: [1, 4] }, "2026-11-05")).toBe(
+      "2026-11-09",
+    );
   });
 
   it("weekly on Mon/Thu from Monday goes to Thursday", () => {
-    expect(nextOccurrence({ freq: "weekly", interval: 1, byWeekday: [1, 4] }, "2026-11-09")).toBe("2026-11-12");
+    expect(nextOccurrence({ freq: "weekly", interval: 1, byWeekday: [1, 4] }, "2026-11-09")).toBe(
+      "2026-11-12",
+    );
   });
 
   it("weekly on Saturday from Friday is the next day", () => {
-    expect(nextOccurrence({ freq: "weekly", interval: 1, byWeekday: [6] }, "2026-11-06")).toBe("2026-11-07");
+    expect(nextOccurrence({ freq: "weekly", interval: 1, byWeekday: [6] }, "2026-11-06")).toBe(
+      "2026-11-07",
+    );
   });
 
   it("weekly with no days falls back to every 7 days", () => {
@@ -31,7 +37,9 @@ describe("nextOccurrence", () => {
   });
 
   it("weekly every 2 weeks on Monday", () => {
-    expect(nextOccurrence({ freq: "weekly", interval: 2, byWeekday: [1] }, "2026-11-09")).toBe("2026-11-23");
+    expect(nextOccurrence({ freq: "weekly", interval: 2, byWeekday: [1] }, "2026-11-09")).toBe(
+      "2026-11-23",
+    );
   });
 
   it("monthly clamps Jan 31 to Feb 28", () => {

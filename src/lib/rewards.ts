@@ -32,13 +32,12 @@ import type { FocusSession, ISODate, LocalDay, Task, XpLedgerEntry } from "./typ
 export type XpSource = "task" | "habit" | "focus" | "shop";
 
 export type DenyReason =
-  | "duplicate"
-  | "daily-cap"
-  | "task-too-new"
-  | "focus-incomplete"
-  | "focus-break";
+  "duplicate" | "daily-cap" | "task-too-new" | "focus-incomplete" | "focus-break";
 
-export type NewXpEntry = Pick<XpLedgerEntry, "sourceType" | "sourceId" | "localDay" | "xp" | "coins">;
+export type NewXpEntry = Pick<
+  XpLedgerEntry,
+  "sourceType" | "sourceId" | "localDay" | "xp" | "coins"
+>;
 
 export type AwardResult = { entry: NewXpEntry | null; reason: DenyReason | null };
 
@@ -47,7 +46,11 @@ export type AwardEvent =
   | { kind: "habit-done"; habitId: string; localDay: LocalDay }
   | { kind: "focus-completed"; session: FocusSession };
 
-export type RevokeSource = { sourceType: XpSource; sourceId: string; localDay?: LocalDay | undefined };
+export type RevokeSource = {
+  sourceType: XpSource;
+  sourceId: string;
+  localDay?: LocalDay | undefined;
+};
 
 export type RewardTotals = {
   xp: number;

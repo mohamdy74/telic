@@ -37,7 +37,12 @@ const mkHabit = (over: { id: string; schedule: Habit["schedule"]; archived?: boo
   archived: over.archived ?? false,
 });
 
-const mkLog = (over: { id: string; habitId: string; localDay: LocalDay; status: HabitLog["status"] }): HabitLog => ({
+const mkLog = (over: {
+  id: string;
+  habitId: string;
+  localDay: LocalDay;
+  status: HabitLog["status"];
+}): HabitLog => ({
   id: over.id,
   habitId: over.habitId,
   localDay: over.localDay,
@@ -72,7 +77,12 @@ const tasks: Task[] = [
   // 09:00 Cairo on a dayStartHour=4 clock → completed TODAY.
   mkTask({ id: "t5", status: "done", dueDate: TODAY, completedAt: "2026-11-06T07:00:00.000Z" }),
   // 02:30 Cairo → belongs to Nov 5 under dayStartHour 4, NOT today.
-  mkTask({ id: "t6", status: "done", dueDate: "2026-11-05", completedAt: "2026-11-06T00:30:00.000Z" }),
+  mkTask({
+    id: "t6",
+    status: "done",
+    dueDate: "2026-11-05",
+    completedAt: "2026-11-06T00:30:00.000Z",
+  }),
 ];
 
 const habits: Habit[] = [

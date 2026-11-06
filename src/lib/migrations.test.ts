@@ -7,16 +7,31 @@ describe("migrations", () => {
     (d) => {
       const todos = (d["todos"] as { title: string; p: number }[]) ?? [];
       const { todos: _drop, ...rest } = d;
-      return { ...rest, tasks: todos.map((t) => ({ title: t.title, priority: t.p >= 2 ? "high" : "low" })) };
+      return {
+        ...rest,
+        tasks: todos.map((t) => ({ title: t.title, priority: t.p >= 2 ? "high" : "low" })),
+      };
     },
   ];
 
   it("runs v0 -> v1 and stamps schemaVersion", () => {
-    const { data, from, to } = runMigrations({ todos: [{ title: "A", p: 3 }, { title: "B", p: 0 }] }, fake, 1);
+    const { data, from, to } = runMigrations(
+      {
+        todos: [
+          { title: "A", p: 3 },
+          { title: "B", p: 0 },
+        ],
+      },
+      fake,
+      1,
+    );
     expect(from).toBe(0);
     expect(to).toBe(1);
     expect(data.meta?.schemaVersion).toBe(1);
-    expect(data["tasks"]).toEqual([{ title: "A", priority: "high" }, { title: "B", priority: "low" }]);
+    expect(data["tasks"]).toEqual([
+      { title: "A", priority: "high" },
+      { title: "B", priority: "low" },
+    ]);
     expect(data["todos"]).toBeUndefined();
   });
 
@@ -36,7 +51,11 @@ describe("migrations", () => {
   });
 
   it("real v1 -> v2 adds the achievements collection", () => {
-    const { data, from, to } = runMigrations({ meta: { schemaVersion: 1 }, tasks: [] }, migrations, 2);
+    const { data, from, to } = runMigrations(
+      { meta: { schemaVersion: 1 }, tasks: [] },
+      migrations,
+      2,
+    );
     expect(from).toBe(1);
     expect(to).toBe(2);
     expect(data["achievements"]).toEqual([]);

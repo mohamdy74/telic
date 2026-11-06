@@ -51,14 +51,20 @@ describe("remainingMs", () => {
 describe("pause / resume", () => {
   it("shifts endsAt forward by the paused duration", () => {
     const pausedAt = new Date(START + 60_000).toISOString();
-    const shifted = shiftEndsAfterResume(new Date(ENDS).toISOString(), pausedAt, START + 5 * 60_000);
+    const shifted = shiftEndsAfterResume(
+      new Date(ENDS).toISOString(),
+      pausedAt,
+      START + 5 * 60_000,
+    );
     // paused for 4 minutes, so the session ends 4 minutes later.
     expect(Date.parse(shifted)).toBe(ENDS + 4 * 60_000);
   });
 
   it("a resume at the pause moment shifts nothing", () => {
     const pausedAt = new Date(START).toISOString();
-    expect(Date.parse(shiftEndsAfterResume(new Date(ENDS).toISOString(), pausedAt, START))).toBe(ENDS);
+    expect(Date.parse(shiftEndsAfterResume(new Date(ENDS).toISOString(), pausedAt, START))).toBe(
+      ENDS,
+    );
   });
 });
 
@@ -70,7 +76,9 @@ describe("completion detection", () => {
   it("not overdue while paused or already ended", () => {
     const pausedAt = new Date(ENDS - 60_000).toISOString();
     expect(isOverdue(session({ pausedAt }), ENDS + 60_000)).toBe(false);
-    expect(isOverdue(session({ endedAt: new Date(ENDS).toISOString() }), ENDS + 60_000)).toBe(false);
+    expect(isOverdue(session({ endedAt: new Date(ENDS).toISOString() }), ENDS + 60_000)).toBe(
+      false,
+    );
   });
 
   it("isActive separates live sessions from finished ones", () => {
@@ -104,7 +112,11 @@ describe("long break cadence", () => {
 
 describe("today's focus", () => {
   const done = session({ completed: true });
-  const cancelled = session({ id: "s2", completed: false, endedAt: new Date(ENDS - 10 * 60_000).toISOString() });
+  const cancelled = session({
+    id: "s2",
+    completed: false,
+    endedAt: new Date(ENDS - 10 * 60_000).toISOString(),
+  });
   const brk = session({ id: "s3", mode: "break", plannedMinutes: 5, completed: true });
   const otherDay = session({ id: "s4", completed: true, localDay: "2026-03-08" });
 

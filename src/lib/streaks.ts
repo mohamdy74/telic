@@ -66,7 +66,12 @@ export interface StreakInfo {
  * - a missed scheduled day (no log) breaks;
  * - today never breaks the streak until the day has ended.
  */
-export function habitStreaks(habit: Habit, logs: HabitLog[], today: LocalDay, weekStartsOn: number): StreakInfo {
+export function habitStreaks(
+  habit: Habit,
+  logs: HabitLog[],
+  today: LocalDay,
+  weekStartsOn: number,
+): StreakInfo {
   const by = logsByDay(logs);
   if (by.size === 0) return { current: 0, best: 0 };
   let earliest = today;

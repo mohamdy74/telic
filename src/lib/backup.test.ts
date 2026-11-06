@@ -16,7 +16,14 @@ const snapshot = (n = 1): Snapshot =>
     shopItems: [],
     purchases: [],
     xpLedger: [
-      { ...rec("x1"), sourceType: "focus", sourceId: "s1", localDay: "2026-01-01", xp: 10, coins: 2 },
+      {
+        ...rec("x1"),
+        sourceType: "focus",
+        sourceId: "s1",
+        localDay: "2026-01-01",
+        xp: 10,
+        coins: 2,
+      },
       { ...rec("x2"), sourceType: "task", sourceId: "t0", localDay: "2026-01-01", xp: 5, coins: 1 },
     ],
     settings: {
@@ -87,7 +94,9 @@ describe("parseBackup validation", () => {
     expect(failCode(JSON.stringify({ schemaVersion: "1", data: {} }))).toBe("invalid-shape");
     expect(failCode(JSON.stringify({ schemaVersion: 0.5, data: {} }))).toBe("invalid-shape");
     expect(failCode(JSON.stringify({ schemaVersion: -1, data: {} }))).toBe("invalid-shape");
-    expect(failCode(JSON.stringify({ schemaVersion: CURRENT_SCHEMA_VERSION }))).toBe("invalid-shape");
+    expect(failCode(JSON.stringify({ schemaVersion: CURRENT_SCHEMA_VERSION }))).toBe(
+      "invalid-shape",
+    );
     expect(failCode(JSON.stringify({ schemaVersion: CURRENT_SCHEMA_VERSION, data: [] }))).toBe(
       "invalid-shape",
     );
@@ -103,7 +112,11 @@ describe("parseBackup validation", () => {
   });
 
   it("rejects a newer schema version", () => {
-    const file = { schemaVersion: CURRENT_SCHEMA_VERSION + 1, exportedAt: stamp, data: snapshot(1) };
+    const file = {
+      schemaVersion: CURRENT_SCHEMA_VERSION + 1,
+      exportedAt: stamp,
+      data: snapshot(1),
+    };
     expect(failCode(JSON.stringify(file))).toBe("newer-schema");
   });
 

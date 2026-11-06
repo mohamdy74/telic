@@ -83,9 +83,15 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
       { title: "Tilth — Make room for what matters" },
-      { name: "description", content: "An offline-first home for your tasks, habits, focus and progress." },
+      {
+        name: "description",
+        content: "An offline-first home for your tasks, habits, focus and progress.",
+      },
       { property: "og:title", content: "Tilth — Make room for what matters" },
-      { property: "og:description", content: "An offline-first home for your tasks, habits, focus and progress." },
+      {
+        property: "og:description",
+        content: "An offline-first home for your tasks, habits, focus and progress.",
+      },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
       // Suppress the browser's "Translate page?" popup — the app ships its own
@@ -93,7 +99,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { name: "google", content: "notranslate" },
       { name: "theme-color", media: "(prefers-color-scheme: light)", content: "#f8f7f1" },
       { name: "theme-color", media: "(prefers-color-scheme: dark)", content: "#1d160e" },
-          ],
+    ],
     links: [
       {
         rel: "stylesheet",
