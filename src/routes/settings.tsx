@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useRef, useState, type ReactNode } from "react";
-import { Check, Database, Download, FileWarning, Monitor, Moon, Smartphone, Sprout, Sun, Upload } from "lucide-react";
+import { BellRing, Check, Database, Download, FileWarning, Keyboard, Monitor, Moon, Smartphone, Sprout, Sun, Upload } from "lucide-react";
 import { usePrefs, type Theme } from "@/components/app/preferences";
 import { BackupError, parseBackup, type ParsedBackup } from "@/lib/backup";
 import { buildZipExport, exportZipFileName } from "@/lib/exportZip";
@@ -77,6 +77,8 @@ function SettingsPage() {
         <ThemeSection />
         <DashboardCardsSection />
         <AppSection />
+        <NotificationsSection />
+        <ShortcutsSection />
       </div>
 
       <div className="mt-4">
@@ -326,6 +328,88 @@ function AppSection() {
       ) : (
         <p className="mt-3 text-xs text-muted-foreground">{t.pwa.installUnsupported}</p>
       )}
+    </fieldset>
+  );
+}
+
+/** Quiet daily digest — off by default; local notifications while the app is open. */
+function NotificationsSection() {
+  const { t } = usePrefs();
+  const ready = useStore((s) => s.ready);
+  const digest = useStore((s) => s.settings.digest);
+  const [perm, setPerm] = useState<NotificationPermission | "unsupported">("default");
+
+  // Read the browser permission after mount (no hydration drift).
+  useEffect(() => {
+    setPerm(typeof Notification === "undefined" ? "unsupported" : Notification.permission);
+  }, []);
+
+  if (!ready) return <SkeletonPanel />;
+
+  const enabled = digest?.enabled ?? false;
+  const morningAt = digest?.morningAt ?? "08:00";
+  const eveningAt = digest?.eveningAt ?? "21:00";
+
+  const askPermission = async () => {
+    if (typeof Notification === "undefined") return;
+    const p = await Notification.requestPermission();
+    setPerm(p);
+  };
+
+  return (
+    <fieldset className="panel">
+      <legend className="panel-title">{t.notif.title}</legend>
+      <p className="text-xs text-muted-foreground">{t.notif.hint}</p>
+      <p className="mt-1 text-xs text-muted-foreground">{t.notif.whileOpen}</p>
+      <div className="mt-3 flex items-center justify-between gap-4">
+        <span className="text-sm">{enabled ? t.notif.on : t.notif.off}</span>
+        <Switch
+          checked={enabled}
+          onChange={(v) => settingsApi.update({ digest: { enabled: v, morningAt, eveningAt } })}
+          label={t.notif.title}
+        />
+      </div>
+      <div className="mt-3">
+        {perm === "granted" ? (
+          <p className="inline-flex items-center gap-1.5 text-xs font-medium text-primary">
+            <Check className="size-3.5" aria-hidden /> {t.notif.on}
+          </p>
+        ) : perm === "denied" ? (
+          <p className="text-xs text-destructive">{t.notif.denied}</p>
+        ) : perm === "unsupported" ? null : (
+          <button type="button" onClick={() => void askPermission()} className={OUTLINE_BTN + " px-3 py-1.5"}>
+            <BellRing className="size-4" aria-hidden /> {t.notif.allow}
+          </button>
+        )}
+      </div>
+    </fieldset>
+  );
+}
+
+/** The keyboard shortcuts that exist, documented where they live. */
+function ShortcutsSection() {
+  const { t } = usePrefs();
+  const rows: Array<[string, string]> = [
+    [t.settings.shortcuts.palette, "Ctrl/⌘ K"],
+    [t.settings.shortcuts.focusStart, "Space"],
+    [t.settings.shortcuts.escape, "Esc"],
+  ];
+  return (
+    <fieldset className="panel">
+      <legend className="panel-title">{t.settings.shortcutsTitle}</legend>
+      <ul className="mt-3 space-y-1.5 text-sm">
+        {rows.map(([label, keys]) => (
+          <li key={label} className="flex items-center justify-between gap-4">
+            <span className="text-muted-foreground">
+              <Keyboard className="me-1.5 inline size-3.5" aria-hidden />
+              {label}
+            </span>
+            <kbd className="rounded border border-border bg-accent/40 px-1.5 py-0.5 font-sans text-xs">
+              {keys}
+            </kbd>
+          </li>
+        ))}
+      </ul>
     </fieldset>
   );
 }
@@ -602,7 +686,7 @@ function Modal({
           "button, [href], input, select, textarea, [tabindex]:not([tabindex='-1'])",
         );
         const first = items?.[0];
-        const last = items?.[items.length - 1];
+        const last = items?.[items?.length - 1];
         if (!first || !last) {
           e.preventDefault();
           return;

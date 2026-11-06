@@ -86,6 +86,18 @@ function HabitsPage() {
     if (showNew) nameRef.current?.focus();
   }, [showNew]);
 
+  // The command palette asks for a fresh habit through sessionStorage.
+  useEffect(() => {
+    try {
+      if (window.sessionStorage.getItem("tilth.new-habit") === "1") {
+        window.sessionStorage.removeItem("tilth.new-habit");
+        setShowNew(true);
+      }
+    } catch {
+      /* storage unavailable — ignore */
+    }
+  }, []);
+
   if (!ready) return <HabitsSkeleton />;
 
   const today = todayLocal();

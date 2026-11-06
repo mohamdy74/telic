@@ -28,6 +28,8 @@ import { latestUnlocks } from "@/lib/achievements";
 import { totalsFromLedger, xpAwardedOnDay } from "@/lib/rewards";
 import { DAILY_XP_CAP } from "@/lib/rewardsConfig";
 import { habits as habitsApi, tasks as tasksApi, todayLocal, useStore } from "@/lib/store";
+import { currentTimeZone } from "@/lib/dates";
+import { digestFor } from "@/lib/digest";
 import type { Task } from "@/lib/types";
 
 export const Route = createFileRoute("/")({
@@ -76,6 +78,7 @@ function DashboardPage() {
   const allSessions = useStore((s) => s.focusSessions);
   const cards = useStore((s) => s.settings.dashboardCards);
   const target = useStore((s) => s.settings.dailyFocusTargetMinutes);
+  const dayStartHour = useStore((s) => s.settings.dayStartHour);
   const [toast, setToast] = useState<string | null>(null);
 
   useEffect(() => {
@@ -101,6 +104,42 @@ function DashboardPage() {
     liveTasks.length === 0 && liveHabits.length === 0 && liveSessions.length === 0;
   const anyCard = Object.values(cards).some((v) => v);
 
+  // Quiet morning/evening summary — the "my day" line under the title.
+  const digest = digestFor({
+    tasks: liveTasks,
+    habits: liveHabits,
+    logs: liveLogs,
+    sessions: liveSessions,
+    today,
+    hour: new Date().getHours(),
+    dayStartHour,
+    timeZone: currentTimeZone(),
+  });
+  const greetingWord = digest.greeting === "morning" ? t.dig.morning : t.dig.evening;
+  const digestLine =
+    digest.greeting === "morning"
+      ? digest.tasksDue === 0 && digest.overdue === 0 && digest.habitsDue === 0
+        ? t.dig.quietDay
+        : [
+            t.dig.tasksDue.replace("{n}", formatNumber(locale, digest.tasksDue)),
+            ...(digest.overdue > 0
+              ? [t.dig.overdue.replace("{n}", formatNumber(locale, digest.overdue))]
+              : []),
+            t.dig.habitsDue.replace("{n}", formatNumber(locale, digest.habitsDue)),
+          ].join(" · ")
+      : digest.completedToday === 0 && digest.stillOpen === 0 && digest.tomorrowOpen === 0
+        ? t.dig.allDone
+        : [
+            t.dig.completedToday.replace("{n}", formatNumber(locale, digest.completedToday)),
+            t.dig.focusToday.replace("{n}", formatNumber(locale, digest.focusMinutes)),
+            ...(digest.stillOpen > 0
+              ? [t.dig.stillOpen.replace("{n}", formatNumber(locale, digest.stillOpen))]
+              : []),
+            ...(digest.tomorrowOpen > 0
+              ? [t.dig.tomorrow.replace("{n}", formatNumber(locale, digest.tomorrowOpen))]
+              : []),
+          ].join(" · ");
+
   const completeTask = (id: string) => {
     tasksApi.complete(id);
     setToast(t.tasks.toasts.completed);
@@ -124,6 +163,10 @@ function DashboardPage() {
         {t.pages.dashboard.title}
       </h1>
       <p className="mt-2 text-muted-foreground">{t.pages.dashboard.body}</p>
+      <p className="mt-3 flex flex-wrap items-center gap-2 text-sm text-muted-foreground">
+        <span className="font-medium text-foreground">{greetingWord}</span>
+        <span>{digestLine}</span>
+      </p>
 
       {firstRun ? (
         <WelcomePanel />

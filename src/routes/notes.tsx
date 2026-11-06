@@ -4,6 +4,7 @@ import { useEffect, useRef, useState, type RefObject } from "react";
 import { usePrefs } from "@/components/app/preferences";
 import { formatDate, type Locale } from "@/lib/i18n";
 import { filterNotes, mdToHtml, sortNotes } from "@/lib/notes";
+import { NOTE_TEMPLATES, templateFor, type TemplateId } from "@/lib/templates";
 import { notes as noteApi, useStore } from "@/lib/store";
 import type { Note, Task } from "@/lib/types";
 
@@ -392,11 +393,17 @@ function NewNoteForm({
   onAdd: (input: { title: string; body: string; linkedTaskId?: string | undefined }) => void;
   onCancel: () => void;
 }) {
-  const { t } = usePrefs();
+  const { t, locale } = usePrefs();
   const [title, setTitle] = useState("");
   const [body, setBody] = useState("");
   const [linkedTaskId, setLinkedTaskId] = useState("");
   const valid = title.trim() !== "";
+  const applyTemplate = (id: TemplateId) => {
+    const tpl = templateFor(id, locale);
+    if (!tpl) return;
+    setTitle(tpl.title);
+    setBody(tpl.body);
+  };
   return (
     <form
       className="mt-4 space-y-3 rounded-xl border border-border bg-card p-4"
@@ -406,6 +413,21 @@ function NewNoteForm({
         onAdd({ title: title.trim(), body, linkedTaskId: linkedTaskId || undefined });
       }}
     >
+      <div>
+        <p className="text-xs font-medium text-muted-foreground">{t.tmpl.label}</p>
+        <div className="mt-1.5 flex flex-wrap gap-1.5">
+          {NOTE_TEMPLATES.map((tpl) => (
+            <button
+              key={tpl.id}
+              type="button"
+              onClick={() => applyTemplate(tpl.id)}
+              className="h-8 rounded-md border border-border bg-background px-2.5 text-xs font-medium text-muted-foreground transition-colors hover:border-primary hover:text-foreground"
+            >
+              {tpl.title[locale]}
+            </button>
+          ))}
+        </div>
+      </div>
       <input
         ref={titleRef}
         value={title}

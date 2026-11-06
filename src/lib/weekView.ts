@@ -1,4 +1,13 @@
+import { addDays, startOfWeek } from "./dates";
+import { isScheduledOn } from "./streaks";
 import type { FocusSession, Habit, HabitLog, LocalDay, Task } from "./types";
+
+/*
+ * Pure week-grid math for the calendar page. Everything works on STORED
+ * LocalDay strings only (see AGENTS.md): a record's localDay is never
+ * recomputed, so a later change of timezone or dayStartHour never
+ * rewrites history.
+ */
 
 /** One day of the week grid. */
 export interface WeekCell {
@@ -28,15 +37,58 @@ export interface WeekInput {
   weekStartsOn: number;
 }
 
-/**
- * RED stub — weekView.test.ts drives the real implementation.
- * Returns the seven days of the anchored week, oldest first.
- */
+const PRIORITY_RANK: Record<Task["priority"], number> = { high: 0, medium: 1, low: 2 };
+
+/** The seven days of the anchored week, oldest first. */
 export function weekDays(anchor: LocalDay, weekStartsOn: number): LocalDay[] {
-  return [];
+  const first = startOfWeek(anchor, weekStartsOn);
+  return Array.from({ length: 7 }, (_, i) => addDays(first, i));
 }
 
-/** RED stub — builds one WeekCell per day of the anchored week. */
+/** Builds one cell per day of the anchored week. */
 export function buildWeek(input: WeekInput): WeekCell[] {
-  return [];
+  const days = weekDays(input.anchor, input.weekStartsOn);
+
+  const byDay = new Map<LocalDay, { open: Task[]; done: Task[] }>();
+  for (const day of days) byDay.set(day, { open: [], done: [] });
+
+  for (const task of input.tasks) {
+    if (task.deletedAt || task.dueDate === undefined) continue;
+    const slot = byDay.get(task.dueDate);
+    if (!slot) continue; // outside the anchored week
+    if (task.status === "done") slot.done.push(task);
+    else slot.open.push(task);
+  }
+  for (const slot of byDay.values()) {
+    slot.open.sort(
+      (a, b) => PRIORITY_RANK[a.priority] - PRIORITY_RANK[b.priority] || a.createdAt.localeCompare(b.createdAt),
+    );
+    slot.done.sort((a, b) => (b.completedAt ?? "").localeCompare(a.completedAt ?? ""));
+  }
+
+  const liveHabits = input.habits.filter((h) => !h.deletedAt && !h.archived);
+  const doneKeys = new Set<string>();
+  for (const log of input.logs) {
+    if (!log.deletedAt && log.status === "done") doneKeys.add(log.habitId + "\n" + log.localDay);
+  }
+
+  return days.map((day) => {
+    const slot = byDay.get(day)!;
+    const scheduled = liveHabits.filter((h) => isScheduledOn(h.schedule, day));
+    let focusMinutes = 0;
+    for (const session of input.sessions) {
+      if (!session.deletedAt && session.completed && session.mode !== "break" && session.localDay === day) {
+        focusMinutes += session.plannedMinutes;
+      }
+    }
+    return {
+      day,
+      openTasks: slot.open,
+      doneTasks: slot.done,
+      habitsScheduled: scheduled.length,
+      habitsDone: scheduled.filter((h) => doneKeys.has(h.id + "\n" + day)).length,
+      focusMinutes,
+      isToday: day === input.today,
+    };
+  });
 }

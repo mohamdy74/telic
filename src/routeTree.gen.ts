@@ -10,6 +10,7 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as CalendarRouteImport } from './routes/calendar'
 import { Route as FocusRouteImport } from './routes/focus'
 import { Route as HabitsRouteImport } from './routes/habits'
 import { Route as InsightsRouteImport } from './routes/insights'
@@ -22,45 +23,51 @@ const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
-} as any)
+}as any)
+const CalendarRoute = CalendarRouteImport.update({
+  id: '/calendar',
+  path: '/calendar',
+  getParentRoute: () => rootRouteImport,
+}as any)
 const FocusRoute = FocusRouteImport.update({
   id: '/focus',
   path: '/focus',
   getParentRoute: () => rootRouteImport,
-} as any)
+}as any)
 const HabitsRoute = HabitsRouteImport.update({
   id: '/habits',
   path: '/habits',
   getParentRoute: () => rootRouteImport,
-} as any)
+}as any)
 const InsightsRoute = InsightsRouteImport.update({
   id: '/insights',
   path: '/insights',
   getParentRoute: () => rootRouteImport,
-} as any)
+}as any)
 const NotesRoute = NotesRouteImport.update({
   id: '/notes',
   path: '/notes',
   getParentRoute: () => rootRouteImport,
-} as any)
+}as any)
 const RewardsRoute = RewardsRouteImport.update({
   id: '/rewards',
   path: '/rewards',
   getParentRoute: () => rootRouteImport,
-} as any)
+}as any)
 const SettingsRoute = SettingsRouteImport.update({
   id: '/settings',
   path: '/settings',
   getParentRoute: () => rootRouteImport,
-} as any)
+}as any)
 const TasksRoute = TasksRouteImport.update({
   id: '/tasks',
   path: '/tasks',
   getParentRoute: () => rootRouteImport,
-} as any)
+}as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/calendar': typeof CalendarRoute
   '/focus': typeof FocusRoute
   '/habits': typeof HabitsRoute
   '/insights': typeof InsightsRoute
@@ -71,6 +78,7 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/calendar': typeof CalendarRoute
   '/focus': typeof FocusRoute
   '/habits': typeof HabitsRoute
   '/insights': typeof InsightsRoute
@@ -82,6 +90,7 @@ export interface FileRoutesByTo {
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/calendar': typeof CalendarRoute
   '/focus': typeof FocusRoute
   '/habits': typeof HabitsRoute
   '/insights': typeof InsightsRoute
@@ -94,6 +103,7 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/calendar'
     | '/focus'
     | '/habits'
     | '/insights'
@@ -104,6 +114,7 @@ export interface FileRouteTypes {
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/calendar'
     | '/focus'
     | '/habits'
     | '/insights'
@@ -114,6 +125,7 @@ export interface FileRouteTypes {
   id:
     | '__root__'
     | '/'
+    | '/calendar'
     | '/focus'
     | '/habits'
     | '/insights'
@@ -125,6 +137,7 @@ export interface FileRouteTypes {
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  CalendarRoute: typeof CalendarRoute
   FocusRoute: typeof FocusRoute
   HabitsRoute: typeof HabitsRoute
   InsightsRoute: typeof InsightsRoute
@@ -141,6 +154,13 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/calendar': {
+      id: '/calendar'
+      path: '/calendar'
+      fullPath: '/calendar'
+      preLoaderRoute: typeof CalendarRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/focus': {
@@ -197,6 +217,7 @@ declare module '@tanstack/react-router' {
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  CalendarRoute: CalendarRoute,
   FocusRoute: FocusRoute,
   HabitsRoute: HabitsRoute,
   InsightsRoute: InsightsRoute,

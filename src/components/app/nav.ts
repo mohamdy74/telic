@@ -1,5 +1,6 @@
 import {
   BarChart3,
+  CalendarDays,
   CheckSquare,
   Gift,
   LayoutDashboard,
@@ -12,6 +13,7 @@ import {
 
 export type NavKey =
   | "dashboard"
+  | "calendar"
   | "tasks"
   | "notes"
   | "habits"
@@ -21,12 +23,22 @@ export type NavKey =
   | "settings";
 export type NavItem = {
   key: NavKey;
-  to: "/" | "/tasks" | "/notes" | "/habits" | "/focus" | "/rewards" | "/insights" | "/settings";
+  to:
+    | "/"
+    | "/calendar"
+    | "/tasks"
+    | "/notes"
+    | "/habits"
+    | "/focus"
+    | "/rewards"
+    | "/insights"
+    | "/settings";
   icon: LucideIcon;
 };
 
 export const NAV: NavItem[] = [
   { key: "dashboard", to: "/", icon: LayoutDashboard },
+  { key: "calendar", to: "/calendar", icon: CalendarDays },
   { key: "tasks", to: "/tasks", icon: CheckSquare },
   { key: "notes", to: "/notes", icon: StickyNote },
   { key: "habits", to: "/habits", icon: Repeat },

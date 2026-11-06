@@ -1,5 +1,17 @@
 import { Link, useNavigate } from "@tanstack/react-router";
-import { ChevronRight, Plus, Search, StickyNote, Target, Trophy, type LucideIcon } from "lucide-react";
+import {
+  ChevronRight,
+  FileText,
+  Languages,
+  Plus,
+  Repeat,
+  Search,
+  StickyNote,
+  SunMoon,
+  Target,
+  Trophy,
+  type LucideIcon,
+} from "lucide-react";
 import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { NAV } from "./nav";
 import { usePrefs } from "./preferences";
@@ -8,6 +20,8 @@ import { totalsFromLedger } from "@/lib/rewards";
 import { resolveAccent } from "@/lib/themes";
 import { isActive } from "@/lib/focusTime";
 import { applyUpdate, registerPwa } from "@/lib/pwa";
+import { toLocalDay } from "@/lib/dates";
+import { eveningDigest, morningDigest } from "@/lib/digest";
 
 type Cmd = { key: string; label: string; icon: LucideIcon; run: () => void };
 
@@ -18,8 +32,13 @@ export function AppShell({ children }: { children: ReactNode }) {
   const activeSession = useStore((s) => s.focusSessions.find((x) => isActive(x)));
   const unlocks = useStore((s) => s.achievements);
   const ready = useStore((s) => s.ready);
+  const settings = useStore((s) => s.settings);
   const settingsAccent = useStore((s) => s.settings.accent);
   const xpLedger = useStore((s) => s.xpLedger);
+  const tasks = useStore((s) => s.tasks);
+  const habits = useStore((s) => s.habits);
+  const logs = useStore((s) => s.habitLogs);
+  const sessions = useStore((s) => s.focusSessions);
   const [unlockToast, setUnlockToast] = useState<string | null>(null);
   const seenUnlocks = useRef<Set<string> | null>(null);
 
@@ -77,6 +96,74 @@ export function AppShell({ children }: { children: ReactNode }) {
     return registerPwa(() => setNeedRefresh(true));
   }, []);
 
+  // Quiet daily digest: at most one morning and one evening summary per day,
+  // only if the user turned it on, and only while the app is open — Tilth is
+  // local-first, there is no push server to deliver anything else.
+  useEffect(() => {
+    if (!ready) return;
+    const digest = settings.digest;
+    if (!digest?.enabled) return;
+    if (typeof Notification === "undefined" || Notification.permission !== "granted") return;
+    const tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
+    const slotAt = (s: string) => {
+      const [h = 0, m = 0] = s.split(":").map(Number);
+      return h * 60 + m;
+    };
+    const fire = () => {
+      const now = new Date();
+      const today = toLocalDay(now, settings.dayStartHour, tz);
+      const hour = now.getHours();
+      const minutes = hour * 60 + now.getMinutes();
+      const state = {
+        tasks,
+        habits,
+        logs,
+        sessions,
+        today,
+        hour,
+        dayStartHour: settings.dayStartHour,
+        timeZone: tz,
+      };
+      let slot: "morning" | "evening";
+      let title: string;
+      let body: string;
+      if (hour < 17) {
+        if (minutes < slotAt(digest.morningAt)) return;
+        const d = morningDigest(state);
+        slot = "morning";
+        title = t.notif.morningTitle;
+        const parts = [t.dig.tasksDue.replace("{n}", String(d.tasksDue))];
+        if (d.overdue > 0) parts.push(t.dig.overdue.replace("{n}", String(d.overdue)));
+        parts.push(t.dig.habitsDue.replace("{n}", String(d.habitsDue)));
+        body = d.tasksDue === 0 && d.overdue === 0 && d.habitsDue === 0 ? t.dig.quietDay : parts.join(" · ");
+      } else {
+        if (minutes < slotAt(digest.eveningAt)) return;
+        const e = eveningDigest(state);
+        slot = "evening";
+        title = t.notif.eveningTitle;
+        const parts = [
+          t.dig.completedToday.replace("{n}", String(e.completedToday)),
+          t.dig.focusToday.replace("{n}", String(e.focusMinutes)),
+        ];
+        if (e.stillOpen > 0) parts.push(t.dig.stillOpen.replace("{n}", String(e.stillOpen)));
+        if (e.tomorrowOpen > 0) parts.push(t.dig.tomorrow.replace("{n}", String(e.tomorrowOpen)));
+        body = e.completedToday === 0 && e.stillOpen === 0 && e.tomorrowOpen === 0 ? t.dig.quietDay : parts.join(" · ");
+      }
+      try {
+        const seen: Record<string, string> = JSON.parse(window.localStorage.getItem("tilth.digest") || "{}");
+        if (seen[slot] === today) return;
+        new Notification(title, { body, tag: "tilth-digest-" + slot });
+        seen[slot] = today;
+        window.localStorage.setItem("tilth.digest", JSON.stringify(seen));
+      } catch {
+        /* ignore */
+      }
+    };
+    fire();
+    const id = window.setInterval(fire, 60_000);
+    return () => window.clearInterval(id);
+  }, [ready, settings, tasks, habits, logs, sessions, t]);
+
   return (
     <div className="min-h-screen bg-background text-foreground">
       <a href="#main" className="skip-link">
@@ -121,7 +208,7 @@ export function AppShell({ children }: { children: ReactNode }) {
 
       <nav
         aria-label="Main"
-        className="fixed inset-x-0 bottom-0 z-30 grid grid-cols-7 border-t border-border bg-sidebar/95 backdrop-blur md:hidden"
+        className="fixed inset-x-0 bottom-0 z-30 grid grid-cols-8 border-t border-border bg-sidebar/95 backdrop-blur md:hidden"
       >
         {NAV.filter((n) => n.key !== "rewards").map(
           ({ key, to, icon: Icon }) => (
@@ -184,7 +271,7 @@ export function AppShell({ children }: { children: ReactNode }) {
 }
 
 function CommandPalette({ onClose }: { onClose: () => void }) {
-  const { t } = usePrefs();
+  const { t, locale, setLocale, theme, setTheme } = usePrefs();
   const navigate = useNavigate();
   const [q, setQ] = useState("");
   const [idx, setIdx] = useState(0);
@@ -222,6 +309,52 @@ function CommandPalette({ onClose }: { onClose: () => void }) {
           navigate({ to: "/notes" });
         },
       },
+      {
+        key: "newHabit",
+        label: t.command.newHabit,
+        icon: Repeat,
+        run: () => {
+          try {
+            window.sessionStorage.setItem("tilth.new-habit", "1");
+          } catch {
+            /* ignore */
+          }
+          onClose();
+          navigate({ to: "/habits" });
+        },
+      },
+      {
+        key: "newFromTemplate",
+        label: t.command.newFromTemplate,
+        icon: FileText,
+        run: () => {
+          try {
+            window.sessionStorage.setItem("tilth.new-note", "1");
+          } catch {
+            /* ignore */
+          }
+          onClose();
+          navigate({ to: "/notes" });
+        },
+      },
+      {
+        key: "toggleLanguage",
+        label: t.command.toggleLanguage,
+        icon: Languages,
+        run: () => {
+          setLocale(locale === "ar" ? "en" : "ar");
+          onClose();
+        },
+      },
+      {
+        key: "toggleTheme",
+        label: t.command.toggleTheme,
+        icon: SunMoon,
+        run: () => {
+          setTheme(theme === "dark" ? "light" : "dark");
+          onClose();
+        },
+      },
       ...NAV.map((n): Cmd => ({
         key: n.key,
         label: t.nav[n.key],
@@ -233,7 +366,7 @@ function CommandPalette({ onClose }: { onClose: () => void }) {
       })),
     ];
     return cmds.filter((c) => c.label.toLowerCase().includes(nq));
-  }, [q, t, onClose, navigate]);
+  }, [q, t, onClose, navigate, locale, setLocale, theme, setTheme]);
 
   useEffect(() => {
     prevFocus.current = document.activeElement;
