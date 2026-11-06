@@ -17,6 +17,7 @@ import {
 } from "lucide-react";
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import { usePrefs } from "@/components/app/preferences";
+import { PageHeader } from "@/components/app/PageHeader";
 import { Modal } from "@/components/app/Modal";
 import { DANGER_BTN, OUTLINE_BTN, PRIMARY_BTN } from "@/components/ui/button";
 import { toast } from "sonner";
@@ -71,16 +72,88 @@ function TasksPage() {
   const [draft, setDraft] = useState("");
   const inputRef = useRef<HTMLInputElement>(null);
 
-  // Focus the quick-add input when arriving via ⌘K → "New task".
+  // Palette handoffs: "New task" focuses quick-add; content search (TIL-F07)
+  // jumps to a task — filters reset, owning view bucket selected, row expanded
+  // and scrolled into view. Gated on `ready`: the store boots post-hydration.
   useEffect(() => {
+    if (!ready) return;
     try {
       if (window.sessionStorage.getItem("tilth.new-task") === "1") {
         window.sessionStorage.removeItem("tilth.new-task");
         inputRef.current?.focus();
       }
+      const openId = window.sessionStorage.getItem("tilth.open-task");
+      if (openId) {
+        window.sessionStorage.removeItem("tilth.open-task");
+        const task = useStore.getState().tasks.find((x) => x.id === openId && !x.deletedAt);
+        if (task) {
+          const day = todayLocal();
+          setSearch("");
+          setPriorityFilter("all");
+          setTagFilter("all");
+          setView(
+            task.status === "done"
+              ? "completed"
+              : !task.dueDate
+                ? "inbox"
+                : task.dueDate < day
+                  ? "overdue"
+                  : task.dueDate === day
+                    ? "today"
+                    : "upcoming",
+          );
+          setExpandedId(task.id);
+          requestAnimationFrame(() =>
+            document
+              .querySelector(`[data-task-id="${task.id}"]`)
+              ?.scrollIntoView({ block: "center" }),
+          );
+        }
+      }
     } catch {
       /* ignore */
     }
+  }, [ready]);
+
+  // TIL-F12 starter keyboard set for list triage: j/k move a row cursor, x
+  // toggles completion with its undo toast, e opens the editor, Esc closes it.
+  // Window-level like the Focus Space handler; skips fields, dialogs, chords.
+  const [cursor, setCursor] = useState(0);
+  const kbRef = useRef({
+    visible: [] as Task[],
+    cursor: 0,
+    mode: "list" as Mode,
+    toggleDone: (_t: Task) => {},
+  });
+  useEffect(() => setCursor(0), [view, search, priorityFilter, tagFilter, mode]);
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.metaKey || e.ctrlKey || e.altKey) return;
+      if (document.querySelector("[role='dialog']")) return;
+      const el = document.activeElement as HTMLElement | null;
+      if (el?.closest?.("input, textarea, select, [contenteditable]")) return;
+      const { visible: list, cursor: cur, mode: m, toggleDone: toggle } = kbRef.current;
+      if (m !== "list" || list.length === 0) return;
+      const k = e.key.toLowerCase();
+      if (k === "j" || k === "k") {
+        e.preventDefault();
+        const next = k === "j" ? Math.min(cur + 1, list.length - 1) : Math.max(cur - 1, 0);
+        setCursor(next);
+        const id = list[next]?.id;
+        if (id)
+          document.querySelector(`[data-task-id="${id}"]`)?.scrollIntoView({ block: "nearest" });
+      } else if (k === "x") {
+        const task = list[cur];
+        if (task) toggle(task);
+      } else if (k === "e") {
+        const task = list[cur];
+        if (task) setExpandedId(task.id);
+      } else if (e.key === "Escape") {
+        setExpandedId(null);
+      }
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
   }, []);
 
   if (!ready) return <TasksSkeleton />;
@@ -181,15 +254,15 @@ function TasksPage() {
   };
 
   const visible = byView[view];
+  kbRef.current = { visible, mode, cursor, toggleDone };
   const hasFilters = search !== "" || priorityFilter !== "all" || tagFilter !== "all";
 
   return (
     <section>
-      <p className="mb-2 text-sm font-medium text-primary">{t.nav.tasks}</p>
-      <h1 className="font-display text-3xl font-semibold tracking-tight md:text-4xl">
-        {t.pages.tasks.title}
-      </h1>
-      <p className="mt-2 text-muted-foreground">{t.pages.tasks.body}</p>
+      <PageHeader
+        title={t.pages.tasks.title}
+        lede={live.length === 0 ? t.pages.tasks.body : undefined}
+      />
 
       <form
         className="mt-6 flex items-center gap-2 rounded-xl border border-border bg-card p-2"
@@ -320,12 +393,13 @@ function TasksPage() {
         <EmptyState view={view} onAdd={() => inputRef.current?.focus()} />
       ) : mode === "list" ? (
         <ul className="mt-4 space-y-2">
-          {visible.map((task) => (
+          {visible.map((task, index) => (
             <TaskRow
               key={task.id}
               task={task}
               today={today}
               expanded={expandedId === task.id}
+              cursor={index === cursor}
               onToggle={() => toggleDone(task)}
               onExpand={() => setExpandedId(expandedId === task.id ? null : task.id)}
               onDelete={() => removeTask(task)}
@@ -409,6 +483,7 @@ function TaskRow({
   onToggle,
   onExpand,
   onDelete,
+  cursor = false,
 }: {
   task: Task;
   today: string;
@@ -416,12 +491,16 @@ function TaskRow({
   onToggle: () => void;
   onExpand: () => void;
   onDelete: () => void;
+  cursor?: boolean;
 }) {
   const { t, locale } = usePrefs();
   const done = task.status === "done";
   const subDone = task.subtasks.filter((s) => s.done).length;
   return (
-    <li className="panel overflow-hidden">
+    <li
+      data-task-id={task.id}
+      className={"panel overflow-hidden transition-colors" + (cursor ? " bg-accent/40" : "")}
+    >
       <div className="flex items-start gap-3 p-3">
         <CheckButton
           checked={done}

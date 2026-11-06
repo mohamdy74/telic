@@ -15,6 +15,7 @@ import {
 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { usePrefs } from "@/components/app/preferences";
+import { PageHeader } from "@/components/app/PageHeader";
 import { ACHIEVEMENT_ICONS } from "@/components/app/achievementIcons";
 import { startOfWeek } from "@/lib/dates";
 import { formatDate, formatNumber } from "@/lib/i18n";
@@ -59,11 +60,7 @@ function RewardsPage() {
   if (!ready) return <RewardsSkeleton />;
   return (
     <section>
-      <p className="mb-2 text-sm font-medium text-primary">{t.nav.rewards}</p>
-      <h1 className="font-display text-3xl font-semibold tracking-tight md:text-4xl">
-        {t.pages.rewards.title}
-      </h1>
-      <p className="mt-2 text-muted-foreground">{t.pages.rewards.body}</p>
+      <PageHeader title={t.pages.rewards.title} lede={t.pages.rewards.body} />
       <div className="mt-6 space-y-4">
         <LevelPanel />
         <ChallengesPanel />

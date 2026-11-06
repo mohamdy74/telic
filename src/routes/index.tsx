@@ -13,6 +13,7 @@ import {
 } from "lucide-react";
 import { useEffect, useState, type ReactNode } from "react";
 import { usePrefs } from "@/components/app/preferences";
+import { PageHeader } from "@/components/app/PageHeader";
 import { OUTLINE_BTN, PRIMARY_BTN } from "@/components/ui/button";
 import { toast } from "sonner";
 import { ACHIEVEMENT_ICONS } from "@/components/app/achievementIcons";
@@ -151,15 +152,16 @@ function DashboardPage() {
 
   return (
     <section>
-      <p className="mb-2 text-sm font-medium text-primary">{t.nav.dashboard}</p>
-      <h1 className="font-display text-3xl font-semibold tracking-tight md:text-4xl">
-        {t.pages.dashboard.title}
-      </h1>
-      <p className="mt-2 text-muted-foreground">{t.pages.dashboard.body}</p>
-      <p className="mt-3 flex flex-wrap items-center gap-2 text-sm text-muted-foreground">
-        <span className="font-medium text-foreground">{greetingWord}</span>
-        <span>{digestLine}</span>
-      </p>
+      <PageHeader
+        context={
+          <>
+            <span className="font-medium text-foreground">{greetingWord}</span>
+            <span>{digestLine}</span>
+          </>
+        }
+        title={t.pages.dashboard.title}
+        lede={firstRun ? t.pages.dashboard.body : undefined}
+      />
 
       {firstRun ? (
         <WelcomePanel />

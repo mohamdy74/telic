@@ -425,6 +425,7 @@ const en = {
   },
 
   command: {
+    contentHeading: "From your data",
     open: "Search or jump to…",
     placeholder: "Type a page name…",
     empty: "No matches",
@@ -942,6 +943,7 @@ const ar: Dict = {
   },
 
   command: {
+    contentHeading: "من بياناتك",
     open: "ابحث أو انتقل إلى…",
     placeholder: "اكتب اسم الصفحة…",
     empty: "لا توجد نتائج",

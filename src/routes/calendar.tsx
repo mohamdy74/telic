@@ -2,6 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { ChevronLeft, ChevronRight, Sprout, Timer } from "lucide-react";
 import { useState } from "react";
 import { usePrefs } from "@/components/app/preferences";
+import { PageHeader } from "@/components/app/PageHeader";
 import { OUTLINE_BTN } from "@/components/ui/button";
 import { addDays, weekdayOf } from "@/lib/dates";
 import { formatDate, formatNumber, type Locale } from "@/lib/i18n";
@@ -72,11 +73,7 @@ function CalendarPage() {
 
   return (
     <section>
-      <p className="mb-2 text-sm font-medium text-primary">{t.nav.calendar}</p>
-      <h1 className="font-display text-3xl font-semibold tracking-tight md:text-4xl">
-        {t.pages.calendar.title}
-      </h1>
-      <p className="mt-2 text-muted-foreground">{t.pages.calendar.body}</p>
+      <PageHeader title={t.pages.calendar.title} lede={t.pages.calendar.body} />
 
       <div className="mt-6 flex flex-wrap items-center justify-between gap-3">
         <div className="flex items-center gap-1.5">

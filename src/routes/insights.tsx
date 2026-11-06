@@ -14,6 +14,7 @@ import {
   YAxis,
 } from "recharts";
 import { usePrefs } from "@/components/app/preferences";
+import { PageHeader } from "@/components/app/PageHeader";
 import { currentTimeZone } from "@/lib/dates";
 import { formatDate, formatNumber } from "@/lib/i18n";
 import {
@@ -141,11 +142,7 @@ function InsightsPage() {
 
   return (
     <section>
-      <p className="mb-2 text-sm font-medium text-primary">{t.nav.insights}</p>
-      <h1 className="font-display text-3xl font-semibold tracking-tight md:text-4xl">
-        {t.pages.insights.title}
-      </h1>
-      <p className="mt-2 text-muted-foreground">{t.pages.insights.body}</p>
+      <PageHeader title={t.pages.insights.title} lede={t.pages.insights.body} />
 
       {!report.hasAnyData ? (
         <EmptyInsights />

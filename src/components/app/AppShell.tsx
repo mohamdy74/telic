@@ -4,6 +4,7 @@ import {
   Ellipsis,
   FileText,
   Languages,
+  ListTodo,
   Plus,
   Repeat,
   Search,
@@ -28,7 +29,14 @@ import { applyUpdate, registerPwa } from "@/lib/pwa";
 import { toLocalDay } from "@/lib/dates";
 import { eveningDigest, morningDigest } from "@/lib/digest";
 
-type Cmd = { key: string; label: string; icon: LucideIcon; run: () => void };
+type Cmd = {
+  key: string;
+  label: string;
+  icon: LucideIcon;
+  run: () => void;
+  /** Small type chip shown on content-search results (TIL-F07). */
+  detail?: string;
+};
 
 // TIL-F06: the desktop sidebar groups nine peer destinations into four labeled
 // sections; Settings is pinned at the bottom. TIL-F01: the mobile bar shows the
@@ -102,6 +110,12 @@ export function AppShell({ children }: { children: ReactNode }) {
     const onKey = (e: KeyboardEvent) => {
       if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "k") {
         e.preventDefault();
+        setOpen((o) => !o);
+      }
+      // "?" toggles the palette — the discoverable cheatsheet (TIL-F12).
+      if (e.key === "?" && !e.metaKey && !e.ctrlKey && !e.altKey) {
+        const el = e.target as HTMLElement | null;
+        if (el?.closest?.("input, textarea, select, [contenteditable]")) return;
         setOpen((o) => !o);
       }
     };
@@ -371,6 +385,8 @@ function CommandPalette({ onClose }: { onClose: () => void }) {
   const [idx, setIdx] = useState(0);
   const inputRef = useRef<HTMLInputElement>(null);
   const prevFocus = useRef<Element | null>(null);
+  const storeTasks = useStore((s) => s.tasks);
+  const storeNotes = useStore((s) => s.notes);
 
   const items = useMemo<Cmd[]>(() => {
     const nq = q.trim().toLowerCase();
@@ -462,6 +478,66 @@ function CommandPalette({ onClose }: { onClose: () => void }) {
     return cmds.filter((c) => c.label.toLowerCase().includes(nq));
   }, [q, t, onClose, navigate, locale, setLocale, theme, setTheme]);
 
+  // TIL-F07: the palette searches live content, not just actions — task
+  // titles/notes/tags and note titles/bodies. The store is fully resident in
+  // memory, so filtering is free; actions stay first, content rides beneath.
+  const content = useMemo<Cmd[]>(() => {
+    const nq = q.trim().toLowerCase();
+    if (nq.length < 2) return [];
+    const out: Cmd[] = [];
+    for (const task of storeTasks) {
+      if (out.length >= 8) break;
+      if (task.deletedAt) continue;
+      const hay = (
+        task.title +
+        "\n" +
+        (task.notes ?? "") +
+        "\n" +
+        task.tags.join(" ")
+      ).toLowerCase();
+      if (!hay.includes(nq)) continue;
+      out.push({
+        key: "task:" + task.id,
+        label: task.title,
+        detail: t.nav.tasks,
+        icon: ListTodo,
+        run: () => {
+          try {
+            window.sessionStorage.setItem("tilth.open-task", task.id);
+          } catch {
+            /* ignore */
+          }
+          onClose();
+          navigate({ to: "/tasks" });
+        },
+      });
+    }
+    for (const note of storeNotes) {
+      if (out.length >= 12) break;
+      if (note.deletedAt) continue;
+      const hay = (note.title + "\n" + (note.body ?? "")).toLowerCase();
+      if (!hay.includes(nq)) continue;
+      out.push({
+        key: "note:" + note.id,
+        label: note.title,
+        detail: t.nav.notes,
+        icon: StickyNote,
+        run: () => {
+          try {
+            window.sessionStorage.setItem("tilth.open-note", note.id);
+          } catch {
+            /* ignore */
+          }
+          onClose();
+          navigate({ to: "/notes" });
+        },
+      });
+    }
+    return out;
+  }, [q, storeTasks, storeNotes, t, onClose, navigate]);
+
+  const flat = useMemo(() => [...items, ...content], [items, content]);
+
   useEffect(() => {
     prevFocus.current = document.activeElement;
     inputRef.current?.focus();
@@ -470,7 +546,7 @@ function CommandPalette({ onClose }: { onClose: () => void }) {
   useEffect(() => setIdx(0), [q]);
 
   const go = (i: number) => {
-    const item = items[i];
+    const item = flat[i];
     if (!item) return;
     item.run();
   };
@@ -490,7 +566,7 @@ function CommandPalette({ onClose }: { onClose: () => void }) {
           if (e.key === "Escape") onClose();
           else if (e.key === "ArrowDown") {
             e.preventDefault();
-            setIdx((i) => Math.min(i + 1, items.length - 1));
+            setIdx((i) => Math.min(i + 1, flat.length - 1));
           } else if (e.key === "ArrowUp") {
             e.preventDefault();
             setIdx((i) => Math.max(i - 1, 0));
@@ -510,7 +586,7 @@ function CommandPalette({ onClose }: { onClose: () => void }) {
           />
         </div>
         <ul role="listbox" className="max-h-80 overflow-y-auto p-2">
-          {items.length === 0 && (
+          {flat.length === 0 && (
             <li className="px-3 py-6 text-center text-sm text-muted-foreground">
               {t.command.empty}
             </li>
@@ -525,10 +601,38 @@ function CommandPalette({ onClose }: { onClose: () => void }) {
               className="flex cursor-pointer items-center gap-3 rounded-lg px-3 py-2 text-sm aria-selected:bg-accent aria-selected:text-accent-foreground"
             >
               <n.icon className="size-4" aria-hidden />
-              <span className="flex-1">{n.label}</span>
+              <span className="min-w-0 flex-1 truncate">{n.label}</span>
               <ChevronRight className="size-4 opacity-60 rtl-flip" aria-hidden />
             </li>
           ))}
+          {content.length > 0 && (
+            <li
+              role="presentation"
+              className="px-3 pb-1 pt-2 text-[11px] font-semibold uppercase tracking-[0.14em] text-muted-foreground"
+            >
+              {t.command.contentHeading}
+            </li>
+          )}
+          {content.map((n, i) => {
+            const gi = items.length + i;
+            return (
+              <li
+                key={n.key}
+                role="option"
+                aria-selected={gi === idx}
+                onMouseEnter={() => setIdx(gi)}
+                onClick={() => go(gi)}
+                className="flex cursor-pointer items-center gap-3 rounded-lg px-3 py-2 text-sm aria-selected:bg-accent aria-selected:text-accent-foreground"
+              >
+                <n.icon className="size-4" aria-hidden />
+                <span className="min-w-0 flex-1 truncate">{n.label}</span>
+                <span className="shrink-0 rounded border border-border px-1.5 py-0.5 text-[10px] text-muted-foreground">
+                  {n.detail}
+                </span>
+                <ChevronRight className="size-4 opacity-60 rtl-flip" aria-hidden />
+              </li>
+            );
+          })}
         </ul>
       </div>
     </div>

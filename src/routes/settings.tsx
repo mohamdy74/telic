@@ -15,6 +15,7 @@ import {
   Upload,
 } from "lucide-react";
 import { usePrefs, type Theme } from "@/components/app/preferences";
+import { PageHeader } from "@/components/app/PageHeader";
 import { Modal } from "@/components/app/Modal";
 import { DANGER_BTN, OUTLINE_BTN, PRIMARY_BTN } from "@/components/ui/button";
 import { BackupError, parseBackup, type ParsedBackup } from "@/lib/backup";
@@ -76,11 +77,7 @@ function SettingsPage() {
   const { t } = usePrefs();
   return (
     <section>
-      <p className="mb-2 text-sm font-medium text-primary">{t.nav.settings}</p>
-      <h1 className="font-display text-3xl font-semibold tracking-tight md:text-4xl">
-        {t.pages.settings.title}
-      </h1>
-      <p className="mt-2 text-muted-foreground">{t.pages.settings.body}</p>
+      <PageHeader title={t.pages.settings.title} lede={t.pages.settings.body} />
 
       <div className="mt-8 grid items-start gap-4 md:grid-cols-2">
         <LanguageSection />

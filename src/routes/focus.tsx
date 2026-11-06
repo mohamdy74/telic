@@ -12,6 +12,7 @@ import {
 } from "lucide-react";
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import { usePrefs } from "@/components/app/preferences";
+import { PageHeader } from "@/components/app/PageHeader";
 import { Modal } from "@/components/app/Modal";
 import { OUTLINE_BTN, PRIMARY_BTN } from "@/components/ui/button";
 import { toast } from "sonner";
@@ -181,11 +182,10 @@ function FocusPage() {
 
   return (
     <section>
-      <p className="mb-2 text-sm font-medium text-primary">{t.nav.focus}</p>
-      <h1 className="font-display text-3xl font-semibold tracking-tight md:text-4xl">
-        {t.pages.focus.title}
-      </h1>
-      <p className="mt-2 text-muted-foreground">{t.pages.focus.body}</p>
+      <PageHeader
+        title={t.pages.focus.title}
+        lede={liveSessions.length === 0 ? t.pages.focus.body : undefined}
+      />
 
       <div className="mt-6">
         <div className="mb-1 flex items-center justify-between text-xs text-muted-foreground">

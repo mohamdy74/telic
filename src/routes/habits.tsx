@@ -11,6 +11,7 @@ import {
 } from "lucide-react";
 import { useEffect, useRef, useState, type RefObject } from "react";
 import { usePrefs } from "@/components/app/preferences";
+import { PageHeader } from "@/components/app/PageHeader";
 import { OUTLINE_BTN, PRIMARY_BTN } from "@/components/ui/button";
 import { toast } from "sonner";
 import { addDays, startOfWeek } from "@/lib/dates";
@@ -129,11 +130,10 @@ function HabitsPage() {
 
   return (
     <section>
-      <p className="mb-2 text-sm font-medium text-primary">{t.nav.habits}</p>
-      <h1 className="font-display text-3xl font-semibold tracking-tight md:text-4xl">
-        {t.pages.habits.title}
-      </h1>
-      <p className="mt-2 text-muted-foreground">{t.pages.habits.body}</p>
+      <PageHeader
+        title={t.pages.habits.title}
+        lede={liveHabits.length === 0 ? t.pages.habits.body : undefined}
+      />
 
       <div className="mt-6 flex flex-wrap items-center justify-between gap-3">
         <div className="segmented m-0" role="radiogroup" aria-label={t.nav.habits}>

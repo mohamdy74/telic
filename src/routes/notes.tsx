@@ -2,6 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { Eye, Link2, Pencil, Pin, PinOff, Plus, Search, StickyNote, Trash2 } from "lucide-react";
 import { useEffect, useRef, useState, type RefObject } from "react";
 import { usePrefs } from "@/components/app/preferences";
+import { PageHeader } from "@/components/app/PageHeader";
 import { OUTLINE_BTN, PRIMARY_BTN } from "@/components/ui/button";
 import { toast } from "sonner";
 import { formatDate, type Locale } from "@/lib/i18n";
@@ -51,6 +52,11 @@ function NotesPage() {
         window.sessionStorage.removeItem("tilth.new-note");
         setShowNew(true);
       }
+      const openNote = window.sessionStorage.getItem("tilth.open-note");
+      if (openNote) {
+        window.sessionStorage.removeItem("tilth.open-note");
+        setExpandedId(openNote);
+      }
     } catch {
       /* storage unavailable — ignore */
     }
@@ -75,11 +81,10 @@ function NotesPage() {
 
   return (
     <section>
-      <p className="mb-2 text-sm font-medium text-primary">{t.nav.notes}</p>
-      <h1 className="font-display text-3xl font-semibold tracking-tight md:text-4xl">
-        {t.pages.notes.title}
-      </h1>
-      <p className="mt-2 text-muted-foreground">{t.pages.notes.body}</p>
+      <PageHeader
+        title={t.pages.notes.title}
+        lede={live.length === 0 ? t.pages.notes.body : undefined}
+      />
 
       <div className="mt-6 flex flex-wrap items-center justify-between gap-3">
         <div className="relative min-w-56 flex-1 sm:max-w-72">
